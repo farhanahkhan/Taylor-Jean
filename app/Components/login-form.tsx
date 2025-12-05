@@ -285,7 +285,7 @@ export function LoginForm() {
           href="#"
           className="font-semibold text-accent hover:text-accent/80 transition-colors"
         >
-          Sign Up
+          Sign UP
         </Link>
       </p>
 

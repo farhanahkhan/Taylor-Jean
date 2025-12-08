@@ -230,111 +230,16 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import useSWR from "swr";
 
 import { Search, Grid3X3, Plus, ChevronDown } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+
+import { getProducts } from "../../../lib/product-store";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 import { MerchProductCard } from "@/app/Components/merch-product-card";
-
-const products = [
-  {
-    id: "1",
-    name: "Taylor Jean Fishing Cap",
-    price: 35.0,
-    category: "Accessories",
-    image: "/navy-blue-fishing-cap-with-boat-logo-embroidered.jpg",
-    colors: [
-      { name: "Navy", hex: "#1E3A5F" },
-      { name: "White", hex: "#FFFFFF" },
-    ],
-    sizes: ["One Size"],
-  },
-  {
-    id: "2",
-    name: "Sport Fishing Polo",
-    price: 65.0,
-    category: "Clothing",
-    image: "/yellow-polo-shirt-with-fishing-boat-emblem.jpg",
-    colors: [
-      { name: "Yellow", hex: "#F5B800" },
-      { name: "Navy", hex: "#1E3A5F" },
-    ],
-    sizes: ["S", "M", "L", "XL", "XXL"],
-  },
-  {
-    id: "3",
-    name: "Tournament Hoodie",
-    price: 95.0,
-    category: "Clothing",
-    image: "/gray-hoodie-with-fishing-tournament-logo-marlin.jpg",
-    colors: [
-      { name: "Gray", hex: "#6B7280" },
-      { name: "Black", hex: "#1A1A1A" },
-    ],
-    sizes: ["M", "L", "XL"],
-  },
-  {
-    id: "4",
-    name: "Marlin Tackle Bag",
-    price: 120.0,
-    category: "Gear",
-    image: "/navy-waterproof-fishing-tackle-bag-boat-gear.jpg",
-    colors: [
-      { name: "Navy", hex: "#1E3A5F" },
-      { name: "Orange", hex: "#F97316" },
-    ],
-    sizes: ["M", "L"],
-  },
-  {
-    id: "5",
-    name: "Deep Sea Fishing Tee",
-    price: 45.0,
-    category: "Clothing",
-    image: "/white-t-shirt-with-vintage-fishing-boat-graphic.jpg",
-    colors: [
-      { name: "White", hex: "#FFFFFF" },
-      { name: "Navy", hex: "#1E3A5F" },
-    ],
-    sizes: ["S", "M", "L", "XL"],
-  },
-  {
-    id: "6",
-    name: "Captain Sunglasses",
-    price: 85.0,
-    category: "Accessories",
-    image: "/polarized-fishing-sunglasses-sport-style.jpg",
-    colors: [
-      { name: "Black", hex: "#1A1A1A" },
-      { name: "Tortoise", hex: "#8B4513" },
-    ],
-    sizes: ["One Size"],
-  },
-  {
-    id: "7",
-    name: "Offshore Windbreaker",
-    price: 125.0,
-    category: "Clothing",
-    image: "/yellow-waterproof-fishing-windbreaker-jacket.jpg",
-    colors: [
-      { name: "Yellow", hex: "#F5B800" },
-      { name: "Navy", hex: "#1E3A5F" },
-    ],
-    sizes: ["M", "L", "XL", "XXL"],
-  },
-  {
-    id: "8",
-    name: "Fishing Rod Holder Belt",
-    price: 55.0,
-    category: "Gear",
-    image: "/leather-fishing-rod-holder-belt-accessory.jpg",
-    colors: [
-      { name: "Brown", hex: "#8B4513" },
-      { name: "Black", hex: "#1A1A1A" },
-    ],
-    sizes: ["S", "M", "L"],
-  },
-];
 
 const categories = ["All Categories", "Clothing", "Accessories", "Gear"];
 const sortOptions = [
@@ -345,9 +250,12 @@ const sortOptions = [
 ];
 
 export default function MerchPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedSort, setSelectedSort] = useState("Newest First");
+
+  const { data: products = [] } = useSWR("products", getProducts);
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name
@@ -357,6 +265,17 @@ export default function MerchPage() {
       selectedCategory === "All Categories" ||
       product.category === selectedCategory;
     return matchesSearch && matchesCategory;
+  });
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (selectedSort) {
+      case "Price: Low to High":
+        return a.price - b.price;
+      case "Price: High to Low":
+        return b.price - a.price;
+      default:
+        return 0;
+    }
   });
 
   return (
@@ -371,8 +290,7 @@ export default function MerchPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {/* Product Catalog */}
-                Merch
+                Product Catalog
               </h1>
               <p className="text-gray-500 mt-1">
                 Manage your product inventory, track stock, and update listings.
@@ -383,7 +301,10 @@ export default function MerchPage() {
                 <Grid3X3 className="h-4 w-4" />
                 Products
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors">
+              <button
+                onClick={() => router.push("/dashboard/merch/add")}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors"
+              >
                 <Plus className="h-4 w-4" />
                 Add Product
               </button>
@@ -463,12 +384,12 @@ export default function MerchPage() {
 
           {/* Product Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
+            {sortedProducts.map((product) => (
               <MerchProductCard key={product.id} product={product} />
             ))}
           </div>
 
-          {filteredProducts.length === 0 && (
+          {sortedProducts.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500">
                 No products found matching your criteria.

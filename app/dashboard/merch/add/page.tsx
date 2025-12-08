@@ -12,6 +12,7 @@ import { ChevronDown, Check } from "lucide-react";
 import { addProduct } from "@/lib/product-store";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
+import Image from "next/image";
 // import { addProduct } from "@/lib/products-store"
 
 const availableSizes = ["XS", "S", "M", "L", "XL", "XXL"];
@@ -285,7 +286,7 @@ export default function AddProductPage() {
                   <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                     {imagePreview ? (
                       <div className="relative w-full h-full">
-                        <img
+                        <Image
                           src={imagePreview || "/placeholder.svg"}
                           alt="Preview"
                           className="w-full h-full object-cover"

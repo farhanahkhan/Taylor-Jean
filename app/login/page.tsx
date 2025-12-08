@@ -43,7 +43,7 @@ export default function LoginPage() {
         </div>
 
         {/* Right side - Branding Panel */}
-        <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-primary to-primary/80 relative overflow-hidden rounded-tl-[70px] rounded-bl-[70px]">
+        <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-primary/80 to-primary/80 relative overflow-hidden rounded-tl-[70px] rounded-bl-[70px]">
           <div className="absolute inset-0 flex flex-col justify-between p-12">
             <div className="flex items-center gap-2.5">
               <Image

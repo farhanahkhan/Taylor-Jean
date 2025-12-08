@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import * as NavigationMenu from "@radix-ui/react-navigation-menu";
 import * as Dialog from "@radix-ui/react-dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -78,9 +79,11 @@ export function Header() {
               <Dialog.Overlay className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
               <Dialog.Content className="fixed top-0 right-0 h-full w-[300px] bg-card border-l border-border z-50 shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right duration-300">
                 <div className="flex items-center justify-between p-4 border-b border-border">
-                  <Dialog.Title className="text-lg font-semibold text-foreground">
-                    Menu
-                  </Dialog.Title>
+                  <VisuallyHidden>
+                    <Dialog.Title className="text-lg font-semibold text-foreground">
+                      Menu
+                    </Dialog.Title>
+                  </VisuallyHidden>
                   <Dialog.Close asChild>
                     <button
                       className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-all"

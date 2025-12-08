@@ -23,9 +23,12 @@ import {
   Trophy,
   ShieldCheck,
   DollarSign,
+  Anchor,
+  ShoppingBag,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Dialog from "@radix-ui/react-dialog";
+import { usePathname } from "next/navigation";
 
 const navItems = [
   //   {
@@ -40,8 +43,9 @@ const navItems = [
   //   { icon: CreditCard, label: "Billing", href: "#" },
   //   { icon: Settings, label: "Settings", href: "#" },
   { icon: LayoutGrid, label: "Dashboard", href: "/dashboard", active: true },
+  { icon: ShoppingBag, label: "Merch", href: "/dashboard/merch" },
+  { icon: Anchor, label: "Charter", href: "/dashboard/charter" },
   { icon: Users, label: "User Management", href: "#" },
-  { icon: Users, label: "Merch", href: "/dashboard/merch", active: true },
   { icon: Users2, label: "Team Management", href: "#" },
   { icon: Trophy, label: "Tournaments", href: "#" },
   { icon: ShieldCheck, label: "Betting & Compliance", href: "#" },
@@ -55,6 +59,7 @@ const navItems = [
 ];
 
 export function DashboardHeader() {
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
@@ -84,7 +89,7 @@ export function DashboardHeader() {
                       className="rounded-lg"
                     />
                     <span className="font-semibold text-foreground">
-                      TAYLOR JEANs
+                      TAYLOR JEAN
                     </span>
                   </div>
                   <Dialog.Close asChild>
@@ -94,7 +99,7 @@ export function DashboardHeader() {
                   </Dialog.Close>
                 </div>
                 <nav className="flex-1 p-4 space-y-1">
-                  {navItems.map((item) => (
+                  {/* {navItems.map((item) => (
                     <Link
                       key={item.label}
                       href={item.href}
@@ -108,7 +113,27 @@ export function DashboardHeader() {
                       <item.icon className="h-5 w-5" />
                       {item.label}
                     </Link>
-                  ))}
+                  ))} */}
+                  {navItems.map((item) => {
+                    const isActive =
+                      item.href === "/dashboard"
+                        ? pathname === "/dashboard"
+                        : pathname.startsWith(item.href) && item.href !== "#";
+                    return (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                          isActive
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                        }`}
+                      >
+                        <item.icon className="h-5 w-5" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
                 </nav>
                 <div className="p-4 border-t border-border">
                   <Link
@@ -163,7 +188,7 @@ export function DashboardHeader() {
 
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <button className="flex items-center gap-1 sm:gap-2 p-1 sm:p-1.5 sm:pr-3 hover:bg-accent rounded-lg transition-all">
+              <button className="flex items-center gap-1 sm:gap-2 p-1 sm:p-1.5 sm:pr-3 rounded-lg transition-all cursor-pointer">
                 <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <span className="text-xs sm:text-sm font-medium text-primary">
                     TJ
@@ -181,11 +206,11 @@ export function DashboardHeader() {
                 sideOffset={8}
                 align="end"
               >
-                <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md cursor-pointer outline-none">
+                <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-primary/10 rounded-md cursor-pointer outline-none">
                   <User className="h-4 w-4" />
                   Profile
                 </DropdownMenu.Item>
-                <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md cursor-pointer outline-none">
+                <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-primary/10 rounded-md cursor-pointer outline-none">
                   <Settings className="h-4 w-4" />
                   Settings
                 </DropdownMenu.Item>
@@ -193,7 +218,7 @@ export function DashboardHeader() {
                 <DropdownMenu.Item asChild>
                   <Link
                     href="/login"
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md cursor-pointer outline-none"
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-primary/10 rounded-md cursor-pointer outline-none"
                   >
                     <LogOut className="h-4 w-4" />
                     Log out

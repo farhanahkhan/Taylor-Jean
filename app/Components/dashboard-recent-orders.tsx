@@ -80,7 +80,7 @@ export function DashboardRecentOrders() {
             {orders.map((order) => (
               <tr
                 key={order.id}
-                className="hover:bg-accent/30 transition-colors"
+                className="hover:bg-primary/10 transition-colors"
               >
                 <td className="py-3 text-sm font-medium text-foreground">
                   {order.id}
@@ -115,7 +115,7 @@ export function DashboardRecentOrders() {
 
       <div className="sm:hidden space-y-3">
         {orders.map((order) => (
-          <div key={order.id} className="p-3 bg-accent/30 rounded-lg">
+          <div key={order.id} className="p-3 bg-primary/10 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold text-foreground">
                 {order.id}

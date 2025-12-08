@@ -1,14 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Header } from "../Components/header";
 import { LoginForm } from "../Components/login-form";
 import taylorjean from "../../public/taylorjean.png";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* <Header /> */}
-
+    <div className="min-h-screen flex flex-col bg-primary/10">
       <div className="flex-1 flex pt-0">
         {/* Left side - Login Form */}
         <div className="flex-3 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24">

@@ -22,23 +22,14 @@ import {
   MessageSquare,
   Bell,
   ShoppingBag,
+  Anchor,
 } from "lucide-react";
 
 const navItems = [
-  //   {
-  //     icon: LayoutDashboard,
-  //     label: "Dashboard",
-  //     href: "/dashboard",
-  //     active: true,
-  //   },
-  //   { icon: BarChart3, label: "Analytics", href: "#" },
-  //   { icon: FolderKanban, label: "Projects", href: "#" },
-  //   { icon: Users, label: "Team", href: "#" },
-  //   { icon: CreditCard, label: "Billing", href: "#" },
-  //   { icon: Settings, label: "Settings", href: "#" },
   { icon: LayoutGrid, label: "Dashboard", href: "/dashboard", active: true },
-  { icon: Users, label: "User Management", href: "#" },
   { icon: ShoppingBag, label: "Merch", href: "/dashboard/merch" },
+  { icon: Anchor, label: "Charter", href: "/dashboard/charter" },
+  { icon: Users, label: "User Management", href: "#" },
   { icon: Users2, label: "Team Management", href: "#" },
   { icon: Trophy, label: "Tournaments", href: "#" },
   { icon: ShieldCheck, label: "Betting & Compliance", href: "#" },

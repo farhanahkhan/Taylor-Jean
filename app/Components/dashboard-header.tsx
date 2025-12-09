@@ -138,7 +138,7 @@ export function DashboardHeader() {
                 <div className="p-4 border-t border-border">
                   <Link
                     href="#"
-                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-all"
+                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-primary/10 rounded-lg transition-all"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <HelpCircle className="h-5 w-5" />

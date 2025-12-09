@@ -6,7 +6,7 @@ import ForgotPasswordPage from "../forgot-password/page";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-primary/10">
+    <div className="min-h-screen flex flex-col">
       <div className="flex-1 flex pt-0">
         {/* Left side - Login Form */}
         <div className="flex-3 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24">

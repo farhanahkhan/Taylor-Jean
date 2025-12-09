@@ -4,13 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  BarChart3,
-  FolderKanban,
   Users,
   Settings,
   HelpCircle,
-  CreditCard,
   LayoutGrid,
   Users2,
   ShieldCheck,
@@ -101,7 +97,7 @@ export function DashboardSidebar() {
       <div className="p-4 border-t border-border">
         <Link
           href="#"
-          className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-all"
+          className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-primary/10 rounded-lg transition-all"
         >
           <HelpCircle className="h-5 w-5" />
           Help & Support

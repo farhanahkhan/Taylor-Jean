@@ -8,8 +8,8 @@ const inter = Inter({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Acme Inc - Login",
-  description: "Sign in to your Acme Inc account",
+  title: "Taylor Jean - Login",
+  description: "Sign in to your Taylor Jean account",
   generator: "v0.app",
   icons: {
     icon: [

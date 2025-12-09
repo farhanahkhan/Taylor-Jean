@@ -48,6 +48,7 @@ export default function CharterPage() {
     emergencyContact: "",
     targetSpecies: [] as string[],
     tripLength: "",
+    amount: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -329,6 +330,25 @@ export default function CharterPage() {
                           {species}
                         </button>
                       ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* {Amount} */}
+                <div className="mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Amount
+                      </Label.Root>
+                      <input
+                        type="number"
+                        name="amount"
+                        value={formData.amount}
+                        onChange={handleInputChange}
+                        placeholder="Enter Amount"
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      />
                     </div>
                   </div>
                 </div>

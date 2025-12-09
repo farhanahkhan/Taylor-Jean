@@ -45,7 +45,7 @@ const navItems = [
   { icon: LayoutGrid, label: "Dashboard", href: "/dashboard", active: true },
   { icon: ShoppingBag, label: "Merch", href: "/dashboard/merch" },
   { icon: Anchor, label: "Charter", href: "/dashboard/charter" },
-  { icon: Users, label: "User Management", href: "#" },
+  { icon: Users, label: "User Management", href: "/dashboard/user_management" },
   { icon: Users2, label: "Team Management", href: "#" },
   { icon: Trophy, label: "Tournaments", href: "#" },
   { icon: ShieldCheck, label: "Betting & Compliance", href: "#" },
@@ -168,7 +168,7 @@ export function DashboardHeader() {
             <input
               type="text"
               placeholder="Search..."
-              className="w-48 lg:w-64 pl-9 pr-4 h-9 bg-primary/10 border border-transparent rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:bg-background transition-all"
+              className="w-48 lg:w-64 pl-9 pr-4 h-9 bg-gray-50 border border-gray rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:bg-background transition-all"
             />
           </div>
         </div>

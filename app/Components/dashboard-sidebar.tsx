@@ -29,7 +29,7 @@ const navItems = [
   { icon: LayoutGrid, label: "Dashboard", href: "/dashboard", active: true },
   { icon: ShoppingBag, label: "Merch", href: "/dashboard/merch" },
   { icon: Anchor, label: "Charter", href: "/dashboard/charter" },
-  { icon: Users, label: "User Management", href: "#" },
+  { icon: Users, label: "User Management", href: "/dashboard/user_management" },
   { icon: Users2, label: "Team Management", href: "#" },
   { icon: Trophy, label: "Tournaments", href: "#" },
   { icon: ShieldCheck, label: "Betting & Compliance", href: "#" },

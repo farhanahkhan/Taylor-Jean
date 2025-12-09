@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { LoginForm } from "../Components/login-form";
 import taylorjean from "../../public/taylorjean.png";
+import ForgotPasswordPage from "../forgot-password/page";
 
 export default function LoginPage() {
   return (

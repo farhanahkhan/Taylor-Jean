@@ -185,18 +185,26 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import * as Label from "@radix-ui/react-label";
 import Link from "next/link";
+import { addUser } from "@/lib/users-store";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
+    addUser({
+      name: name || email.split("@")[0],
+      email: email,
+      role: "Fan",
+      status: "Active",
+    });
     setIsLoading(false);
     router.push("/dashboard");
   };
@@ -257,7 +265,7 @@ export function LoginForm() {
 
       <div className="flex justify-end">
         <a
-          href="#"
+          href="/forgot-password"
           className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
         >
           Forgot Password?
@@ -282,7 +290,7 @@ export function LoginForm() {
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
         <Link
-          href="#"
+          href="/signup"
           className="font-semibold text-accent hover:text-accent/80 transition-colors"
         >
           Sign up

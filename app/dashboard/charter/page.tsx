@@ -1,32 +1,29 @@
 "use client";
 
-import type React from "react";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo } from "react";
+import useSWR from "swr";
+import {
+  Search,
+  Filter,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  Check,
+  X,
+  Plus,
+} from "lucide-react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Select from "@radix-ui/react-select";
-import * as Label from "@radix-ui/react-label";
-import { Check, ChevronDown } from "lucide-react";
+import {
+  getCharters,
+  addCharter,
+  updateCharter,
+  deleteCharter,
+  type Charter,
+} from "@/lib/charter-store";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
-
-const targetSpecies = [
-  "Sea Bass",
-  "Striped Bass",
-  "White Marlin",
-  "Blue Marlin",
-  "Tuna",
-  "Mahi",
-  "Shark",
-];
-
-const tripLengths = [
-  "Half Day (4 hours)",
-  "3/4 Day (6 hours)",
-  "Full Day (8 hours)",
-  "Extended Day (10 hours)",
-  "Overnight Trip",
-];
+import { CharterForm } from "@/app/Components/charter-form";
 
 const charterTypes = [
   "Private Charter",
@@ -36,340 +33,337 @@ const charterTypes = [
 ];
 
 export default function CharterPage() {
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    charterDate: "",
-    backupDate: "",
-    charterType: "",
-    emergencyName: "",
-    emergencyContact: "",
-    targetSpecies: [] as string[],
-    tripLength: "",
-    amount: "",
-  });
+  const { data: charters = getCharters(), mutate } = useSWR(
+    "charters",
+    getCharters
+  );
+  const [search, setSearch] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Charter>>({});
+  const [openForms, setOpenForms] = useState<number[]>([]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const filteredCharters = useMemo(() => {
+    return charters.filter(
+      (charter) =>
+        charter.fullName.toLowerCase().includes(search.toLowerCase()) ||
+        charter.email.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [charters, search]);
+
+  const handleAddForm = () => {
+    setOpenForms((prev) => [...prev, Date.now()]);
   };
 
-  const handleSpeciesToggle = (species: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      targetSpecies: prev.targetSpecies.includes(species)
-        ? prev.targetSpecies.filter((s) => s !== species)
-        : [...prev.targetSpecies, species],
-    }));
+  const handleRemoveForm = (formId: number) => {
+    setOpenForms((prev) => prev.filter((id) => id !== formId));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Charter booking submitted:", formData);
-    alert("Charter booking submitted successfully!");
+  const handleFormSubmit = (
+    formId: number,
+    data: {
+      fullName: string;
+      email: string;
+      charterDate: string;
+      charterType: string;
+      amount: number;
+    }
+  ) => {
+    addCharter(data);
+    handleRemoveForm(formId);
+    mutate();
+  };
+
+  const handleEdit = (charter: Charter) => {
+    setEditingId(charter.id);
+    setEditForm({
+      fullName: charter.fullName,
+      email: charter.email,
+      charterDate: charter.charterDate,
+      charterType: charter.charterType,
+      amount: charter.amount,
+    });
+  };
+
+  const handleSaveEdit = (id: string) => {
+    updateCharter(id, editForm);
+    setEditingId(null);
+    setEditForm({});
+    mutate();
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditForm({});
+  };
+
+  const handleDelete = (id: string) => {
+    deleteCharter(id);
+    mutate();
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex">
+    <div className="flex min-h-screen bg-slate-900">
       <DashboardSidebar />
-
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col">
         <DashboardHeader />
-
-        <main className="bg-gray-50 flex flex-col items-center">
-          <div className="flex-1  p-4 md:p-6 lg:p-8 lg:w-[60%]">
-            {/* Page Header */}
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 bg-gray-50 overflow-auto">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
                 Charter Booking
               </h1>
-              <p className="text-gray-500 mt-1">
+              <p className="text-muted-foreground">
                 Customize and book your fishing charter experience.
               </p>
             </div>
-            {/* max-w-4xl */}
-            {/* Form Card */}
-            <div className="bg-white rounded-xl p-6 md:p-8 shadow-sm max-w-4xl ">
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-900">Charter</h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  Fill in the details to book your fishing trip.
-                </p>
+            <button
+              onClick={handleAddForm}
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Add Charter
+            </button>
+          </div>
+
+          {/* Open Forms */}
+          {openForms.map((formId) => (
+            <div key={formId} className="mb-6">
+              <CharterForm
+                onSubmit={(data) => handleFormSubmit(formId, data)}
+                onCancel={() => handleRemoveForm(formId)}
+              />
+            </div>
+          ))}
+
+          {/* Card Container */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+            {/* Search and Filters */}
+            <div className="p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border-b border-gray-100">
+              <div className="relative flex-1 max-w-xl w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search charters by name or email..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 h-10 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                />
               </div>
+              <button className="flex items-center gap-2 px-4 h-10 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <Filter className="h-4 w-4" />
+                Filters
+              </button>
+            </div>
 
-              <form onSubmit={handleSubmit}>
-                {/* Basic Information */}
-                <div className="mb-8">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                    Basic Information
-                  </h3>
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
+                      Full Name
+                    </th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
+                      Email Address
+                    </th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
+                      Charter Date
+                    </th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
+                      Charter Type
+                    </th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
+                      Amount
+                    </th>
+                    <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredCharters.map((charter) => (
+                    <tr
+                      key={charter.id}
+                      className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                    >
+                      {/* Full Name Column */}
+                      <td className="px-6 py-4">
+                        {editingId === charter.id ? (
+                          <input
+                            type="text"
+                            value={editForm.fullName || ""}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                fullName: e.target.value,
+                              })
+                            }
+                            className="w-full px-3 py-1.5 text-sm font-semibold border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          />
+                        ) : (
+                          <p className="font-semibold text-foreground">
+                            {charter.fullName}
+                          </p>
+                        )}
+                      </td>
 
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
-                          Full Name *
-                        </Label.Root>
-                        <input
-                          type="text"
-                          name="fullName"
-                          required
-                          value={formData.fullName}
-                          onChange={handleInputChange}
-                          placeholder="Enter your full name"
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        />
-                      </div>
-                      <div>
-                        <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
-                          Email Address *
-                        </Label.Root>
-                        <input
-                          type="email"
-                          name="email"
-                          required
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          placeholder="Enter your email"
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        />
-                      </div>
-                      <div>
-                        <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
-                          Phone Number *
-                        </Label.Root>
-                        <input
-                          type="tel"
-                          name="phoneNumber"
-                          required
-                          value={formData.phoneNumber}
-                          onChange={handleInputChange}
-                          placeholder="Enter your phone"
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                      {/* Email Column */}
+                      <td className="px-6 py-4">
+                        {editingId === charter.id ? (
+                          <input
+                            type="email"
+                            value={editForm.email || ""}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                email: e.target.value,
+                              })
+                            }
+                            className="w-full px-3 py-1.5 text-sm text-primary border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          />
+                        ) : (
+                          <p className="text-sm text-primary">
+                            {charter.email}
+                          </p>
+                        )}
+                      </td>
 
-                {/* Charter Details */}
-                <div className="mb-8">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                    Charter Details
-                  </h3>
+                      {/* Charter Date Column */}
+                      <td className="px-6 py-4">
+                        {editingId === charter.id ? (
+                          <input
+                            type="date"
+                            value={editForm.charterDate || ""}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                charterDate: e.target.value,
+                              })
+                            }
+                            className="px-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          />
+                        ) : (
+                          <p className="text-muted-foreground">
+                            {charter.charterDate}
+                          </p>
+                        )}
+                      </td>
 
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
-                          Charter Date
-                        </Label.Root>
-                        <input
-                          type="date"
-                          name="charterDate"
-                          value={formData.charterDate}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        />
-                      </div>
-                      <div>
-                        <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
-                          Backup Charter Date
-                        </Label.Root>
-                        <input
-                          type="date"
-                          name="backupDate"
-                          value={formData.backupDate}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        />
-                      </div>
-                      <div>
-                        <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
-                          Charter Type
-                        </Label.Root>
-                        <Select.Root
-                          value={formData.charterType}
-                          onValueChange={(value) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              charterType: value,
-                            }))
-                          }
-                        >
-                          <Select.Trigger className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                            <Select.Value placeholder="Select an option" />
-                            <Select.Icon>
-                              <ChevronDown className="h-4 w-4 text-gray-500" />
-                            </Select.Icon>
-                          </Select.Trigger>
-                          <Select.Portal>
-                            <Select.Content className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden z-50">
-                              <Select.Viewport className="p-1">
-                                {charterTypes.map((type) => (
-                                  <Select.Item
-                                    key={type}
-                                    value={type}
-                                    className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer outline-none rounded"
-                                  >
-                                    <Select.ItemText>{type}</Select.ItemText>
-                                    <Select.ItemIndicator>
-                                      <Check className="h-4 w-4 text-primary" />
-                                    </Select.ItemIndicator>
-                                  </Select.Item>
-                                ))}
-                              </Select.Viewport>
-                            </Select.Content>
-                          </Select.Portal>
-                        </Select.Root>
-                      </div>
-                    </div>
+                      {/* Charter Type Column */}
+                      <td className="px-6 py-4">
+                        {editingId === charter.id ? (
+                          <Select.Root
+                            value={editForm.charterType}
+                            onValueChange={(value) =>
+                              setEditForm({ ...editForm, charterType: value })
+                            }
+                          >
+                            <Select.Trigger className="inline-flex items-center justify-between px-3 py-1.5 text-sm border border-gray-200 rounded-md min-w-[150px] focus:outline-none focus:ring-2 focus:ring-primary/30">
+                              <Select.Value />
+                              <Select.Icon />
+                            </Select.Trigger>
+                            <Select.Portal>
+                              <Select.Content className="bg-white rounded-md shadow-lg border border-gray-100 overflow-hidden z-50">
+                                <Select.Viewport className="p-1">
+                                  {charterTypes.map((type) => (
+                                    <Select.Item
+                                      key={type}
+                                      value={type}
+                                      className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 rounded outline-none"
+                                    >
+                                      <Select.ItemText>{type}</Select.ItemText>
+                                    </Select.Item>
+                                  ))}
+                                </Select.Viewport>
+                              </Select.Content>
+                            </Select.Portal>
+                          </Select.Root>
+                        ) : (
+                          <span className="text-primary font-medium">
+                            {charter.charterType}
+                          </span>
+                        )}
+                      </td>
 
-                    <div>
-                      <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Length of Trip
-                      </Label.Root>
-                      <Select.Root
-                        value={formData.tripLength}
-                        onValueChange={(value) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            tripLength: value,
-                          }))
-                        }
-                      >
-                        <Select.Trigger className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                          <Select.Value placeholder="Select trip length" />
-                          <Select.Icon>
-                            <ChevronDown className="h-4 w-4 text-gray-500" />
-                          </Select.Icon>
-                        </Select.Trigger>
-                        <Select.Portal>
-                          <Select.Content className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden z-50">
-                            <Select.Viewport className="p-1">
-                              {tripLengths.map((length) => (
-                                <Select.Item
-                                  key={length}
-                                  value={length}
-                                  className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer outline-none rounded"
+                      {/* Amount Column */}
+                      <td className="px-6 py-4">
+                        {editingId === charter.id ? (
+                          <input
+                            type="number"
+                            value={editForm.amount || ""}
+                            onChange={(e) =>
+                              setEditForm({
+                                ...editForm,
+                                amount: Number(e.target.value),
+                              })
+                            }
+                            className="w-24 px-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          />
+                        ) : (
+                          <p className="font-semibold text-foreground">
+                            ${charter.amount.toLocaleString()}
+                          </p>
+                        )}
+                      </td>
+
+                      {/* Actions Column */}
+                      <td className="px-6 py-4 text-right">
+                        {editingId === charter.id ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleSaveEdit(charter.id)}
+                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            >
+                              <Check className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <DropdownMenu.Root>
+                            <DropdownMenu.Trigger asChild>
+                              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                              </button>
+                            </DropdownMenu.Trigger>
+                            <DropdownMenu.Portal>
+                              <DropdownMenu.Content
+                                align="end"
+                                className="min-w-[140px] bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50"
+                              >
+                                <DropdownMenu.Item
+                                  onClick={() => handleEdit(charter)}
+                                  className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 outline-none"
                                 >
-                                  <Select.ItemText>{length}</Select.ItemText>
-                                  <Select.ItemIndicator>
-                                    <Check className="h-4 w-4 text-primary" />
-                                  </Select.ItemIndicator>
-                                </Select.Item>
-                              ))}
-                            </Select.Viewport>
-                          </Select.Content>
-                        </Select.Portal>
-                      </Select.Root>
-                    </div>
-                  </div>
+                                  <Pencil className="h-4 w-4" />
+                                  Edit
+                                </DropdownMenu.Item>
+                                <DropdownMenu.Item
+                                  onClick={() => handleDelete(charter.id)}
+                                  className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-red-50 text-red-600 outline-none"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Delete
+                                </DropdownMenu.Item>
+                              </DropdownMenu.Content>
+                            </DropdownMenu.Portal>
+                          </DropdownMenu.Root>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {filteredCharters.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  No charters found
                 </div>
-
-                {/* Emergency Contact */}
-                <div className="mb-8">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                    Emergency Contact
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Emergency Name (Optional)
-                      </Label.Root>
-                      <input
-                        type="text"
-                        name="emergencyName"
-                        value={formData.emergencyName}
-                        onChange={handleInputChange}
-                        placeholder="Enter emergency contact name"
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      />
-                    </div>
-                    <div>
-                      <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Emergency Contact Number (Optional)
-                      </Label.Root>
-                      <input
-                        type="tel"
-                        name="emergencyContact"
-                        value={formData.emergencyContact}
-                        onChange={handleInputChange}
-                        placeholder="Enter emergency phone number"
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Target Species */}
-                <div className="mb-8">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                    Target Species
-                  </h3>
-
-                  <div>
-                    <Label.Root className="block text-sm font-medium text-gray-700 mb-2">
-                      Select all that apply
-                    </Label.Root>
-                    <div className="flex flex-wrap gap-2">
-                      {targetSpecies.map((species) => (
-                        <button
-                          key={species}
-                          type="button"
-                          onClick={() => handleSpeciesToggle(species)}
-                          className={`px-4 py-2 text-sm font-medium border rounded-lg transition-colors ${
-                            formData.targetSpecies.includes(species)
-                              ? "bg-primary/10"
-                              : "bg-white text-gray-700 border-gray-200 hover:border-gray-400 cursor-pointer"
-                          }`}
-                        >
-                          {species}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* {Amount} */}
-                <div className="mb-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Amount
-                      </Label.Root>
-                      <input
-                        type="number"
-                        name="amount"
-                        value={formData.amount}
-                        onChange={handleInputChange}
-                        placeholder="Enter Amount"
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={() => router.push("/dashboard")}
-                    className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2.5 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors cursor-pointer"
-                  >
-                    Submit Booking
-                  </button>
-                </div>
-              </form>
+              )}
             </div>
           </div>
         </main>

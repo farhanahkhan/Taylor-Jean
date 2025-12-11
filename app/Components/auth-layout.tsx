@@ -63,8 +63,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           <div className="space-y-6">
             <blockquote className="space-y-4">
               <p className="text-xl text-primary-foreground/95 leading-relaxed max-w-md font-semi-bold">
-                &ldquo;Taylor Jean Sport Fishing: A Legacy of Excellence in
-                Competitive Fishing&rdquo;
+                Taylor Jean Sport Fishing: A Legacy of Excellence in Competitive
+                Fishing
               </p>
               <p className="text-xl text-primary-foreground/95 leading-relaxed max-w-md font-light">
                 &ldquo;Welcome aboard the Taylor Jean, one of the most decorated

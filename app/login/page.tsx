@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { LoginForm } from "../Components/login-form";
 import taylorjean from "../../public/taylorjean.png";
-import ForgotPasswordPage from "../forgot-password/page";
 
 export default function LoginPage() {
   return (
@@ -17,7 +16,7 @@ export default function LoginPage() {
                 alt="Taylor Jean logo"
                 // width={100}
                 // height={36}
-                className="rounded-xl w-[90%] mb-[1rem]"
+                className="rounded-xl w-[90%] mb-4"
               />
               <h1 className="text-2xl font-semibold tracking-tight text-foreground ">
                 Welcome back
@@ -62,17 +61,16 @@ export default function LoginPage() {
             <div className="space-y-6">
               <blockquote className="space-y-4">
                 <p className="text-xl text-primary-foreground/95 leading-relaxed max-w-md font-semi-bold">
-                  &ldquo;Taylor Jean Sport Fishing: A Legacy of Excellence in
-                  Competitive Fishing&rdquo;
+                  Taylor Jean Sport Fishing: A Legacy of Excellence in
+                  Competitive Fishing
                 </p>
-                <p className="text-xl text-primary-foreground/95 leading-relaxed max-w-md font-light">
-                  &ldquo;Welcome aboard the Taylor Jean, one of the most
-                  decorated sport fishing vessels on the tournament circuit.
-                  With a history of hard-fought victories, record-breaking
-                  catches, and an unwavering commitment to the sport, the Taylor
-                  Jean Sport Fishing team has built a reputation as a dominant
-                  force in some of the most prestigious offshore fishing
-                  competitions.&rdquo;
+                <p className="text-lg text-primary-foreground/95 leading-relaxed max-w-md font-light">
+                  Welcome aboard the Taylor Jean, one of the most decorated
+                  sport fishing vessels on the tournament circuit. With a
+                  history of hard-fought victories, record-breaking catches, and
+                  an unwavering commitment to the sport, the Taylor Jean Sport
+                  Fishing team has built a reputation as a dominant force in
+                  some of the most prestigious offshore fishing competitions.
                 </p>
                 <footer className="text-sm">
                   <p className="font-medium text-primary-foreground">

@@ -132,8 +132,8 @@ export function CharterBookingForm({
         charterType: payload.charterType,
         amount: payload.amount,
       });
-    } catch (err: any) {
-      alert("Something went wrong: " + err.message);
+    } catch (err) {
+      //   alert("Something went wrong: " + err.message);
     }
   };
 

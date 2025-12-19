@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
 type UserPayload = {

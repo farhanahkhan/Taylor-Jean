@@ -20,6 +20,7 @@ import {
   ShoppingBag,
   Anchor,
 } from "lucide-react";
+import { useState } from "react";
 
 const navItems = [
   { icon: LayoutGrid, label: "Dashboard", href: "/dashboard", active: true },
@@ -39,6 +40,7 @@ const navItems = [
 ];
 
 export function DashboardSidebar() {
+  const [openCharter, setOpenCharter] = useState(false);
   const pathname = usePathname();
   return (
     <aside className="hidden lg:flex flex-col w-64 bg-card border-r border-border min-h-screen">
@@ -71,12 +73,87 @@ export function DashboardSidebar() {
           </Link>
         ))}
       </nav> */}
+
+      {/* // today */}
+
+      {/* <nav className="flex-1 px-3 space-y-1">
+        {navItems.map((item) => {
+          const isActive =
+            item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname.startsWith(item.href) && item.href !== "#";
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+              }`}
+            >
+              <item.icon className="h-5 w-5" />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav> */}
+
       <nav className="flex-1 px-3 space-y-1">
         {navItems.map((item) => {
           const isActive =
             item.href === "/dashboard"
               ? pathname === "/dashboard"
               : pathname.startsWith(item.href) && item.href !== "#";
+
+          // 👉 Charter dropdown
+          if (item.label === "Charter") {
+            return (
+              <div key={item.label}>
+                <button
+                  type="button"
+                  onClick={() => setOpenCharter(!openCharter)}
+                  className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon className="h-5 w-5" />
+                    Charters
+                  </div>
+                  <span className="text-xs">{openCharter ? "▲" : "▼"}</span>
+                </button>
+
+                {/* Dropdown options */}
+                {openCharter && (
+                  <div className="ml-8 mt-1 space-y-1">
+                    <Link
+                      href="/dashboard/charters/charter"
+                      className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                    >
+                      Charter
+                    </Link>
+                    <Link
+                      href="/dashboard/charters/service"
+                      className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                    >
+                      Services
+                    </Link>
+                    <Link
+                      href="/dashboard/charters/charterbooking"
+                      className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                    >
+                      Charter Booking
+                    </Link>
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          // 👉 Normal nav items
           return (
             <Link
               key={item.label}

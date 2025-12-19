@@ -19,17 +19,31 @@ export function SignupForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    addUser({
-      name: fullName,
-      email: email,
-      role: "Fan",
-      status: "Active",
-    });
+    try {
+      const res = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName, email, password }),
+      });
 
-    setIsLoading(false);
-    router.push("/login");
+      const data = await res.json();
+      console.log(data);
+
+      if (!res.ok) {
+        alert(data.message || "Signup failed");
+        setIsLoading(false);
+        return;
+      }
+
+      // Signup success
+      alert("Signup successful!");
+      router.push("/login");
+    } catch (err) {
+      alert("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

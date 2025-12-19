@@ -180,6 +180,7 @@
 "use client";
 
 import type React from "react";
+import { NextResponse } from "next/server";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
@@ -194,13 +195,39 @@ export function LoginForm() {
 
   const router = useRouter();
 
+  //   const handleSubmit = async (e: React.FormEvent) => {
+  //     e.preventDefault();
+  //     setIsLoading(true);
+  //     await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  //     setIsLoading(false);
+  //     router.push("/dashboard");
+  //   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    setIsLoading(false);
-    router.push("/dashboard");
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Login failed");
+        return;
+      }
+
+      // ❌ Client JS ko token access nahi
+      router.push("/dashboard");
+    } catch (error) {
+      alert("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

@@ -24,6 +24,7 @@ import {
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 import { CharterForm } from "@/app/Components/charter-form";
+import { CharterBookingForm } from "@/app/Components/charterbooking-form";
 
 const charterTypes = [
   "Private Charter",
@@ -128,7 +129,7 @@ export default function CharterPage() {
           {/* Open Forms */}
           {openForms.map((formId) => (
             <div key={formId} className="mb-6">
-              <CharterForm
+              <CharterBookingForm
                 onSubmit={(data) => handleFormSubmit(formId, data)}
                 onCancel={() => handleRemoveForm(formId)}
               />

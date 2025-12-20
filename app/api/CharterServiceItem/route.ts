@@ -18,6 +18,7 @@ export async function POST(req: Request) {
       serviceName: body.name,
       description: body.description,
       price: body.amount,
+      isActive: body.isActive,
     }),
   });
 

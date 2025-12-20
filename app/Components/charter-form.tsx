@@ -33,11 +33,16 @@ export function CharterForm({ onSubmit, onCancel }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const amountNum = parseFloat(formData.amount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      alert("Please enter a valid amount");
+      return;
+    }
 
     onSubmit({
       fullName: formData.fullName,
       description: formData.description,
-      amount: Number(formData.amount),
+      amount: amountNum,
       isActive: formData.isActive,
     });
   };
@@ -93,7 +98,7 @@ export function CharterForm({ onSubmit, onCancel }: Props) {
                 Amount
               </label>
               <input
-                type="text"
+                type="number"
                 name="amount"
                 value={formData.amount}
                 onChange={(e) =>

@@ -52,10 +52,4 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-  // catch (err: any) {
-  //   return NextResponse.json(
-  //     { message: "Something went wrong", details: err.message },
-  //     { status: 500 }
-  //   );
-  // }
 }

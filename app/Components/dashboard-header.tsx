@@ -60,6 +60,7 @@ const navItems = [
 
 export function DashboardHeader() {
   const pathname = usePathname();
+  const [openCharter, setOpenCharter] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
@@ -119,6 +120,69 @@ export function DashboardHeader() {
                       item.href === "/dashboard"
                         ? pathname === "/dashboard"
                         : pathname.startsWith(item.href) && item.href !== "#";
+
+                    if (item.label === "Charter") {
+                      return (
+                        <div key={item.label}>
+                          <button
+                            type="button"
+                            onClick={() => setOpenCharter(!openCharter)}
+                            className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-sm text-muted-foreground font-medium rounded-lg transition-all"
+                            //    ${
+                            //   isActive
+                            //     ? "bg-primary/10 text-primary"
+                            //     : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                            // }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <item.icon className="h-5 w-5" />
+                              Charters
+                            </div>
+                            <span className="text-xs">
+                              {openCharter ? "▲" : "▼"}
+                            </span>
+                          </button>
+
+                          {/* Dropdown options */}
+                          {openCharter && (
+                            <div className="ml-8 mt-1 space-y-1">
+                              <Link
+                                href="/dashboard/charters/charter"
+                                className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                                  pathname === "/dashboard/charters/charter"
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                                }`}
+                              >
+                                Charter
+                              </Link>
+                              <Link
+                                href="/dashboard/charters/service"
+                                className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                                  pathname === "/dashboard/charters/service"
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                                }`}
+                              >
+                                Services
+                              </Link>
+                              <Link
+                                href="/dashboard/charters/charterbooking"
+                                className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                                  pathname ===
+                                  "/dashboard/charters/charterbooking"
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                                }`}
+                              >
+                                Charter Booking
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
                     return (
                       <Link
                         key={item.label}

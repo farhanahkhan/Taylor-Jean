@@ -13,6 +13,7 @@ export function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
 
@@ -24,9 +25,14 @@ export function SignupForm() {
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, password }),
+        body: JSON.stringify({
+          fullName,
+          email,
+          password,
+          role,
+        }),
       });
-
+      // const res = await fetch("/api/login", { ... });
       const data = await res.json();
       console.log(data);
 
@@ -34,6 +40,11 @@ export function SignupForm() {
         alert(data.message || "Signup failed");
         setIsLoading(false);
         return;
+      }
+      if (data.role === "Team") {
+        router.push("/dashboardTeam");
+      } else {
+        router.push("/dashboard"); //
       }
 
       // Signup success
@@ -116,6 +127,27 @@ export function SignupForm() {
             </span>
           </button>
         </div>
+      </div>
+      <div className="space-y-2">
+        <Label.Root
+          htmlFor="role"
+          className="text-sm font-semibold text-foreground"
+        >
+          Select Role
+        </Label.Root>
+
+        <select
+          id="role"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          required
+          className="w-full px-4 h-12 bg-muted rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+        >
+          <option value="" disabled>
+            Select role
+          </option>
+          <option value="Team">Team</option>
+        </select>
       </div>
 
       <button

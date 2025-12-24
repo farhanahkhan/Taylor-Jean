@@ -20,7 +20,7 @@ import {
   ShoppingBag,
   Anchor,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { icon: LayoutGrid, label: "Dashboard", href: "/dashboard", active: true },
@@ -40,8 +40,17 @@ const navItems = [
 ];
 
 export function DashboardSidebar() {
-  const [openCharter, setOpenCharter] = useState(false);
   const pathname = usePathname();
+  const [openCharter, setOpenCharter] = useState(false);
+
+  const isCharterRoute = pathname.startsWith("/dashboard/charters");
+  // ✅ Auto open Charter dropdown on refresh
+  // useEffect(() => {
+  //   if (isCharterRoute) {
+  //     setOpenCharter(true); // ✅ no error
+  //   }
+  // }, []);
+
   return (
     <aside className="hidden lg:flex flex-col w-64 bg-card border-r border-border min-h-screen">
       <div className="p-4 border-b border-border">
@@ -113,11 +122,12 @@ export function DashboardSidebar() {
                 <button
                   type="button"
                   onClick={() => setOpenCharter(!openCharter)}
-                  className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
-                  }`}
+                  className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-sm text-muted-foreground font-medium rounded-lg transition-all"
+                  //    ${
+                  //   isActive
+                  //     ? "bg-primary/10 text-primary"
+                  //     : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                  // }`}
                 >
                   <div className="flex items-center gap-3">
                     <item.icon className="h-5 w-5" />
@@ -131,19 +141,31 @@ export function DashboardSidebar() {
                   <div className="ml-8 mt-1 space-y-1">
                     <Link
                       href="/dashboard/charters/charter"
-                      className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                        pathname === "/dashboard/charters/charter"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      }`}
                     >
                       Charter
                     </Link>
                     <Link
                       href="/dashboard/charters/service"
-                      className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                        pathname === "/dashboard/charters/service"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      }`}
                     >
                       Services
                     </Link>
                     <Link
                       href="/dashboard/charters/charterbooking"
-                      className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                        pathname === "/dashboard/charters/charterbooking"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      }`}
                     >
                       Charter Booking
                     </Link>

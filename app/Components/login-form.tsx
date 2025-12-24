@@ -242,14 +242,13 @@ export function LoginForm() {
         alert(data.message || "Login failed");
         return;
       }
-      const role = data.data.role?.toLowerCase();
+      const role = data.data.role;
       // ✅ ROLE BASED DASHBOARD
       if (role === "Team") {
-        router.push("/dashboardTeam");
+        router.push("/team");
+      } else {
+        router.push("/dashboard");
       }
-      // else {
-      //   router.push("/dashboard");
-      // }
     } catch (error) {
       alert("Something went wrong");
     } finally {

@@ -41,11 +41,11 @@ export function SignupForm() {
         setIsLoading(false);
         return;
       }
-      if (data.role === "Team") {
-        router.push("/dashboardTeam");
-      } else {
-        router.push("/dashboard"); //
-      }
+      // if (data.role === "Team") {
+      //   router.push("/team");
+      // } else {
+      //   router.push("/dashboard");
+      // }
 
       // Signup success
       alert("Signup successful!");

@@ -207,28 +207,6 @@ export function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
 
-    //   try {
-    //     const res = await fetch("/api/login", {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify({ email, password }),
-    //     });
-
-    //     const data = await res.json();
-
-    //     if (!res.ok) {
-    //       alert(data.message || "Login failed");
-    //       return;
-    //     }
-
-    //     // ❌ Client JS ko token access nahi
-    //     router.push("/dashboard");
-    //   } catch (error) {
-    //     alert("Something went wrong");
-    //   } finally {
-    //     setIsLoading(false);
-    //   }
-    // };
     try {
       const res = await fetch("/api/login", {
         method: "POST",

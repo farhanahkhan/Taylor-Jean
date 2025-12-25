@@ -47,7 +47,7 @@ const navItems = [
   { icon: Anchor, label: "Charter", href: "/dashboard/charter" },
   { icon: Users, label: "User Management", href: "/dashboard/user_management" },
   { icon: Users2, label: "Team Management", href: "#" },
-  { icon: Trophy, label: "Tournaments", href: "#" },
+  { icon: Trophy, label: "Tournaments", href: "/dashboard/tournaments" },
   { icon: ShieldCheck, label: "Betting & Compliance", href: "#" },
   { icon: DollarSign, label: "Payments & Commerce", href: "#" },
   { icon: FileText, label: "Content Moderation", href: "#" },

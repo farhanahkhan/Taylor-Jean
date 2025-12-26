@@ -58,7 +58,7 @@ export default function TeamDashboardPage() {
               ].map((action) => (
                 <button
                   key={action}
-                  className="px-4 py-3 text-sm font-medium text-foreground bg-accent/50 hover:bg-accent rounded-lg transition-colors"
+                  className="px-4 py-3 text-sm font-medium text-primary bg-primary/10 hover:bg-primary/15 rounded-lg transition-colors"
                 >
                   {action}
                 </button>

@@ -127,7 +127,7 @@ export function TeamHeader() {
 
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <button className="flex items-center gap-1 sm:gap-2 p-1 sm:p-1.5 sm:pr-3 hover:bg-accent rounded-lg transition-all">
+              <button className="flex items-center gap-1 sm:gap-2 p-1 sm:p-1.5 sm:pr-3 hover:bg-primary/15 rounded-lg transition-all">
                 <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <span className="text-xs sm:text-sm font-medium text-primary">
                     TJ
@@ -145,11 +145,11 @@ export function TeamHeader() {
                 sideOffset={8}
                 align="end"
               >
-                <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md cursor-pointer outline-none">
+                <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-primary/15 rounded-md cursor-pointer outline-none">
                   <User className="h-4 w-4" />
                   Profile
                 </DropdownMenu.Item>
-                <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md cursor-pointer outline-none">
+                <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-primary/15 rounded-md cursor-pointer outline-none">
                   <Settings className="h-4 w-4" />
                   Settings
                 </DropdownMenu.Item>

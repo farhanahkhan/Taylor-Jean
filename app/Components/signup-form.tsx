@@ -7,6 +7,7 @@ import { Eye, EyeOff } from "lucide-react";
 import * as Label from "@radix-ui/react-label";
 import Link from "next/link";
 import { addUser } from "@/lib/users-store";
+import { motion, Variants } from "framer-motion";
 
 export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,6 +17,18 @@ export function SignupForm() {
   const [role, setRole] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+
+  const formVariants: Variants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +71,13 @@ export function SignupForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <motion.form
+      variants={formVariants}
+      initial="hidden"
+      animate="visible"
+      onSubmit={handleSubmit}
+      className="space-y-5"
+    >
       <div className="space-y-2">
         <Label.Root
           htmlFor="fullName"
@@ -140,7 +159,6 @@ export function SignupForm() {
           id="role"
           value={role}
           onChange={(e) => setRole(e.target.value)}
-          required
           className="w-full px-4 h-12 bg-muted rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
         >
           <option value="" disabled>
@@ -230,6 +248,6 @@ export function SignupForm() {
           <span className="sr-only">Sign up with Facebook</span>
         </button>
       </div>
-    </form>
+    </motion.form>
   );
 }

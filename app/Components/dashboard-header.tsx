@@ -177,6 +177,28 @@ export function DashboardHeader() {
                               >
                                 Charter Booking
                               </Link>
+                              <Link
+                                href="/dashboard/charters/charterbooking"
+                                className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                                  pathname ===
+                                  "/dashboard/charters/charterbooking"
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                                }`}
+                              >
+                                Charter Inquiry
+                              </Link>
+                              <Link
+                                href="/dashboard/charters/charterbooking"
+                                className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                                  pathname ===
+                                  "/dashboard/charters/charterbooking"
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                                }`}
+                              >
+                                Category
+                              </Link>
                             </div>
                           )}
                         </div>

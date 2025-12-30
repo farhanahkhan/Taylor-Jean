@@ -1,126 +1,3 @@
-// "use client";
-
-// import { useState, useMemo } from "react";
-// import useSWR from "swr";
-// import {
-//   Search,
-//   Filter,
-//   MoreVertical,
-//   Pencil,
-//   Trash2,
-//   Check,
-//   X,
-//   Plus,
-// } from "lucide-react";
-// import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-// import * as Select from "@radix-ui/react-select";
-// import {
-//   getCharters,
-//   addCharter,
-//   updateCharter,
-//   deleteCharter,
-//   type Charter,
-// } from "@/lib/charter-store";
-// import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
-// import { DashboardHeader } from "@/app/Components/dashboard-header";
-// import { CharterForm } from "@/app/Components/charter-form";
-// import { CharterBookingForm } from "@/app/Components/charterbooking-form";
-
-// const charterTypes = [
-//   "Private Charter",
-//   "Shared Charter",
-//   "Tournament Charter",
-//   "Corporate Charter",
-// ];
-
-// export default function CharterPage() {
-//   // purana code
-//   //   const { data: charters = getCharters(), mutate } = useSWR(
-//   //     "charters",
-//   //     getCharters
-//   //   );
-//   // naya code
-
-//   const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
-//   const { data, error, mutate } = useSWR("/api/charter-bookingList", fetcher);
-//   const [search, setSearch] = useState("");
-//   const [editingId, setEditingId] = useState<string | null>(null);
-//   const [editForm, setEditForm] = useState<Partial<Charter>>({});
-//   const [openForms, setOpenForms] = useState<number[]>([]);
-
-//   const filteredCharters = useMemo(() => {
-//     return charters.filter(
-//       (charter) =>
-//         charter.fullName.toLowerCase().includes(search.toLowerCase()) ||
-//         charter.email.toLowerCase().includes(search.toLowerCase())
-//     );
-//   }, [charters, search]);
-
-//   const handleAddForm = () => {
-//     setOpenForms((prev) => [...prev, Date.now()]);
-//   };
-
-// const charters: Charter[] = useMemo(() => {
-//   if (!data?.data) return [];
-
-//   return data.data.map((item: any) => ({
-//     id: item.id,
-//     fullName: `${item.firstName} ${item.lastName}`,
-//     email: item.email,
-//     charterDate: item.preferredDate?.split("T")[0], // yyyy-mm-dd
-//     charterType: "Private Charter", // API me nahi hai
-//     amount: item.amount ?? 0,
-//   }));
-// }, [data]);
-
-//   const handleRemoveForm = (formId: number) => {
-//     setOpenForms((prev) => prev.filter((id) => id !== formId));
-//   };
-
-//   const handleFormSubmit = (
-//     formId: number,
-//     data: {
-//       fullName: string;
-//       email: string;
-//       charterDate: string;
-//       charterType: string;
-//       amount: number;
-//     }
-//   ) => {
-//     addCharter(data);
-//     handleRemoveForm(formId);
-//     mutate();
-//   };
-
-//   const handleEdit = (charter: Charter) => {
-//     setEditingId(charter.id);
-//     setEditForm({
-//       fullName: charter.fullName,
-//       email: charter.email,
-//       charterDate: charter.charterDate,
-//       charterType: charter.charterType,
-//       amount: charter.amount,
-//     });
-//   };
-
-//   const handleSaveEdit = (id: string) => {
-//     updateCharter(id, editForm);
-//     setEditingId(null);
-//     setEditForm({});
-//     mutate();
-//   };
-
-//   const handleCancelEdit = () => {
-//     setEditingId(null);
-//     setEditForm({});
-//   };
-
-//   const handleDelete = (id: string) => {
-//     deleteCharter(id);
-//     mutate();
-//   };
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -133,34 +10,26 @@ import {
   Trash2,
   Check,
   X,
-  Plus,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Select from "@radix-ui/react-select";
+
+import {
+  getServiceInquiries,
+  updateServiceInquiry,
+  deleteServiceInquiry,
+  type ServiceInquiry,
+} from "@/lib/service-inquiry-store";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
-import { CharterBookingForm } from "@/app/Components/charterbooking-form";
 
-// --------- Interfaces ---------
-export interface Charter {
-  id: string;
-  fullName: string;
-  email: string;
-  charterDate: string;
-  charterType: string;
-  amount: number;
-}
-
-interface CharterApiItem {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  preferredDate: string;
-  amount: number;
-}
-
-// --------- Constants ---------
+const statusOptions = [
+  "Pending",
+  "Approved",
+  "Rejected",
+  "In Progress",
+  "Completed",
+];
 const charterTypes = [
   "Private Charter",
   "Shared Charter",
@@ -168,58 +37,37 @@ const charterTypes = [
   "Corporate Charter",
 ];
 
-const fetcher = (url: string) =>
-  fetch(url)
-    .then((res) => res.json())
-    .then((json) => json.data);
-
-export default function CharterPage() {
-  // --------- SWR Fetch ---------
-  const { data, error, mutate } = useSWR<CharterApiItem[]>(
-    "/api/charter-bookingList",
-    fetcher
+export default function ServiceInquiryPage() {
+  const { data: inquiries = getServiceInquiries(), mutate } = useSWR(
+    "service-inquiries",
+    getServiceInquiries
   );
-
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Charter>>({});
-  const [openForms, setOpenForms] = useState<number[]>([]);
+  const [editForm, setEditForm] = useState<Partial<ServiceInquiry>>({});
 
-  // --------- Map API data to UI model ---------
-  const charters: Charter[] = useMemo(() => {
-    if (!data) return [];
-    return data.map((item) => ({
-      id: item.id,
-      fullName: `${item.firstName} ${item.lastName}`,
-      email: item.email,
-      charterDate: item.preferredDate.split("T")[0],
-      charterType: "Private Charter", // default value
-      amount: item.amount ?? 0,
-    }));
-  }, [data]);
-
-  // --------- Filtered list ---------
-  const filteredCharters = useMemo(() => {
-    return charters.filter(
-      (c) =>
-        c.fullName.toLowerCase().includes(search.toLowerCase()) ||
-        c.email.toLowerCase().includes(search.toLowerCase())
+  const filteredInquiries = useMemo(() => {
+    return inquiries.filter(
+      (inquiry) =>
+        inquiry.fullName.toLowerCase().includes(search.toLowerCase()) ||
+        inquiry.email.toLowerCase().includes(search.toLowerCase())
     );
-  }, [charters, search]);
+  }, [inquiries, search]);
 
-  // --------- Handlers ---------
-  const handleAddForm = () => setOpenForms((prev) => [...prev, Date.now()]);
-  const handleRemoveForm = (formId: number) =>
-    setOpenForms((prev) => prev.filter((id) => id !== formId));
-
-  const handleEdit = (charter: Charter) => {
-    setEditingId(charter.id);
-    setEditForm({ ...charter });
+  const handleEdit = (inquiry: ServiceInquiry) => {
+    setEditingId(inquiry.id);
+    setEditForm({
+      fullName: inquiry.fullName,
+      email: inquiry.email,
+      charterDate: inquiry.charterDate,
+      charterType: inquiry.charterType,
+      amount: inquiry.amount,
+      status: inquiry.status,
+    });
   };
 
   const handleSaveEdit = (id: string) => {
-    // TODO: Replace with API PUT call
-    console.log("Save edit", id, editForm);
+    updateServiceInquiry(id, editForm);
     setEditingId(null);
     setEditForm({});
     mutate();
@@ -231,9 +79,25 @@ export default function CharterPage() {
   };
 
   const handleDelete = (id: string) => {
-    // TODO: Replace with API DELETE call
-    console.log("Delete", id);
+    deleteServiceInquiry(id);
     mutate();
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Pending":
+        return "text-yellow-600 bg-yellow-50";
+      case "Approved":
+        return "text-green-600 bg-green-50";
+      case "Rejected":
+        return "text-red-600 bg-red-50";
+      case "In Progress":
+        return "text-blue-600 bg-blue-50";
+      case "Completed":
+        return "text-emerald-600 bg-emerald-50";
+      default:
+        return "text-gray-600 bg-gray-50";
+    }
   };
 
   return (
@@ -241,40 +105,17 @@ export default function CharterPage() {
       <DashboardSidebar />
       <div className="flex-1 flex flex-col">
         <DashboardHeader />
-        <main className="flex-1 p-4 md:p-6 lg:p-8 bg-gray-50 overflow-auto ">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 bg-gray-50 overflow-auto">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                Charter Booking
+                Service Inquiry
               </h1>
               <p className="text-muted-foreground">
-                Customize and book your fishing charter experience.
+                Manage and track service inquiries from customers.
               </p>
             </div>
-            <button
-              onClick={handleAddForm}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              Add Charter
-            </button>
           </div>
-
-          {/* Open Forms */}
-          {openForms.map((formId) => (
-            <div key={formId} className="mb-6">
-              {/* <CharterBookingForm
-                onSubmit={(data) => handleFormSubmit(formId, data)}
-                onCancel={() => handleRemoveForm(formId)}
-
-              /> */}
-
-              <CharterBookingForm
-                onSubmit={(data) => console.log("Submit", data)}
-                onCancel={() => handleRemoveForm(formId)}
-              />
-            </div>
-          ))}
 
           {/* Card Container */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100">
@@ -316,20 +157,23 @@ export default function CharterPage() {
                     <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
                       Amount
                     </th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
+                      Status
+                    </th>
                     <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCharters.map((charter) => (
+                  {filteredInquiries.map((inquiry) => (
                     <tr
-                      key={charter.id}
+                      key={inquiry.id}
                       className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
                     >
                       {/* Full Name Column */}
                       <td className="px-6 py-4">
-                        {editingId === charter.id ? (
+                        {editingId === inquiry.id ? (
                           <input
                             type="text"
                             value={editForm.fullName || ""}
@@ -343,14 +187,14 @@ export default function CharterPage() {
                           />
                         ) : (
                           <p className="font-semibold text-foreground">
-                            {charter.fullName}
+                            {inquiry.fullName}
                           </p>
                         )}
                       </td>
 
                       {/* Email Column */}
                       <td className="px-6 py-4">
-                        {editingId === charter.id ? (
+                        {editingId === inquiry.id ? (
                           <input
                             type="email"
                             value={editForm.email || ""}
@@ -364,14 +208,14 @@ export default function CharterPage() {
                           />
                         ) : (
                           <p className="text-sm text-primary">
-                            {charter.email}
+                            {inquiry.email}
                           </p>
                         )}
                       </td>
 
                       {/* Charter Date Column */}
                       <td className="px-6 py-4">
-                        {editingId === charter.id ? (
+                        {editingId === inquiry.id ? (
                           <input
                             type="date"
                             value={editForm.charterDate || ""}
@@ -385,14 +229,14 @@ export default function CharterPage() {
                           />
                         ) : (
                           <p className="text-muted-foreground">
-                            {charter.charterDate}
+                            {inquiry.charterDate}
                           </p>
                         )}
                       </td>
 
                       {/* Charter Type Column */}
                       <td className="px-6 py-4">
-                        {editingId === charter.id ? (
+                        {editingId === inquiry.id ? (
                           <Select.Root
                             value={editForm.charterType}
                             onValueChange={(value) =>
@@ -421,14 +265,14 @@ export default function CharterPage() {
                           </Select.Root>
                         ) : (
                           <span className="text-primary font-medium">
-                            {charter.charterType}
+                            {inquiry.charterType}
                           </span>
                         )}
                       </td>
 
                       {/* Amount Column */}
                       <td className="px-6 py-4">
-                        {editingId === charter.id ? (
+                        {editingId === inquiry.id ? (
                           <input
                             type="number"
                             value={editForm.amount || ""}
@@ -442,17 +286,59 @@ export default function CharterPage() {
                           />
                         ) : (
                           <p className="font-semibold text-foreground">
-                            ${charter.amount.toLocaleString()}
+                            ${inquiry.amount.toLocaleString()}
                           </p>
+                        )}
+                      </td>
+
+                      {/* Status Column */}
+                      <td className="px-6 py-4">
+                        {editingId === inquiry.id ? (
+                          <Select.Root
+                            value={editForm.status}
+                            onValueChange={(value) =>
+                              setEditForm({ ...editForm, status: value })
+                            }
+                          >
+                            <Select.Trigger className="inline-flex items-center justify-between px-3 py-1.5 text-sm border border-gray-200 rounded-md min-w-[130px] focus:outline-none focus:ring-2 focus:ring-primary/30">
+                              <Select.Value />
+                              <Select.Icon />
+                            </Select.Trigger>
+                            <Select.Portal>
+                              <Select.Content className="bg-white rounded-md shadow-lg border border-gray-100 overflow-hidden z-50">
+                                <Select.Viewport className="p-1">
+                                  {statusOptions.map((status) => (
+                                    <Select.Item
+                                      key={status}
+                                      value={status}
+                                      className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 rounded outline-none"
+                                    >
+                                      <Select.ItemText>
+                                        {status}
+                                      </Select.ItemText>
+                                    </Select.Item>
+                                  ))}
+                                </Select.Viewport>
+                              </Select.Content>
+                            </Select.Portal>
+                          </Select.Root>
+                        ) : (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                              inquiry.status
+                            )}`}
+                          >
+                            {inquiry.status}
+                          </span>
                         )}
                       </td>
 
                       {/* Actions Column */}
                       <td className="px-6 py-4 text-right">
-                        {editingId === charter.id ? (
+                        {editingId === inquiry.id ? (
                           <div className="flex items-center justify-end gap-2">
                             <button
-                              onClick={() => handleSaveEdit(charter.id)}
+                              onClick={() => handleSaveEdit(inquiry.id)}
                               className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                             >
                               <Check className="h-4 w-4" />
@@ -477,14 +363,14 @@ export default function CharterPage() {
                                 className="min-w-[140px] bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50"
                               >
                                 <DropdownMenu.Item
-                                  onClick={() => handleEdit(charter)}
+                                  onClick={() => handleEdit(inquiry)}
                                   className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 outline-none"
                                 >
                                   <Pencil className="h-4 w-4" />
                                   Edit
                                 </DropdownMenu.Item>
                                 <DropdownMenu.Item
-                                  onClick={() => handleDelete(charter.id)}
+                                  onClick={() => handleDelete(inquiry.id)}
                                   className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-red-50 text-red-600 outline-none"
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -500,9 +386,9 @@ export default function CharterPage() {
                 </tbody>
               </table>
 
-              {filteredCharters.length === 0 && (
+              {filteredInquiries.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
-                  No charters found
+                  No service inquiries found
                 </div>
               )}
             </div>

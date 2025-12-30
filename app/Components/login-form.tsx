@@ -180,6 +180,7 @@
 "use client";
 
 import type React from "react";
+import { motion, Variants } from "framer-motion";
 import { NextResponse } from "next/server";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -194,6 +195,17 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
 
   const router = useRouter();
+  const formVariants: Variants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
 
   //   const handleSubmit = async (e: React.FormEvent) => {
   //     e.preventDefault();
@@ -235,7 +247,13 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <motion.form
+      variants={formVariants}
+      initial="hidden"
+      animate="visible"
+      onSubmit={handleSubmit}
+      className="space-y-5"
+    >
       <div className="space-y-2">
         <Label.Root
           htmlFor="email"
@@ -377,6 +395,6 @@ export function LoginForm() {
           <span className="sr-only">Sign in with Facebook</span>
         </button>
       </div>
-    </form>
+    </motion.form>
   );
 }

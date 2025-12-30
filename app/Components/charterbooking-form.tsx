@@ -138,7 +138,7 @@ export function CharterBookingForm({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 ">
       <div className="mb-6">
         <h2 className="text-lg font-bold text-gray-900">Charter</h2>
         <p className="text-sm text-gray-500 mt-1">

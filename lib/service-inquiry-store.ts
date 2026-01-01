@@ -6,6 +6,7 @@ export interface ServiceInquiry {
   charterType: string;
   amount: number;
   status: string;
+  contact: string;
 }
 
 let serviceInquiries: ServiceInquiry[] = [
@@ -13,6 +14,7 @@ let serviceInquiries: ServiceInquiry[] = [
     id: "1",
     fullName: "ammar iqbal",
     email: "ammariqbal366@gmail.com",
+    contact: "03152845678",
     charterDate: "2025-12-18",
     charterType: "Private Charter",
     amount: 0,
@@ -22,6 +24,7 @@ let serviceInquiries: ServiceInquiry[] = [
     id: "2",
     fullName: "ammar iqbal",
     email: "ammariqbal366@gmail.com",
+    contact: "03152845678",
     charterDate: "2025-12-18",
     charterType: "Private Charter",
     amount: 0,

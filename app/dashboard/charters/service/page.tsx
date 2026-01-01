@@ -15,7 +15,7 @@ import {
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
-import { CharterForm } from "@/app/Components/charter-form";
+import { ServiceForm } from "@/app/Components/service-form";
 
 export interface Service {
   id: string;
@@ -137,7 +137,7 @@ export default function CharterPage() {
           {/* 7️⃣ Add Service Form */}
           {isFormOpen && (
             <div className="mb-6">
-              <CharterForm
+              <ServiceForm
                 onSubmit={handleFormSubmit}
                 onCancel={() => setIsFormOpen(false)}
               />
@@ -203,7 +203,9 @@ export default function CharterPage() {
                         <td className="px-6 py-4">{service.serviceName}</td>
                         <td className="px-6 py-4">{service.description}</td>
                         <td className="px-6 py-4">${service.price}</td>
-                        <td className="px-6 py-4">${service.isActive}</td>
+                        <td className="px-6 py-4">
+                          $ {service.isActive ? "Active" : "Inactive"}
+                        </td>
                         <td className="px-6 py-4 text-right">
                           {editingId === service.id ? (
                             <div className="flex items-center justify-end gap-2">

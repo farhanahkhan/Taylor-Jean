@@ -38,8 +38,8 @@ export default function ServicePage() {
   const { data: charters = [], mutate } = useSWR("charters", fetchCharters);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form state
   const [name, setName] = useState("");
   // const [amount, setAmount] = useState(0);
   const [description, setDescription] = useState("");
@@ -97,26 +97,6 @@ export default function ServicePage() {
     }
   };
 
-  // const handleSubmit = () => {
-  //   addCharters({
-  //     name,
-  //     amount,
-  //     description,
-  //     charterType: charterCategoryId,
-  //     fileName: uploadedFileName,
-  //     isActive,
-  //   });
-  //   // Reset form
-  //   setName("");
-  //   setAmount(0);
-  //   setDescription("");
-  //   setCharterCategoryId("");
-  //   setUploadedFileName("");
-  //   setIsActive(true);
-  //   setShowForm(false);
-  //   mutate();
-  // };
-
   const handleSubmit = async () => {
     if (!name || !amount || !description || !charterCategoryId) {
       alert("Please fill all required fields");
@@ -124,6 +104,7 @@ export default function ServicePage() {
     }
 
     try {
+      setIsSubmitting(true); // 🔄 loader ON
       const payload = {
         charterName: name, // API field
         description: description,
@@ -152,7 +133,6 @@ export default function ServicePage() {
         setIsActive(true);
         setShowForm(false);
 
-        // Optionally refresh SWR or local state
         mutate();
       } else {
         alert("Failed to add charter: " + data.message);
@@ -318,11 +298,28 @@ export default function ServicePage() {
 
               {/* Submit Button */}
               <div className="flex justify-end">
-                <button
+                {/* <button
                   onClick={handleSubmit}
+                  disabled={isSubmitting}
                   className="px-6 py-2.5 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
                 >
                   Submit
+                </button> */}
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className={`px-6 py-2.5 text-sm font-medium text-white rounded-lg transition-colors flex items-center gap-2
+    ${
+      isSubmitting
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-slate-800 hover:bg-slate-700"
+    }
+  `}
+                >
+                  {isSubmitting && (
+                    <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  )}
+                  {isSubmitting ? "Submitting..." : "Submit"}
                 </button>
               </div>
             </div>

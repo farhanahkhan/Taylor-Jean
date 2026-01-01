@@ -25,6 +25,7 @@ import {
   DollarSign,
   Anchor,
   ShoppingBag,
+  FileCheck,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -48,7 +49,12 @@ const navItems = [
   { icon: Users, label: "User Management", href: "/dashboard/user_management" },
   { icon: Users2, label: "Team Management", href: "#" },
   { icon: Trophy, label: "Tournaments", href: "/dashboard/tournaments" },
-  { icon: ShieldCheck, label: "Betting & Compliance", href: "#" },
+  {
+    icon: ShieldCheck,
+    label: "Betting & Compliance",
+    href: "/dashboard/betting&compliance",
+  },
+  { icon: FileCheck, label: "KYC", href: "/dashboard/kyc" },
   { icon: DollarSign, label: "Payments & Commerce", href: "#" },
   { icon: FileText, label: "Content Moderation", href: "#" },
   { icon: ClipboardList, label: "CMS", href: "#" },

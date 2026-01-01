@@ -23,7 +23,7 @@ interface Props {
   onCancel: () => void;
 }
 
-export function CharterForm({ onSubmit, onCancel }: Props) {
+export function ServiceForm({ onSubmit, onCancel }: Props) {
   const [formData, setFormData] = useState({
     fullName: "",
     description: "",
@@ -118,7 +118,7 @@ export function CharterForm({ onSubmit, onCancel }: Props) {
               }
               className="h-4 w-4"
             />
-            <label className="text-sm text-gray-700">Is Success</label>
+            <label className="text-sm text-gray-700">Is Active</label>
           </div>
         </div>
 

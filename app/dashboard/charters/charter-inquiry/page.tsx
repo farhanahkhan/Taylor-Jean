@@ -15,62 +15,105 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Select from "@radix-ui/react-select";
 
 import {
-  getServiceInquiries,
   updateServiceInquiry,
   deleteServiceInquiry,
-  type ServiceInquiry,
 } from "@/lib/service-inquiry-store";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 
-const statusOptions = [
-  "Pending",
-  "Approved",
-  "Rejected",
-  "In Progress",
-  "Completed",
-];
-const charterTypes = [
-  "Private Charter",
-  "Shared Charter",
-  "Tournament Charter",
-  "Corporate Charter",
-];
+// const fetchCharterInquiries = async (): Promise<ServiceInquiry[]> => {
+//   const res = await fetch("/api/charter-inquiries");
+//   const json = await res.json();
+
+//   return json.data.map((item: any) => ({
+//     id: item.id,
+//     name: `${item.firstName} ${item.lastName}`,
+//     email: item.email,
+//     contact: item.contact,
+//     amount: item.amount,
+//     paymentStatus: item.paymentStatus,
+//   }));
+// };
+
+interface APIResponseItem {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  contact: string;
+  amount: number;
+  paymentStatus: string;
+}
+interface APIResponse {
+  data: APIResponseItem[];
+}
+
+const fetchCharterInquiries = async (): Promise<ServiceInquiry[]> => {
+  const res = await fetch("/api/charter-inquiries");
+  const json = (await res.json()) as APIResponse; // ✅ Type assertion
+
+  return json.data.map((item) => ({
+    id: item.id,
+    name: `${item.firstName} ${item.lastName}`,
+    email: item.email,
+    contact: item.contact,
+    amount: item.amount,
+    paymentStatus: item.paymentStatus,
+  }));
+};
+
+export interface ServiceInquiry {
+  id: string;
+  name: string;
+  email: string;
+  contact: string;
+  amount: number;
+  paymentStatus: string;
+}
 
 export default function ServiceInquiryPage() {
-  const { data: inquiries = getServiceInquiries(), mutate } = useSWR(
-    "service-inquiries",
-    getServiceInquiries
-  );
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<ServiceInquiry>>({});
+  const { data: inquiries = [], mutate } = useSWR(
+    "charter-inquiries",
+    fetchCharterInquiries
+  );
 
   const filteredInquiries = useMemo(() => {
-    return inquiries.filter(
-      (inquiry) =>
-        inquiry.fullName.toLowerCase().includes(search.toLowerCase()) ||
-        inquiry.email.toLowerCase().includes(search.toLowerCase())
-    );
+    return inquiries.filter((inquiry) => {
+      const name = inquiry.name?.toLowerCase() || "";
+      const email = inquiry.email?.toLowerCase() || "";
+
+      return (
+        name.includes(search.toLowerCase()) ||
+        email.includes(search.toLowerCase())
+      );
+    });
   }, [inquiries, search]);
 
   const handleEdit = (inquiry: ServiceInquiry) => {
     setEditingId(inquiry.id);
     setEditForm({
-      fullName: inquiry.fullName,
+      name: inquiry.name,
       email: inquiry.email,
-      charterDate: inquiry.charterDate,
-      charterType: inquiry.charterType,
+      contact: inquiry.contact,
+      // charterType: inquiry.charterType,
       amount: inquiry.amount,
-      status: inquiry.status,
+      paymentStatus: inquiry.paymentStatus,
     });
   };
 
-  const handleSaveEdit = (id: string) => {
-    updateServiceInquiry(id, editForm);
-    setEditingId(null);
-    setEditForm({});
-    mutate();
+  const handleSaveEdit = async (id: string) => {
+    try {
+      await updateServiceInquiry(id, editForm); // PUT request
+      setEditingId(null);
+      setEditForm({});
+      mutate(); // re-fetch data
+    } catch (error) {
+      console.error("Failed to save edit:", error);
+      alert("Failed to save changes. Please try again.");
+    }
   };
 
   const handleCancelEdit = () => {
@@ -78,11 +121,15 @@ export default function ServiceInquiryPage() {
     setEditForm({});
   };
 
-  const handleDelete = (id: string) => {
-    deleteServiceInquiry(id);
-    mutate();
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteServiceInquiry(id); // DELETE request
+      mutate(); // re-fetch data
+    } catch (error) {
+      console.error("Failed to delete inquiry:", error);
+      alert("Failed to delete inquiry. Please try again.");
+    }
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Pending":
@@ -100,6 +147,20 @@ export default function ServiceInquiryPage() {
     }
   };
 
+  // const fetchCharterInquiries = async (): Promise<ServiceInquiry[]> => {
+  //   const res = await fetch("/api/charter-inquiries");
+  //   const json = await res.json();
+
+  //   return json.data.map((item: any) => ({
+  //     id: item.id,
+  //     name: `${item.firstName} ${item.lastName}`, // ✅ first + last name
+  //     email: item.email,
+  //     contact: item.contact,
+  //     amount: item.amount,
+  //     paymentStatus: item.paymentStatus,
+  //   }));
+  // };
+
   return (
     <div className="flex min-h-screen bg-slate-900">
       <DashboardSidebar />
@@ -109,7 +170,7 @@ export default function ServiceInquiryPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                Service Inquiry
+                Charter Inquiry
               </h1>
               <p className="text-muted-foreground">
                 Manage and track service inquiries from customers.
@@ -143,22 +204,20 @@ export default function ServiceInquiryPage() {
                 <thead>
                   <tr className="border-b border-gray-100">
                     <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
-                      Full Name
+                      Name
                     </th>
                     <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
-                      Email Address
+                      Email
                     </th>
                     <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
-                      Charter Date
+                      Contact
                     </th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
-                      Charter Type
-                    </th>
+
                     <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
                       Amount
                     </th>
                     <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
-                      Status
+                      Payment Status
                     </th>
                     <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
                       Actions
@@ -176,18 +235,18 @@ export default function ServiceInquiryPage() {
                         {editingId === inquiry.id ? (
                           <input
                             type="text"
-                            value={editForm.fullName || ""}
+                            value={editForm.name || ""}
                             onChange={(e) =>
                               setEditForm({
                                 ...editForm,
-                                fullName: e.target.value,
+                                name: e.target.value,
                               })
                             }
                             className="w-full px-3 py-1.5 text-sm font-semibold border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30"
                           />
                         ) : (
                           <p className="font-semibold text-foreground">
-                            {inquiry.fullName}
+                            {inquiry.name}
                           </p>
                         )}
                       </td>
@@ -217,25 +276,25 @@ export default function ServiceInquiryPage() {
                       <td className="px-6 py-4">
                         {editingId === inquiry.id ? (
                           <input
-                            type="date"
-                            value={editForm.charterDate || ""}
+                            type="number"
+                            value={editForm.contact || ""}
                             onChange={(e) =>
                               setEditForm({
                                 ...editForm,
-                                charterDate: e.target.value,
+                                contact: e.target.value,
                               })
                             }
                             className="px-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30"
                           />
                         ) : (
                           <p className="text-muted-foreground">
-                            {inquiry.charterDate}
+                            {inquiry.contact}
                           </p>
                         )}
                       </td>
 
                       {/* Charter Type Column */}
-                      <td className="px-6 py-4">
+                      {/* <td className="px-6 py-4">
                         {editingId === inquiry.id ? (
                           <Select.Root
                             value={editForm.charterType}
@@ -268,7 +327,7 @@ export default function ServiceInquiryPage() {
                             {inquiry.charterType}
                           </span>
                         )}
-                      </td>
+                      </td> */}
 
                       {/* Amount Column */}
                       <td className="px-6 py-4">
@@ -293,44 +352,15 @@ export default function ServiceInquiryPage() {
 
                       {/* Status Column */}
                       <td className="px-6 py-4">
-                        {editingId === inquiry.id ? (
-                          <Select.Root
-                            value={editForm.status}
-                            onValueChange={(value) =>
-                              setEditForm({ ...editForm, status: value })
-                            }
-                          >
-                            <Select.Trigger className="inline-flex items-center justify-between px-3 py-1.5 text-sm border border-gray-200 rounded-md min-w-[130px] focus:outline-none focus:ring-2 focus:ring-primary/30">
-                              <Select.Value />
-                              <Select.Icon />
-                            </Select.Trigger>
-                            <Select.Portal>
-                              <Select.Content className="bg-white rounded-md shadow-lg border border-gray-100 overflow-hidden z-50">
-                                <Select.Viewport className="p-1">
-                                  {statusOptions.map((status) => (
-                                    <Select.Item
-                                      key={status}
-                                      value={status}
-                                      className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 rounded outline-none"
-                                    >
-                                      <Select.ItemText>
-                                        {status}
-                                      </Select.ItemText>
-                                    </Select.Item>
-                                  ))}
-                                </Select.Viewport>
-                              </Select.Content>
-                            </Select.Portal>
-                          </Select.Root>
-                        ) : (
-                          <span
-                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                              inquiry.status
-                            )}`}
-                          >
-                            {inquiry.status}
-                          </span>
-                        )}
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            inquiry.paymentStatus === "Pending"
+                              ? "bg-yellow-50 text-yellow-600"
+                              : "bg-green-50 text-green-600"
+                          }`}
+                        >
+                          {inquiry.paymentStatus}
+                        </span>
                       </td>
 
                       {/* Actions Column */}

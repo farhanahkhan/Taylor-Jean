@@ -204,7 +204,7 @@ export default function CharterPage() {
                         <td className="px-6 py-4">{service.description}</td>
                         <td className="px-6 py-4">${service.price}</td>
                         <td className="px-6 py-4">
-                          $ {service.isActive ? "Active" : "Inactive"}
+                          {service.isActive ? "Active" : "Inactive"}
                         </td>
                         <td className="px-6 py-4 text-right">
                           {editingId === service.id ? (

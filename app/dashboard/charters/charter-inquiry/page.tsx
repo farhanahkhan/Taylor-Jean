@@ -266,7 +266,7 @@ export default function ServiceInquiryPage() {
                             className="w-full px-3 py-1.5 text-sm text-primary border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30"
                           />
                         ) : (
-                          <p className="text-sm text-primary">
+                          <p className="text-sm text-muted-foreground">
                             {inquiry.email}
                           </p>
                         )}

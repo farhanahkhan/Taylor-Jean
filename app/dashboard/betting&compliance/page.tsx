@@ -113,7 +113,7 @@ export default function BettingPage() {
   ).length;
 
   return (
-    <div className="flex min-h-screen bg-slate-900">
+    <div className="flex min-h-screen bg-slate-900 overflow-x-hidden">
       <DashboardSidebar />
 
       <div className="flex-1 flex flex-col">
@@ -138,7 +138,7 @@ export default function BettingPage() {
                   placeholder="Search bets..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-48 lg:w-75 pl-9 pr-4 h-9 bg-gray-50 border border-gray rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:bg-background transition-all"
+                  className="w-full sm:w-64 lg:w-80 pl-9 pr-4 h-9 bg-gray-50 border border-gray rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:bg-background transition-all"
                 />
               </div>
 
@@ -227,98 +227,98 @@ export default function BettingPage() {
             </div>
 
             {/* Bets Table - Made table responsive with horizontal scroll on mobile */}
-            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[1000px]">
-                  <thead className="bg-slate-50 border-b border-slate-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Bet ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        User
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Tournament
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Bet Type
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Amount
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Odds
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Potential Payout
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {filteredBets.map((bet) => {
-                      const StatusIcon = statusIcons[bet.status];
-                      return (
-                        <tr key={bet.id} className="hover:bg-primary/10">
-                          <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                            {bet.id}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-900">
-                            {bet.user}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">
-                            {bet.tournament}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">
-                            {bet.betType}
-                          </td>
-                          <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                            ${bet.amount}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">
-                            {bet.odds}
-                          </td>
-                          <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                            ${bet.potentialPayout.toFixed(2)}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">
-                            {bet.date}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-                                statusStyles[bet.status]
-                              }`}
-                            >
-                              <StatusIcon className="h-3.5 w-3.5" />
-                              {bet.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-slate-600 hover:text-slate-900"
-                            >
-                              View
-                            </Button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+            {/* <div className="bg-white rounded-lg border border-slate-200 overflow-hidden"> */}
+            <div className="relative overflow-x-auto bg-white rounded-lg border border-slate-200">
+              <table className="w-full min-w-[1100px] text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Bet ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      User
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Tournament
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Bet Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Odds
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Potential Payout
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {filteredBets.map((bet) => {
+                    const StatusIcon = statusIcons[bet.status];
+                    return (
+                      <tr key={bet.id} className="hover:bg-primary/10">
+                        <td className="px-6 py-4 text-sm font-medium text-slate-900">
+                          {bet.id}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-900">
+                          {bet.user}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-600">
+                          {bet.tournament}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-600">
+                          {bet.betType}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-medium text-slate-900">
+                          ${bet.amount}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-600">
+                          {bet.odds}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-medium text-slate-900">
+                          ${bet.potentialPayout.toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-600">
+                          {bet.date}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                              statusStyles[bet.status]
+                            }`}
+                          >
+                            <StatusIcon className="h-3.5 w-3.5" />
+                            {bet.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-slate-600 hover:text-slate-900 hover:bg-primary/20"
+                          >
+                            View
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
+            {/* </div> */}
           </div>
         </main>
       </div>

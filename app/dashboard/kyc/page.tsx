@@ -248,7 +248,7 @@ export default function KYCPage() {
                 placeholder="Search KYC requests..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-48 lg:w-75 pl-9 pr-4 h-9 bg-gray-50 border border-gray rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:bg-background transition-all"
+                className="w-full sm:w-75 pl-9 pr-4 h-9 bg-gray-50 border border-gray rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:bg-background transition-all"
               />
             </div>
             <Select.Root value={statusFilter} onValueChange={setStatusFilter}>

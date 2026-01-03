@@ -3,14 +3,15 @@
 import { useState, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Search, Filter, Clock, CheckCircle, XCircle, X } from "lucide-react";
 import * as Select from "@radix-ui/react-select";
 import { ChevronDown } from "lucide-react";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
+import * as Dialog from "@radix-ui/react-dialog";
 
 // Sample betting data
-const bets = [
+const initialBets = [
   {
     id: "#1",
     user: "John Smith",
@@ -83,26 +84,67 @@ const statusIcons = {
 };
 
 export default function BettingPage() {
+  const [betsData, setBetsData] = useState(initialBets);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedBet, setSelectedBet] = useState<(typeof betsData)[0] | null>(
+    null
+  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [adjustedPayout, setAdjustedPayout] = useState("");
+  const [modalStatus, setModalStatus] = useState<
+    "pending" | "won" | "review" | "lost"
+  >("pending");
+
+  const handleViewBet = (bet: (typeof betsData)[0]) => {
+    setSelectedBet(bet);
+    setAdjustedPayout(bet.potentialPayout.toString());
+    setModalStatus(bet.status);
+    setIsModalOpen(true);
+  };
+
+  const handleApproveBet = () => {
+    if (selectedBet) {
+      setModalStatus("won");
+    }
+  };
+
+  const handleRejectBet = () => {
+    if (selectedBet) {
+      setModalStatus("lost");
+    }
+  };
+
+  const handleSaveChanges = () => {
+    if (selectedBet) {
+      setBetsData((prevBets) =>
+        prevBets.map((bet) =>
+          bet.id === selectedBet.id
+            ? {
+                ...bet,
+                potentialPayout:
+                  Number.parseFloat(adjustedPayout) || bet.potentialPayout,
+                status: modalStatus,
+              }
+            : bet
+        )
+      );
+      setIsModalOpen(false);
+    }
+  };
 
   const filteredBets = useMemo(() => {
-    return bets.filter((bet) => {
-      // Filter by status
+    return betsData.filter((bet) => {
       const matchesStatus =
         statusFilter === "all" || bet.status === statusFilter;
-
-      // Filter by search query (searches user, tournament, and bet type)
       const matchesSearch =
         searchQuery === "" ||
         bet.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
         bet.tournament.toLowerCase().includes(searchQuery.toLowerCase()) ||
         bet.betType.toLowerCase().includes(searchQuery.toLowerCase());
-
       return matchesStatus && matchesSearch;
     });
-  }, [searchQuery, statusFilter]);
-
+  }, [searchQuery, statusFilter, betsData]);
   const totalBets = filteredBets.length;
   const totalAmount = filteredBets.reduce((sum, bet) => sum + bet.amount, 0);
   const pendingPayouts = filteredBets
@@ -113,10 +155,10 @@ export default function BettingPage() {
   ).length;
 
   return (
-    <div className="flex min-h-screen bg-slate-900 overflow-x-hidden">
+    <div className="flex min-h-screen bg-slate-900 overflow-x-hidden max-w-full">
       <DashboardSidebar />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen w-0">
         <DashboardHeader />
 
         <main className="flex-1 p-4 md:p-6 bg-slate-50">
@@ -305,6 +347,7 @@ export default function BettingPage() {
                         </td>
                         <td className="px-6 py-4">
                           <Button
+                            onClick={() => handleViewBet(bet)}
                             variant="ghost"
                             size="sm"
                             className="text-slate-600 hover:text-slate-900 hover:bg-primary/20"
@@ -322,6 +365,159 @@ export default function BettingPage() {
           </div>
         </main>
       </div>
+
+      {/* Bet Details Modal */}
+      <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl p-6 md:p-8">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <Dialog.Title className="text-xl md:text-2xl font-bold text-slate-900">
+                  Bet Details
+                </Dialog.Title>
+                <p className="text-sm text-slate-600 mt-1">
+                  ID: {selectedBet?.id}
+                </p>
+              </div>
+              <Dialog.Close className="text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </Dialog.Close>
+            </div>
+
+            {selectedBet && (
+              <div className="space-y-6">
+                {/* User and Tournament Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 mb-1">
+                      User
+                    </p>
+                    <p className="text-base text-slate-900">
+                      {selectedBet.user}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 mb-1">
+                      Tournament
+                    </p>
+                    <p className="text-base text-slate-900">
+                      {selectedBet.tournament}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bet Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 mb-1">
+                      Bet Type
+                    </p>
+                    <p className="text-base text-slate-900">
+                      {selectedBet.betType}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 mb-1">
+                      Placed Date
+                    </p>
+                    <p className="text-base text-slate-900">
+                      {selectedBet.date}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Financial Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 mb-1">
+                      Bet Amount
+                    </p>
+                    <p className="text-base font-semibold text-slate-900">
+                      ${selectedBet.amount}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 mb-1">
+                      Odds
+                    </p>
+                    <p className="text-base text-slate-900">
+                      {selectedBet.odds}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 mb-1">
+                      Potential Payout
+                    </p>
+                    <p className="text-base font-semibold text-slate-900">
+                      ${selectedBet.potentialPayout}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 mb-1">
+                      Status
+                    </p>
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${statusStyles[modalStatus]}`}
+                    >
+                      {modalStatus}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-200 pt-6">
+                  <p className="text-sm font-semibold text-slate-900 mb-4">
+                    Adjust Payout or Status
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <input
+                      type="number"
+                      value={adjustedPayout}
+                      onChange={(e) => setAdjustedPayout(e.target.value)}
+                      placeholder="Enter adjusted payout"
+                      className="w-full sm:w-64 lg:w-80 pl-4 pr-4 h-9 bg-gray-50 border border-gray rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:bg-background transition-all"
+                    />
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={handleApproveBet}
+                        className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Approve
+                      </Button>
+                      <Button
+                        onClick={handleRejectBet}
+                        className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Reject
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    className="bg-slate-800 hover:bg-slate-900 text-white"
+                    onClick={handleSaveChanges}
+                  >
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }

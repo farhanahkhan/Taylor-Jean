@@ -224,10 +224,10 @@ export default function KYCPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50 max-w-full">
       <DashboardSidebar />
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen w-0">
         <DashboardHeader />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8">

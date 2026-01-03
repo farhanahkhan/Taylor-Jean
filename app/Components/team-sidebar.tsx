@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import taylor from "@/public/taylorjean.png";
 import Image from "next/image";
+import taylorjean from "@/public/elegant-tj-monogram-logo.jpg";
+
 import {
   LayoutGrid,
   Zap,
@@ -51,7 +53,7 @@ export function TeamSidebar() {
       <div className="p-4 border-b border-border">
         <Link href="/team" className="flex items-center gap-2.5">
           <Image
-            src="/elegant-tj-monogram-logo.jpg"
+            src={taylorjean}
             alt="Taylor Jean logo"
             width={36}
             height={36}

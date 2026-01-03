@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import taylorjean from "@/public/elegant-tj-monogram-logo.jpg";
 import {
   Menu,
   X,
@@ -52,17 +53,17 @@ export function TeamHeader() {
             </Dialog.Trigger>
             <Dialog.Portal>
               <Dialog.Overlay className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50" />
-              <Dialog.Content className="fixed top-0 left-0 h-full w-[280px] bg-sidebar border-r border-sidebar-border z-50 shadow-xl animate-in slide-in-from-left duration-300">
+              <Dialog.Content className="fixed top-0 left-0 h-full w-[280px] bg-card   border-border z-50 shadow-xl animate-in slide-in-from-left duration-300">
                 <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
                   <div className="flex items-center gap-2">
                     <Image
-                      src="/images/whatsapp-20image-202025-12-04-20at-2010.jpeg"
+                      src={taylorjean}
                       alt="Taylor Jean logo"
                       width={32}
                       height={32}
                       className="rounded-lg"
                     />
-                    <span className="font-semibold text-sidebar-foreground">
+                    <span className="font-semibold text-muted-foreground">
                       Taylor Jean
                     </span>
                   </div>
@@ -77,7 +78,7 @@ export function TeamHeader() {
                     <Link
                       key={item.label}
                       href={item.href}
-                      className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-all"
+                      className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-all"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <item.icon className="h-5 w-5" />
@@ -91,7 +92,7 @@ export function TeamHeader() {
 
           <Link href="/team" className="flex lg:hidden items-center gap-2">
             <Image
-              src="/images/whatsapp-20image-202025-12-04-20at-2010.jpeg"
+              src={taylorjean}
               alt="Taylor Jean logo"
               width={28}
               height={28}

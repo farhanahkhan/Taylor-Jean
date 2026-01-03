@@ -582,7 +582,7 @@ export default function KYCPage() {
                       placeholder="Add notes or reason for decision..."
                       value={decisionNotes}
                       onChange={(e) => setDecisionNotes(e.target.value)}
-                      className="min-h-[100px] resize-none"
+                      className="w-full sm:w-64 lg:w-full  pl-2 pt-2 pr-4 h-14 bg-gray-50 border border-gray rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:bg-background transition-all"
                     />
                   </div>
                 </div>

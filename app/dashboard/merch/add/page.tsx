@@ -49,8 +49,17 @@ export default function AddProductPage() {
   const [colors, setColors] = useState<Color[]>([]);
   const [sizesFromAPI, setSizesFromAPI] = useState<Size[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [imageUrl, setImageUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
 
+  useEffect(() => {
+    const savedImage = localStorage.getItem("temp_product_image");
+    if (savedImage) {
+      setImagePreview(savedImage);
+    }
+  }, []);
   // Load categories
+
   useEffect(() => {
     async function loadCategories() {
       try {
@@ -124,17 +133,32 @@ export default function AddProductPage() {
       reader.readAsDataURL(file);
     }
   };
+  //                old
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const f = e.target.files?.[0];
+  //   if (!f) return;
+
+  //   setFile(f);
+
+  //   const reader = new FileReader();
+  //   reader.onload = () => setImagePreview(reader.result as string);
+  //   reader.readAsDataURL(f);
+  // };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) handleImageUpload(file);
-  };
+    if (!file) return;
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleImageUpload(file);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+
+      setImagePreview(base64);
+
+      // ✅ SAVE IMAGE LOCALLY
+      localStorage.setItem("temp_product_image", base64);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -148,44 +172,37 @@ export default function AddProductPage() {
 
   // --- FINAL HANDLE SUBMIT ---
   const handleSubmit = async () => {
-    if (!productName || !price || !category) {
-      alert("Please fill product name, price and category");
+    const res = await fetch("/api/merch", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: productName,
+        price: Number(price),
+        categoryId: category,
+        description,
+        imageUrl: "/placeholder.png", // ✅ BACKEND SAFE
+        colorIds: selectedColors,
+        sizeIds: selectedSizes
+          .map((s) => sizesFromAPI.find((x) => x.sizeValue === s)?.id)
+          .filter(Boolean),
+        isActive: true,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Failed");
       return;
     }
 
-    const colorIds = selectedColors;
-    const sizeIds = selectedSizes
-      .map((s) => sizesFromAPI.find((sz) => sz.sizeValue === s)?.id)
-      .filter(Boolean) as string[];
+    // ✅ clear temp image after save
+    localStorage.removeItem("temp_product_image");
 
-    // ✅ Always send a valid full URL to backend
-    const finalImageUrl = "https://mobileapp.designswebs.com/placeholder.svg";
-
-    try {
-      const res = await fetch("/api/merch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: productName,
-          price: Number(price),
-          categoryId: category,
-          colorIds,
-          sizeIds,
-          description,
-          imageUrl: finalImageUrl, // always valid URL
-          isActive: true,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || JSON.stringify(data));
-
-      alert("Product Created Successfully!");
-      router.push("/dashboard/merch");
-    } catch (err) {
-      console.error("Add Product Error:", err);
-      alert("Failed to create product. Check console for details.");
-    }
+    alert("Product created successfully");
+    router.push("/dashboard/merch");
   };
 
   return (
@@ -342,12 +359,15 @@ export default function AddProductPage() {
                         <Image
                           src={imagePreview}
                           alt="Preview"
-                          className="w-full h-full object-cover"
-                          width={96}
-                          height={96}
+                          fill
+                          className="object-cover rounded"
                         />
                         <button
-                          onClick={() => setImagePreview(null)}
+                          onClick={() => {
+                            setImagePreview(null);
+                            setFile(null);
+                            localStorage.removeItem("product_image"); // ✅ CLEAR
+                          }}
                           className="absolute top-1 right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow"
                         >
                           <X className="w-3 h-3 text-gray-600" />
@@ -359,7 +379,6 @@ export default function AddProductPage() {
                   </div>
 
                   <div
-                    onDrop={handleDrop}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onClick={() => fileInputRef.current?.click()}
@@ -383,8 +402,8 @@ export default function AddProductPage() {
                       ref={fileInputRef}
                       type="file"
                       accept="image/*"
+                      hidden
                       onChange={handleFileChange}
-                      className="hidden"
                     />
                   </div>
                 </div>

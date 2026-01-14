@@ -11,6 +11,11 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "img.sonofatailor.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "mobileapp.designswebs.com",
         port: "",
         pathname: "/**",

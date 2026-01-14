@@ -13,11 +13,8 @@ import {
 } from "@/components/ui/dialog";
 
 import Image from "next/image";
-import {
-  getTournaments,
-  addTournament,
-  type Tournament,
-} from "@/lib/tournament-store";
+
+// import type { Tournament } from "@/lib/tournament-store";
 import { Label } from "@radix-ui/react-label";
 import {
   Select,
@@ -29,23 +26,67 @@ import {
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 
-const allowableSpecies = [
-  "Blue Marlin",
-  "White Marlin",
-  "Sailfish",
-  "Yellowfin Tuna",
-  "Bluefin Tuna",
-  "Mahi Mahi",
-  "Wahoo",
-  "Swordfish",
-  "King Mackerel",
-];
+interface TournamentType {
+  id: string;
+  name: string;
+  isActive: boolean;
+}
+interface Species {
+  id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+}
+export interface Tournament {
+  id: string;
+  name: string;
+  title: string; // add title to display in frontend
+  startDate: string;
+  endDate: string;
+  image?: string;
+  status?: string;
+  teams?: number;
+  description?: string; // add this
+  isActive?: boolean;
+}
+
+// API response type
+
+interface TournamentAPIResponse {
+  data: Omit<Tournament, "title">[]; // API returns 'name', we add 'title'
+}
 
 export default function TournamentsPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
+  // const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  // tournament dropdown api
+  const [tournamentTypes, setTournamentTypes] = useState<TournamentType[]>([]);
+  const [allowableSpecies, setAllowableSpecies] = useState<Species[]>([]);
+  const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // New state
+
+  useEffect(() => {
+    const fetchTournamentTypes = async () => {
+      const res = await fetch("/api/tournament-types?type=tournament-types"); // ✅ correct
+      const result: { data: TournamentType[] } = await res.json();
+      setTournamentTypes(result.data);
+    };
+
+    fetchTournamentTypes();
+  }, []);
+
+  // Species API
+  useEffect(() => {
+    const fetchSpecies = async () => {
+      const res = await fetch("/api/tournament-types?type=species"); // ✅ correct
+      const result: { data: Species[] } = await res.json();
+      setAllowableSpecies(result.data);
+    };
+
+    fetchSpecies();
+  }, []);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -61,28 +102,70 @@ export default function TournamentsPage() {
 
   useEffect(() => {
     const fetchTournaments = async () => {
-      const data = await getTournaments();
-      setTournaments(data);
+      try {
+        const res = await fetch("/api/tournaments");
+        const data: TournamentAPIResponse = await res.json();
+
+        // Safely map API response to include 'title'
+        const tournamentsWithTitle: Tournament[] = data.data.map((t) => ({
+          ...t,
+          // If t.name exists, use it; otherwise fallback to empty string
+          title: t.name ?? "",
+        }));
+
+        setTournaments(tournamentsWithTitle);
+      } catch (error) {
+        console.error("Failed to fetch tournaments:", error);
+      } finally {
+        setIsLoading(false); // Stop loader
+      }
     };
+
     fetchTournaments();
   }, []);
 
-  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       setBannerPreview(reader.result as string);
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setBannerPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload-banner", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setBannerPreview(data.url); // <- save the URL
+      } else {
+        alert(data.message || "Upload failed");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong while uploading the banner");
     }
   };
 
-  const toggleSpecies = (species: string) => {
+  const toggleSpecies = (speciesId: string) => {
     setSelectedSpecies((prev) =>
-      prev.includes(species)
-        ? prev.filter((s) => s !== species)
-        : [...prev, species]
+      prev.includes(speciesId)
+        ? prev.filter((id) => id !== speciesId)
+        : [...prev, speciesId]
     );
   };
 
@@ -90,53 +173,79 @@ export default function TournamentsPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleLaunchTournament = () => {
+  const handleLaunchTournament = async () => {
     // Validate required fields
-    if (!formData.title || !formData.startDate || !formData.endDate) {
+    if (
+      !formData.title ||
+      !formData.startDate ||
+      !formData.endDate ||
+      !formData.tournamentType
+    ) {
       alert("Please fill in all required fields");
       return;
     }
 
-    // Format dates for display (e.g., "Nov 12")
-    const startDateObj = new Date(formData.startDate);
-    const displayDate = startDateObj.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
+    try {
+      // Prepare request body according to backend API
+      const payload = {
+        name: formData.title,
+        place: formData.marina || "TBD",
+        tournamentTypeId: formData.tournamentType, // id selected from dropdown
+        startDate: new Date(formData.startDate).toISOString(),
+        endDate: new Date(formData.endDate).toISOString(),
+        entryFee: Number(formData.entryFee) || 0,
+        points: Number(formData.pointsPerLb) || 0,
+        description:
+          formData.description || "Exciting fishing tournament event.",
+        imageUrl: bannerPreview || "/placeholder.svg", // <- persistent image
+        speciesIds: selectedSpecies, // array of species ids
+      };
 
-    const newTournament = addTournament({
-      title: formData.title,
-      description: formData.description || "Exciting fishing tournament event.",
-      image: bannerPreview || "/placeholder.svg",
-      marina: formData.marina || "TBD",
-      tournamentType: formData.tournamentType || "Big Game / Pelagic",
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      allowableSpecies: selectedSpecies,
-      entryFee: Number(formData.entryFee) || 0,
-      pointsPerLb: Number(formData.pointsPerLb) || 0,
-      teamCap: Number(formData.teamCap) || 0,
-      status: "ACTIVE",
-    });
+      const res = await fetch("/api/tournaments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-    // Update local state
-    setTournaments(getTournaments());
+      const data = await res.json();
 
-    // Reset form
-    setIsModalOpen(false);
-    setSelectedSpecies([]);
-    setBannerPreview(null);
-    setFormData({
-      title: "",
-      description: "",
-      marina: "",
-      tournamentType: "",
-      startDate: "",
-      endDate: "",
-      entryFee: "",
-      pointsPerLb: "",
-      teamCap: "",
-    });
+      if (!res.ok) {
+        alert(data.message || "Failed to create tournament");
+        return;
+      }
+
+      alert("Tournament created successfully!");
+
+      // Optionally, refresh tournaments list
+      const tournamentsRes = await fetch("/api/tournaments");
+      const tournamentsData: TournamentAPIResponse =
+        await tournamentsRes.json();
+
+      setTournaments(
+        tournamentsData.data.map((t) => ({ ...t, title: t.name }))
+      );
+
+      // Reset form
+      setIsModalOpen(false);
+      setSelectedSpecies([]);
+      setBannerPreview(null);
+      setFormData({
+        title: "",
+        description: "",
+        marina: "",
+        tournamentType: "",
+        startDate: "",
+        endDate: "",
+        entryFee: "",
+        pointsPerLb: "",
+        teamCap: "",
+      });
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong while creating the tournament.");
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -171,47 +280,63 @@ export default function TournamentsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tournaments.map((tournament) => (
-              <div
-                key={tournament.id}
-                className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 hover:shadow-md transition-shadow"
-              >
-                <div className="relative h-48">
-                  <Image
-                    src={tournament.image || "/placeholder.svg"}
-                    alt={tournament.title}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute top-3 left-3">
-                    <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-semibold rounded-md">
-                      {tournament.status}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-5">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                    {tournament.title}
-                  </h3>
-                  <p className="text-sm text-slate-600 mb-4">
-                    {tournament.description}
-                  </p>
-                  <div className="flex items-center gap-4 text-sm text-slate-500">
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="h-4 w-4" />
-                      <span>
-                        {formatDate(tournament.startDate)} -{" "}
-                        {formatDate(tournament.endDate)}
+            {isLoading ? (
+              // Loader while API is fetching
+              <div className="col-span-full flex justify-center items-center h-48">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                <span className="ml-2 text-gray-700">
+                  Loading tournaments...
+                </span>
+              </div>
+            ) : tournaments.length === 0 ? (
+              // Show message if no tournaments
+              <p className="col-span-full text-center text-gray-500">
+                No tournaments found.
+              </p>
+            ) : (
+              // Your existing code for tournament cards
+              tournaments.map((tournament) => (
+                <div
+                  key={tournament.id}
+                  className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 hover:shadow-md transition-shadow"
+                >
+                  <div className="relative h-48">
+                    <Image
+                      src={tournament.image || "/placeholder.svg"}
+                      alt={tournament.title || tournament.name} // fallback if title is missing
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute top-3 left-3">
+                      <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-semibold rounded-md">
+                        Active
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Users className="h-4 w-4" />
-                      <span>{tournament.teams} Teams</span>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                      {tournament.title || tournament.name}
+                    </h3>
+                    <p className="text-sm text-slate-600 mb-4">
+                      {tournament.description || "No description available."}
+                    </p>
+                    <div className="flex items-center gap-4 text-sm text-slate-500">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="h-4 w-4" />
+                        <span>
+                          {formatDate(tournament.startDate)} -{" "}
+                          {formatDate(tournament.endDate)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Users className="h-4 w-4" />
+                        <span>{tournament.teams || 0} Teams</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -330,22 +455,22 @@ export default function TournamentsPage() {
                     >
                       Tournament Type
                     </Label>
+
                     <Select
-                      value={formData.tournamentType}
-                      onValueChange={(value) =>
+                      value={formData.tournamentType} // stores ID
+                      onValueChange={(value: string) =>
                         handleInputChange("tournamentType", value)
                       }
                     >
-                      <SelectTrigger className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary">
-                        <SelectValue placeholder="Big Game / Pelagic" />
+                      <SelectTrigger className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary">
+                        <SelectValue placeholder="Select Tournament Type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="big-game">
-                          Big Game / Pelagic
-                        </SelectItem>
-                        <SelectItem value="inshore">Inshore</SelectItem>
-                        <SelectItem value="offshore">Offshore</SelectItem>
-                        <SelectItem value="mixed">Mixed Species</SelectItem>
+                        {tournamentTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            {type.name} {/* Show name on frontend */}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -397,15 +522,15 @@ export default function TournamentsPage() {
                   <div className="grid grid-cols-3 gap-2">
                     {allowableSpecies.map((species) => (
                       <button
-                        key={species}
-                        onClick={() => toggleSpecies(species)}
+                        key={species.id}
+                        onClick={() => toggleSpecies(species.id)}
                         className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
-                          selectedSpecies.includes(species)
+                          selectedSpecies.includes(species.id)
                             ? "bg-primary/10 text-primary border-primary/10"
-                            : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
+                            : "bg-white text-slate-700 border-slate-200 hover:bg-gray-100"
                         }`}
                       >
-                        {species}
+                        {species.name} {/* Name show */}
                       </button>
                     ))}
                   </div>

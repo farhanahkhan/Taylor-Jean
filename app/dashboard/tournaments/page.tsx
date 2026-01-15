@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import tournament from "@/public/snowy-mountain-landscape-fishing-tournament.jpg";
 
 import { useState, useEffect } from "react";
 import { Plus, Calendar, Users } from "lucide-react";
@@ -302,6 +303,7 @@ export default function TournamentsPage() {
                 >
                   <div className="relative h-48">
                     <Image
+                      // src={tournament}
                       src={tournament.image || "/placeholder.svg"}
                       alt={tournament.title || tournament.name} // fallback if title is missing
                       fill

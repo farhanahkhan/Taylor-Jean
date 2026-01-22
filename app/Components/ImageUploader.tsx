@@ -46,13 +46,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUploadSuccess }) => {
 
       const data = await res.json();
       console.log(data);
-      debugger;
+      // debugger;
       const presignedUrl: string = data?.uploadUrl;
 
       setUploadStatus("Uploading to Cloudflare R2...");
 
       // 2️⃣ Upload to R2 using presigned URL
-      debugger;
+      // debugger;
       const uploadRes = await fetch(presignedUrl, {
         method: "PUT",
         body: file,

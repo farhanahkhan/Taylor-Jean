@@ -45,11 +45,13 @@ export interface Tournament {
   title: string; // add title to display in frontend
   startDate: string;
   endDate: string;
-  image?: string;
+  // image?: string;
   status?: string;
   teams?: number;
   description?: string; // add this
   isActive?: boolean;
+  imageUrl?: string;
+  points?: number;
 }
 
 // API response type
@@ -101,7 +103,7 @@ export default function TournamentsPage() {
     endDate: "",
     entryFee: "",
     pointsPerLb: "",
-    teamCap: "",
+
     imageUrl: "",
   });
 
@@ -116,6 +118,7 @@ export default function TournamentsPage() {
           ...t,
           // If t.name exists, use it; otherwise fallback to empty string
           title: t.name ?? "",
+          image: t.imageUrl ?? "",
         }));
 
         setTournaments(tournamentsWithTitle);
@@ -204,12 +207,14 @@ export default function TournamentsPage() {
         endDate: new Date(formData.endDate).toISOString(),
         entryFee: Number(formData.entryFee) || 0,
         points: Number(formData.pointsPerLb) || 0,
+
         description:
           formData.description || "Exciting fishing tournament event.",
         imageUrl: uploadedImageUrl, // <- persistent image
         speciesIds: selectedSpecies, // array of species ids
       };
 
+      console.log("payload", payload);
       const res = await fetch("/api/tournaments", {
         method: "POST",
         headers: {
@@ -228,12 +233,17 @@ export default function TournamentsPage() {
       alert("Tournament created successfully!");
 
       // Optionally, refresh tournaments list
+      debugger;
       const tournamentsRes = await fetch("/api/tournaments");
       const tournamentsData: TournamentAPIResponse =
         await tournamentsRes.json();
-
+      console.log(tournamentsData);
       setTournaments(
-        tournamentsData.data.map((t) => ({ ...t, title: t.name }))
+        tournamentsData.data.map((t) => ({
+          ...t,
+          title: t.name,
+          image: t.imageUrl ?? "",
+        }))
       );
 
       // Reset form
@@ -250,7 +260,6 @@ export default function TournamentsPage() {
         endDate: "",
         entryFee: "",
         pointsPerLb: "",
-        teamCap: "",
         imageUrl: "",
       });
     } catch (error) {
@@ -313,7 +322,7 @@ export default function TournamentsPage() {
                 >
                   <div className="relative h-48">
                     <Image
-                      src={tournament.image || "/placeholder.svg"}
+                      src={tournament.imageUrl || "/placeholder.svg"}
                       alt={tournament.title || tournament.name}
                       fill
                       className="object-cover"
@@ -341,7 +350,7 @@ export default function TournamentsPage() {
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Users className="h-4 w-4" />
-                        <span>{tournament.teams || 0} Teams</span>
+                        <span>{tournament.points || 0} Points</span>
                       </div>
                     </div>
                   </div>
@@ -606,7 +615,7 @@ export default function TournamentsPage() {
                         }
                       />
                     </div>
-                    <div>
+                    {/* <div>
                       <Label
                         htmlFor="team-cap"
                         className="text-xs font-medium text-slate-500 uppercase mb-2 block"
@@ -623,7 +632,7 @@ export default function TournamentsPage() {
                           handleInputChange("teamCap", e.target.value)
                         }
                       />
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 

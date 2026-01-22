@@ -63,9 +63,10 @@ export default function CharterPage() {
     const payload = {
       name: formData.fullName, // backend expects "name"
       description: formData.description,
-      price: formData.amount,
+      amount: formData.amount,
       isActive: formData.isActive,
     };
+    console.log("POST PAYLOAD:", payload);
 
     const res = await fetch("/api/CharterServiceItems", {
       method: "POST",

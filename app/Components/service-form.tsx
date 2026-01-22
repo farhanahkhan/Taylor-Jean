@@ -6,13 +6,6 @@ import * as Select from "@radix-ui/react-select";
 import * as Label from "@radix-ui/react-label";
 import { Check, ChevronDown } from "lucide-react";
 
-// const charterPrices: Record<string, number> = {
-//   "Private Charter": 1500,
-//   "Shared Charter": 800,
-//   "Tournament Charter": 2500,
-//   "Corporate Charter": 3500,
-// };
-
 interface Props {
   onSubmit: (data: {
     fullName: string;
@@ -27,14 +20,14 @@ export function ServiceForm({ onSubmit, onCancel }: Props) {
   const [formData, setFormData] = useState({
     fullName: "",
     description: "",
-    amount: "",
+    amount: 0,
     isActive: false,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const amountNum = parseFloat(formData.amount);
-    if (isNaN(amountNum) || amountNum <= 0) {
+
+    if (formData.amount <= 0) {
       alert("Please enter a valid amount");
       return;
     }
@@ -42,7 +35,7 @@ export function ServiceForm({ onSubmit, onCancel }: Props) {
     onSubmit({
       fullName: formData.fullName,
       description: formData.description,
-      amount: amountNum,
+      amount: formData.amount, // ✅ already number
       isActive: formData.isActive,
     });
   };
@@ -102,7 +95,10 @@ export function ServiceForm({ onSubmit, onCancel }: Props) {
                 name="amount"
                 value={formData.amount}
                 onChange={(e) =>
-                  setFormData({ ...formData, amount: e.target.value })
+                  setFormData({
+                    ...formData,
+                    amount: Number(e.target.value), // ✅ IMPORTANT
+                  })
                 }
                 placeholder="Enter Amount"
                 className="w-full max-w-xs px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"

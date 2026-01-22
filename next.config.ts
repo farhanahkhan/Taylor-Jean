@@ -24,6 +24,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "pub-a282791a5a174e8daa69fcf36a7fd132.r2.dev",
       },
+      {
+        protocol: "https",
+        hostname: "img.drz.lazcdn.com",
+      },
     ],
   },
 };

@@ -10,6 +10,7 @@ import Image from "next/image";
 
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
+import ImageUploader from "@/app/Components/ImageUploader";
 
 export type Color = {
   id: string;
@@ -36,7 +37,6 @@ type SizeAPIResponse = {
 
 export default function AddProductPage() {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [productName, setProductName] = useState("");
   const [price, setPrice] = useState("");
@@ -44,20 +44,21 @@ export default function AddProductPage() {
   const [description, setDescription] = useState("");
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+
   const [colors, setColors] = useState<Color[]>([]);
   const [sizesFromAPI, setSizesFromAPI] = useState<Size[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [imageUrl, setImageUrl] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  // const [imageUrl, setImageUrl] = useState("");
 
-  useEffect(() => {
-    const savedImage = localStorage.getItem("temp_product_image");
-    if (savedImage) {
-      setImagePreview(savedImage);
-    }
-  }, []);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+
+  // useEffect(() => {
+  //   const savedImage = localStorage.getItem("temp_product_image");
+  //   if (savedImage) {
+  //     setImagePreview(savedImage);
+  //   }
+  // }, []);
   // Load categories
 
   useEffect(() => {
@@ -126,52 +127,12 @@ export default function AddProductPage() {
     );
   };
 
-  const handleImageUpload = (file: File) => {
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (e) => setImagePreview(e.target?.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-  //                old
-  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const f = e.target.files?.[0];
-  //   if (!f) return;
-
-  //   setFile(f);
-
-  //   const reader = new FileReader();
-  //   reader.onload = () => setImagePreview(reader.result as string);
-  //   reader.readAsDataURL(f);
-  // };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-
-      setImagePreview(base64);
-
-      // ✅ SAVE IMAGE LOCALLY
-      localStorage.setItem("temp_product_image", base64);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
   // --- FINAL HANDLE SUBMIT ---
   const handleSubmit = async () => {
+    if (!uploadedImageUrl) {
+      alert("Please upload product image");
+      return;
+    }
     const res = await fetch("/api/merch", {
       method: "POST",
       headers: {
@@ -182,7 +143,7 @@ export default function AddProductPage() {
         price: Number(price),
         categoryId: category,
         description,
-        imageUrl: "/placeholder.png", // ✅ BACKEND SAFE
+        imageUrl: uploadedImageUrl, // ✅ BACKEND SAFE
         colorIds: selectedColors,
         sizeIds: selectedSizes
           .map((s) => sizesFromAPI.find((x) => x.sizeValue === s)?.id)
@@ -199,7 +160,7 @@ export default function AddProductPage() {
     }
 
     // ✅ clear temp image after save
-    localStorage.removeItem("temp_product_image");
+    // localStorage.removeItem("temp_product_image");
 
     alert("Product created successfully");
     router.push("/dashboard/merch");
@@ -352,7 +313,7 @@ export default function AddProductPage() {
                 <Label.Root className="block text-sm font-medium text-gray-700 mb-2">
                   Product Image
                 </Label.Root>
-                <div className="flex gap-4">
+                {/* <div className="flex gap-4">
                   <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                     {imagePreview ? (
                       <div className="relative w-full h-full">
@@ -406,7 +367,29 @@ export default function AddProductPage() {
                       onChange={handleFileChange}
                     />
                   </div>
-                </div>
+                </div> */}
+                {/* <ImageUploader
+                  onUploadSuccess={(url) => {
+                    setImageUrl(url);
+                  }}
+                /> */}
+                <ImageUploader
+                  onUploadSuccess={(finalImageUrl) => {
+                    setUploadedImageUrl(finalImageUrl); // DB ke liye
+                    setBannerPreview(finalImageUrl); // browser preview
+                  }}
+                />
+
+                {bannerPreview && (
+                  <div className="mt-4 relative w-32 h-32 rounded-lg overflow-hidden border">
+                    <Image
+                      src={bannerPreview}
+                      alt="Product Preview"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Actions */}
@@ -419,7 +402,9 @@ export default function AddProductPage() {
                 </button>
                 <button
                   onClick={handleSubmit}
-                  disabled={!productName || !price || !category}
+                  disabled={
+                    !productName || !price || !category || !uploadedImageUrl
+                  }
                   className="px-6 py-2.5 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Create Product

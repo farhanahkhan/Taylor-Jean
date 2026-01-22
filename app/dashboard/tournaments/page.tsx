@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
+import ImageUploader from "@/app/Components/ImageUploader";
 
 interface TournamentType {
   id: string;
@@ -67,6 +68,8 @@ export default function TournamentsPage() {
   const [allowableSpecies, setAllowableSpecies] = useState<Species[]>([]);
   const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true); // New state
+  const [teamImage, setTeamImage] = useState("");
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>(""); // store finalImageUrl
 
   useEffect(() => {
     const fetchTournamentTypes = async () => {
@@ -99,6 +102,7 @@ export default function TournamentsPage() {
     entryFee: "",
     pointsPerLb: "",
     teamCap: "",
+    imageUrl: "",
   });
 
   useEffect(() => {
@@ -175,6 +179,10 @@ export default function TournamentsPage() {
   };
 
   const handleLaunchTournament = async () => {
+    if (!uploadedImageUrl) {
+      alert("Please upload a tournament banner first!");
+      return;
+    }
     // Validate required fields
     if (
       !formData.title ||
@@ -198,7 +206,7 @@ export default function TournamentsPage() {
         points: Number(formData.pointsPerLb) || 0,
         description:
           formData.description || "Exciting fishing tournament event.",
-        imageUrl: bannerPreview || "/placeholder.svg", // <- persistent image
+        imageUrl: uploadedImageUrl, // <- persistent image
         speciesIds: selectedSpecies, // array of species ids
       };
 
@@ -231,7 +239,8 @@ export default function TournamentsPage() {
       // Reset form
       setIsModalOpen(false);
       setSelectedSpecies([]);
-      setBannerPreview(null);
+      setTeamImage("");
+      // setBannerPreview(null);
       setFormData({
         title: "",
         description: "",
@@ -242,6 +251,7 @@ export default function TournamentsPage() {
         entryFee: "",
         pointsPerLb: "",
         teamCap: "",
+        imageUrl: "",
       });
     } catch (error) {
       console.error(error);
@@ -303,9 +313,8 @@ export default function TournamentsPage() {
                 >
                   <div className="relative h-48">
                     <Image
-                      // src={tournament}
                       src={tournament.image || "/placeholder.svg"}
-                      alt={tournament.title || tournament.name} // fallback if title is missing
+                      alt={tournament.title || tournament.name}
                       fill
                       className="object-cover"
                     />
@@ -355,7 +364,7 @@ export default function TournamentsPage() {
                   <Label className="text-xs font-medium text-slate-500 uppercase mb-2 block">
                     Tournament Banner
                   </Label>
-                  <div className="relative">
+                  {/* <div className="relative">
                     <input
                       type="file"
                       id="banner-upload"
@@ -392,7 +401,24 @@ export default function TournamentsPage() {
                         </>
                       )}
                     </label>
-                  </div>
+                  </div> */}
+                  <ImageUploader
+                    onUploadSuccess={(finalImageUrl) => {
+                      setUploadedImageUrl(finalImageUrl); // save uploaded URL
+                      setBannerPreview(finalImageUrl); // show preview
+                    }}
+                  />
+
+                  {bannerPreview && (
+                    <div className="mt-2 relative w-full h-40 rounded overflow-hidden border border-gray-200">
+                      <Image
+                        src={bannerPreview}
+                        alt="Tournament Banner"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Event Title */}
@@ -608,7 +634,7 @@ export default function TournamentsPage() {
                     className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-dark-navy rounded-lg hover:bg-navy transition-colors"
                   >
                     <span>⚡</span>
-                    Launch Tournament
+                    Create Tournament
                   </button>
                   <p className="text-xs text-center text-slate-400 mt-3">
                     Drafts are saved automatically. Listing will be visible to

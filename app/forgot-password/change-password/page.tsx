@@ -30,12 +30,46 @@ export default function ChangePasswordPage() {
       return;
     }
 
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
+    const email = sessionStorage.getItem("resetEmail");
+    const otp = sessionStorage.getItem("resetOtp");
 
-    sessionStorage.removeItem("resetEmail");
-    router.push("/login");
+    if (!email || !otp) {
+      setError("Session expired. Please try again.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const res = await fetch("/api/auth/update-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          otp,
+          newPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Failed to update password");
+        return;
+      }
+
+      // cleanup
+      sessionStorage.removeItem("resetEmail");
+      sessionStorage.removeItem("resetOtp");
+
+      router.push("/login");
+    } catch (err) {
+      setError("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

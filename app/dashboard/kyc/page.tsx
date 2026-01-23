@@ -371,7 +371,10 @@ export default function KYCPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {filteredRequests.map((request) => (
-                    <tr key={request.id} className="hover:bg-primary/10">
+                    <tr
+                      key={request.id}
+                      className="hover:bg-accent-foreground cursor-pointer"
+                    >
                       <td className="px-4 py-4 text-sm font-medium text-slate-900">
                         {request.id}
                       </td>
@@ -413,6 +416,13 @@ export default function KYCPage() {
                   ))}
                 </tbody>
               </table>
+
+              {filteredRequests.length === 0 && (
+                <div className="col-span-full flex justify-center items-center h-48">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                  <span className="ml-2 text-gray-700">Loading KYC List</span>
+                </div>
+              )}
             </div>
           </div>
         </main>

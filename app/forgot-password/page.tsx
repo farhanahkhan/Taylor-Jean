@@ -14,10 +14,30 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    sessionStorage.setItem("resetEmail", email);
-    router.push("/forgot-password/otp");
+
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to send OTP");
+        return;
+      }
+
+      sessionStorage.setItem("resetEmail", email);
+      router.push("/forgot-password/otp");
+    } catch (error) {
+      alert("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

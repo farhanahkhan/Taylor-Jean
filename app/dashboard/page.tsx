@@ -1,8 +1,3 @@
-// import { DashboardHeader } from "@/components/dashboard-header";
-// import { DashboardSidebar } from "@/components/dashboard-sidebar";
-// import { DashboardStats } from "@/components/dashboard-stats";
-// import { DashboardChart } from "../Components/dashboard-chart";
-// import { DashboardRecentOrders } from "@/components/dashboard-recent-orders";
 import { DashboardChart } from "../Components/dashboard-chart";
 import { DashboardHeader } from "../Components/dashboard-header";
 import { DashboardRecentOrders } from "../Components/dashboard-recent-orders";

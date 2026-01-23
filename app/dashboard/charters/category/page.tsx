@@ -394,6 +394,17 @@ export default function CategoryPage() {
                       ))}
                     </tbody>
                   </table>
+                  {filteredCategories.length === 0 && (
+                    // <div className="text-center py-12 text-muted-foreground">
+                    //   No service inquiries found
+                    // </div>
+                    <div className="col-span-full flex justify-center items-center h-48">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                      <span className="ml-2 text-gray-700">
+                        Loading Category
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

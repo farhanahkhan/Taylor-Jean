@@ -247,9 +247,10 @@ export default function MerchPage() {
 
           {/* Product Grid */}
           {isLoading && (
-            <p className="text-center text-gray-500 py-10">
-              Loading products...
-            </p>
+            <div className="col-span-full flex justify-center items-center h-48">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+              <span className="ml-2 text-gray-700">Loading Product...</span>
+            </div>
           )}
           {!isLoading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

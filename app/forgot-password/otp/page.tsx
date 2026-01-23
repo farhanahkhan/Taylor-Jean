@@ -60,12 +60,47 @@ export default function OTPPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (otp.some((digit) => !digit)) return;
 
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    router.push("/forgot-password/change-password");
+    const email = sessionStorage.getItem("resetEmail");
+    if (!email) {
+      alert("Session expired. Please try again.");
+      return;
+    }
+
+    const otpValue = otp.join("");
+
+    try {
+      setIsLoading(true);
+
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          otp: otpValue,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Invalid OTP");
+        return;
+      }
+
+      // save otp for change password step
+      sessionStorage.setItem("resetOtp", otpValue);
+
+      router.push("/forgot-password/change-password");
+    } catch (error) {
+      alert("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleResend = async () => {

@@ -448,9 +448,17 @@ export default function ServicePage() {
               </table>
 
               {filteredCharters.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  No services found
-                </div>
+                <>
+                  {/* <div className="text-center py-12 text-muted-foreground">
+                    No services found
+                  </div> */}
+                  <div className="col-span-full flex justify-center items-center h-48">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                    <span className="ml-2 text-gray-700">
+                      Loading Charter List
+                    </span>
+                  </div>
+                </>
               )}
             </div>
           </div>

@@ -173,7 +173,7 @@ export default function BettingPage() {
             </div>
 
             {/* Search and Filter */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 justify-between">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 justify-between bg-white p-4 rounded-md shadow-sm">
               <div className="relative flex-1 max-w-full sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
@@ -310,7 +310,10 @@ export default function BettingPage() {
                   {filteredBets.map((bet) => {
                     const StatusIcon = statusIcons[bet.status];
                     return (
-                      <tr key={bet.id} className="hover:bg-primary/10">
+                      <tr
+                        key={bet.id}
+                        className="hover:bg-accent-foreground cursor-pointer"
+                      >
                         <td className="px-6 py-4 text-sm font-medium text-slate-900">
                           {bet.id}
                         </td>

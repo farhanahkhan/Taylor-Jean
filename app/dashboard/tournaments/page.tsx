@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-import tournament from "@/public/snowy-mountain-landscape-fishing-tournament.jpg";
 
 import { useState, useEffect } from "react";
 import { Plus, Calendar, Users } from "lucide-react";
@@ -15,7 +14,6 @@ import {
 
 import Image from "next/image";
 
-// import type { Tournament } from "@/lib/tournament-store";
 import { Label } from "@radix-ui/react-label";
 import {
   Select,
@@ -143,31 +141,31 @@ export default function TournamentsPage() {
   //   }
   // };
 
-  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
+  //   const formData = new FormData();
+  //   formData.append("file", file);
 
-    try {
-      const res = await fetch("/api/upload-banner", {
-        method: "POST",
-        body: formData,
-      });
+  //   try {
+  //     const res = await fetch("/api/upload-banner", {
+  //       method: "POST",
+  //       body: formData,
+  //     });
 
-      const data = await res.json();
+  //     const data = await res.json();
 
-      if (res.ok) {
-        setBannerPreview(data.url); // <- save the URL
-      } else {
-        alert(data.message || "Upload failed");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong while uploading the banner");
-    }
-  };
+  //     if (res.ok) {
+  //       setBannerPreview(data.url); // <- save the URL
+  //     } else {
+  //       alert(data.message || "Upload failed");
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Something went wrong while uploading the banner");
+  //   }
+  // };
 
   const toggleSpecies = (speciesId: string) => {
     setSelectedSpecies((prev) =>
@@ -504,7 +502,11 @@ export default function TournamentsPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {tournamentTypes.map((type) => (
-                          <SelectItem key={type.id} value={type.id}>
+                          <SelectItem
+                            key={type.id}
+                            value={type.id}
+                            className="hover:bg-[red]"
+                          >
                             {type.name} {/* Show name on frontend */}
                           </SelectItem>
                         ))}

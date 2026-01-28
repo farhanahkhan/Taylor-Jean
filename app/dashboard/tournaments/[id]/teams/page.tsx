@@ -15,6 +15,17 @@ interface TournamentTeam {
   displayName: string;
 }
 
+interface ApiTeamActivity {
+  id: string;
+  createdAt: string;
+  actionStatus: number;
+  speciesImage: string;
+  tournamentTeam: {
+    name: string;
+    displayName: string;
+  };
+}
+
 interface Activity {
   id: string;
   speciesId: string;
@@ -24,20 +35,28 @@ interface Activity {
   tournamentTeamId: string;
   tournamentTeamMemberId: string;
 }
-
 interface Team {
   id: string;
-  tournamentId: string;
   teamName: string;
   memberName: string;
-  identification: string;
   entryDate: string;
-  entryTime: string;
-  submissionHash: string;
   image: string;
-  status: "verified" | "pending" | "invalidated";
-  activities: Activity[];
+  status: "verified" | "pending";
 }
+
+// interface Team {
+//   id: string;
+//   tournamentId: string;
+//   teamName: string;
+//   memberName: string;
+//   identification: string;
+//   entryDate: string;
+//   entryTime: string;
+//   submissionHash: string;
+//   image: string;
+//   status: "verified" | "pending" | "invalidated";
+//   activities: Activity[];
+// }
 
 export default function TournamentTeamsPage() {
   // const { id: tournamentId } = useParams<{ id: string }>();
@@ -49,31 +68,31 @@ export default function TournamentTeamsPage() {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!tournamentId) return;
+  // useEffect(() => {
+  //   if (!tournamentId) return;
 
-    const fetchTeams = async () => {
-      try {
-        // debugger;
-        const res = await fetch(
-          `/api/team-activities/tournament/${tournamentId}`
-          // "http://mobileapp.designswebs.com:5431/api/team-activities/tournament/75411a28-0740-47f6-84bf-ba275a35cc0d"
-        );
-        console.log("Tournament ID:", tournamentId);
-        // debugger;
-        const json = await res.json();
-        // debugger;
-        setTeams(json.data || []);
-      } catch (err) {
-        console.error(err);
-        // debugger;
-      } finally {
-        setLoading(false);
-      }
-    };
+  //   const fetchTeams = async () => {
+  //     try {
+  //       // debugger;
+  //       const res = await fetch(
+  //         `/api/team-activities/tournament/${tournamentId}`
+  //         // "http://mobileapp.designswebs.com:5431/api/team-activities/tournament/75411a28-0740-47f6-84bf-ba275a35cc0d"
+  //       );
+  //       console.log("Tournament ID:", tournamentId);
+  //       // debugger;
+  //       const json = await res.json();
+  //       // debugger;
+  //       setTeams(json.data || []);
+  //     } catch (err) {
+  //       console.error(err);
+  //       // debugger;
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchTeams();
-  }, [tournamentId]);
+  //   fetchTeams();
+  // }, [tournamentId]);
 
   //   if (loading) {
   //     return (
@@ -118,6 +137,41 @@ export default function TournamentTeamsPage() {
   //     );
   //   }
 
+  useEffect(() => {
+    if (!tournamentId) return;
+
+    const fetchTeams = async () => {
+      try {
+        const res = await fetch(
+          `/api/team-activities/tournament/${tournamentId}`
+        );
+
+        const json = await res.json();
+
+        console.log("RAW API DATA", json.data);
+
+        const mappedTeams: Team[] = json.data.map(
+          (item: ApiTeamActivity): Team => ({
+            id: item.id,
+            teamName: item.tournamentTeam?.name ?? "N/A",
+            memberName: item.tournamentTeam?.displayName ?? "N/A",
+            entryDate: item.createdAt,
+            image: item.speciesImage,
+            status: item.actionStatus === 1 ? "verified" : "pending",
+          })
+        );
+
+        setTeams(mappedTeams);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeams();
+  }, [tournamentId]);
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <DashboardSidebar />
@@ -159,11 +213,11 @@ export default function TournamentTeamsPage() {
                     {team.teamName}
                   </div>
                   <div className="absolute top-4 right-4">
-                    <span
+                    {/* <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                         team.status === "verified"
                           ? "bg-green-100 text-green-800"
-                          : team.status === "invalidated"
+                          : team.status === "verified"
                           ? "bg-red-100 text-red-800"
                           : "bg-blue-100 text-blue-800"
                       }`}
@@ -173,6 +227,15 @@ export default function TournamentTeamsPage() {
                         : team.status === "invalidated"
                         ? "REJECTED"
                         : "PENDING REVIEW"}
+                    </span> */}
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                        team.status === "verified"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-blue-100 text-blue-800"
+                      }`}
+                    >
+                      {team.status === "verified" ? "ACCEPTED" : "PENDING"}
                     </span>
                   </div>
                 </div>
@@ -180,7 +243,7 @@ export default function TournamentTeamsPage() {
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3 pb-3 border-b border-slate-200">
                     <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                      {team.memberName[0]}
+                      {team.memberName?.[0] ?? "?"}
                     </div>
                     <span className="font-semibold text-slate-900">
                       {team.memberName}
@@ -193,7 +256,7 @@ export default function TournamentTeamsPage() {
                         Identification
                       </p>
                       <p className="text-slate-900 font-medium">
-                        {team.identification}
+                        {/* {team.identification} */}
                       </p>
                     </div>
                     <div>
@@ -232,6 +295,34 @@ export default function TournamentTeamsPage() {
               </button>
             </div>
             {/* You can add detailed modal info here using selectedTeam.activities */}
+
+            <div className="p-4">
+              <div className="flex items-center gap-3 mb-3 pb-3 border-b border-slate-200">
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+                  {selectedTeam.memberName?.[0] ?? "?"}
+                </div>
+                <span className="font-semibold text-slate-900">
+                  {selectedTeam.memberName}
+                </span>
+              </div>
+
+              <div className="space-y-3 text-sm mb-2 pb-2 border-slate-200">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
+                    Identification
+                  </p>
+                  <p className="text-slate-900 font-medium">
+                    {/* {team.identification} */}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
+                    Entry Date
+                  </p>
+                  <p className="text-slate-900">{selectedTeam.entryDate}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

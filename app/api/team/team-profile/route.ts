@@ -3,8 +3,7 @@ import { NextResponse } from "next/server";
 // Full URLs for external API
 const GET_TEAMS_URL =
   "http://mobileapp.designswebs.com:5431/api/teams/by-tournament/b97ce2a9-2ea6-4452-8829-abd10643a674";
-// `http://mobileapp.designswebs.com:5431/api/teams/by-tournament`;
-// ("http://mobileapp.designswebs.com:5431/api/teams");
+
 const CREATE_TEAM_URL =
   "http://mobileapp.designswebs.com:5431/api/teams/create";
 

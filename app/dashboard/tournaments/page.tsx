@@ -25,6 +25,7 @@ import {
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 import ImageUploader from "@/app/Components/ImageUploader";
+import Link from "next/link";
 
 interface TournamentType {
   id: string;
@@ -300,6 +301,7 @@ export default function TournamentsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {isLoading ? (
               // Loader while API is fetching
+
               <div className="col-span-full flex justify-center items-center h-48">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
                 <span className="ml-2 text-gray-700">
@@ -313,8 +315,10 @@ export default function TournamentsPage() {
               </p>
             ) : (
               // Your existing code for tournament cards
+
               tournaments.map((tournament) => (
-                <div
+                <Link
+                  href={`/dashboard/tournaments/${tournament.id}/teams`}
                   key={tournament.id}
                   className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 hover:shadow-md transition-shadow"
                 >
@@ -352,7 +356,8 @@ export default function TournamentsPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
+                // </Link>
               ))
             )}
           </div>

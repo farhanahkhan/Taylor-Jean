@@ -25,12 +25,6 @@ export async function GET(
       }
     );
 
-    // if (!res.ok) {
-    //   return NextResponse.json(
-    //     { status: false, message: "Failed to fetch tournament activities" },
-    //     { status: res.status }
-    //   );
-    // }
     if (!res.ok) {
       const errorData = await res.json();
       return NextResponse.json(errorData, { status: res.status });

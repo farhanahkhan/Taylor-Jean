@@ -232,7 +232,7 @@ export default function TournamentsPage() {
       alert("Tournament created successfully!");
 
       // Optionally, refresh tournaments list
-      debugger;
+      // debugger;
       const tournamentsRes = await fetch("/api/tournaments");
       const tournamentsData: TournamentAPIResponse =
         await tournamentsRes.json();

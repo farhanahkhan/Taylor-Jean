@@ -54,19 +54,19 @@ export default function TournamentTeamsPage() {
 
     const fetchTeams = async () => {
       try {
-        debugger;
+        // debugger;
         const res = await fetch(
           `/api/team-activities/tournament/${tournamentId}`
           // "http://mobileapp.designswebs.com:5431/api/team-activities/tournament/75411a28-0740-47f6-84bf-ba275a35cc0d"
         );
         console.log("Tournament ID:", tournamentId);
-        debugger;
+        // debugger;
         const json = await res.json();
-        debugger;
+        // debugger;
         setTeams(json.data || []);
       } catch (err) {
         console.error(err);
-        debugger;
+        // debugger;
       } finally {
         setLoading(false);
       }

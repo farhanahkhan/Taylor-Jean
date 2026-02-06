@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
 
-// Full URLs for external API
+// External APIs
 const GET_TEAMS_URL =
-  "http://mobileapp.designswebs.com:5431/api/teams/by-tournament/b97ce2a9-2ea6-4452-8829-abd10643a674";
+  "http://mobileapp.designswebs.com:5431/api/general-teams/my";
 
 const CREATE_TEAM_URL =
-  "http://mobileapp.designswebs.com:5431/api/teams/create";
+  "http://mobileapp.designswebs.com:5431/api/general-teams/create";
 
-// Bearer token (use .env for security)
+// 🔐 Bearer Token (better: env me rakho)
 const BEARER_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjNzA2ZTJjOS01ZTJlLTQxYjItOTFkYS00NThjZDcwZGI1NDUiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJmYXJoYW5haG1lZEBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJEb21haW4uRW50aXRpZXMuUm9sZSIsImV4cCI6MTc2ODQ5NTE4NCwiaXNzIjoiWW91ckFwcCIsImF1ZCI6IllvdXJBcHBVc2VycyJ9.RWo_SPuLi5SrzyuGxmmwFEvA999aH9a4Wu2lqYrdB-U";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImM3MDZlMmM5LTVlMmUtNDFiMi05MWRhLTQ1OGNkNzBkYjU0NSIsInN1YiI6ImM3MDZlMmM5LTVlMmUtNDFiMi05MWRhLTQ1OGNkNzBkYjU0NSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImZhcmhhbmFobWVkQGdtYWlsLmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkRvbWFpbi5FbnRpdGllcy5Sb2xlIiwiZXhwIjoxNzcwMzc1NDk1LCJpc3MiOiJZb3VyQXBwIiwiYXVkIjoiWW91ckFwcFVzZXJzIn0.PuTSDlwwtqpXNbEMlvZcTP05En9lzodmwlQzNuvFcAg";
 
 /* ======================
-   GET – Fetch all Teams
+   GET – My Teams List
 ====================== */
 export async function GET() {
   try {
@@ -27,9 +27,7 @@ export async function GET() {
 
     const data = await res.json();
 
-    if (!res.ok) return NextResponse.json(data, { status: res.status });
-
-    return NextResponse.json(data);
+    return NextResponse.json(data, { status: res.status });
   } catch (error) {
     console.error("GET Teams Error:", error);
     return NextResponse.json(
@@ -39,43 +37,6 @@ export async function GET() {
   }
 }
 
-// export async function GET(req: Request) {
-//   try {
-//     const { searchParams } = new URL(req.url);
-//     const tournamentId = searchParams.get("tournamentId");
-
-//     if (!tournamentId) {
-//       return NextResponse.json(
-//         { message: "tournamentId is required" },
-//         { status: 400 }
-//       );
-//     }
-
-//     const res = await fetch(`${GET_TEAMS_URL}/${tournamentId}`, {
-//       method: "GET",
-//       headers: {
-//         Authorization: `Bearer ${BEARER_TOKEN}`,
-//         "Content-Type": "application/json",
-//       },
-//       cache: "no-store",
-//     });
-
-//     const data = await res.json();
-
-//     if (!res.ok) {
-//       return NextResponse.json(data, { status: res.status });
-//     }
-
-//     return NextResponse.json(data);
-//   } catch (error) {
-//     console.error("GET Teams Error:", error);
-//     return NextResponse.json(
-//       { message: "Internal Server Error" },
-//       { status: 500 }
-//     );
-//   }
-// }
-
 /* ======================
    POST – Create Team
 ====================== */
@@ -83,7 +44,17 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    console.log("POST Payload:", body); // Debug payload
+    // ✅ ONLY allowed fields (VERY IMPORTANT)
+    const payload = {
+      name: body.name,
+      displayName: body.displayName,
+      description: body.description || "",
+      length: Number(body.length) || 0,
+      engine: body.engine || "",
+      gadgets: body.gadgets || "",
+    };
+
+    console.log("Create Team Payload:", payload);
 
     const res = await fetch(CREATE_TEAM_URL, {
       method: "POST",
@@ -91,15 +62,12 @@ export async function POST(req: Request) {
         Authorization: `Bearer ${BEARER_TOKEN}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
-    console.log("POST Response:", data); // Debug response
 
-    if (!res.ok) return NextResponse.json(data, { status: res.status });
-
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json(data, { status: res.status });
   } catch (error) {
     console.error("POST Create Team Error:", error);
     return NextResponse.json(

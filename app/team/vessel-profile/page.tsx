@@ -118,7 +118,7 @@ export default function VesselProfilePage() {
   };
 
   const handleUpdateProfile = async () => {
-    if (!teamName || !vesselName || !tournamentId) {
+    if (!teamName || !vesselName) {
       alert("Please fill all required fields!");
       return;
     }
@@ -126,7 +126,7 @@ export default function VesselProfilePage() {
     setIsSubmitting(true);
 
     const payload = {
-      tournamentId,
+      // tournamentId,
       name: teamName,
       displayName: vesselName,
       description: vesselBio,
@@ -295,19 +295,19 @@ export default function VesselProfilePage() {
                   BASIC INFORMATION
                 </h3>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Team Name
-                    </label>
-                    <input
-                      type="text"
-                      value={teamName}
-                      onChange={(e) => setTeamName(e.target.value)}
-                      placeholder="Enter team name"
-                      className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                    />
-                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Team Name
+                      </label>
+                      <input
+                        type="text"
+                        value={teamName}
+                        onChange={(e) => setTeamName(e.target.value)}
+                        placeholder="Enter team name"
+                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                      />
+                    </div>
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">
                         Team Display Name
@@ -320,7 +320,7 @@ export default function VesselProfilePage() {
                         className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                       />
                     </div>
-
+                    {/* 
                     <div>
                       <Label
                         htmlFor="tournament-type"
@@ -346,12 +346,12 @@ export default function VesselProfilePage() {
                               value={tournament.id}
                               className="hover:text-grey "
                             >
-                              {tournament.name} {/* Show name on frontend */}
+                              {tournament.name} 
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
+                    </div> */}
                   </div>
 
                   <div>

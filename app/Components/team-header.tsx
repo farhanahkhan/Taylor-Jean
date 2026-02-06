@@ -32,6 +32,7 @@ const navItems = [
   { icon: Calendar, label: "Charter Calendar", href: "/team/charter-calendar" },
   { icon: ShoppingBag, label: "Merch Store", href: "/team/merch-store" },
   { icon: BarChart3, label: "Performance", href: "/team/performance" },
+  { icon: Calendar, label: "Team Tournament", href: "/team/team-tournament" },
 ];
 
 export function TeamHeader() {

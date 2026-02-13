@@ -1,4 +1,5 @@
-import { API_BASE_URL } from "@/app/constants/route";
+// import { API_BASE_URL } from "@/app/constants/route";
+import { API_BASE_URL } from "@/lib/constants/route";
 import { NextResponse } from "next/server";
 
 const API_URL = `${API_BASE_URL}/api/CharterBookingInquiries`;

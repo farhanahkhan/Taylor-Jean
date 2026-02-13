@@ -1,5 +1,6 @@
+import { API_BASE_URL } from "@/lib/constants/route";
 import { NextResponse } from "next/server";
-import { API_BASE_URL } from "@/app/constants/route";
+// import { API_BASE_URL } from "@/app/constants/route";
 
 // Agar aapka real backend API hai
 export async function GET() {

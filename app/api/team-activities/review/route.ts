@@ -1,5 +1,6 @@
+import { API_BASE_URL } from "@/lib/constants/route";
 import { NextRequest, NextResponse } from "next/server";
-import { API_BASE_URL } from "@/app/constants/route";
+// import { API_BASE_URL } from "@/app/constants/route";
 
 export async function POST(req: NextRequest) {
   try {

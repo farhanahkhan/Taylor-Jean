@@ -1,4 +1,5 @@
-import { API_BASE_URL } from "@/app/constants/route";
+// import { API_BASE_URL } from "@/app/constants/route";
+import { API_BASE_URL } from "@/lib/constants/route";
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = `${API_BASE_URL}/api/uploads/generate-upload-url`;

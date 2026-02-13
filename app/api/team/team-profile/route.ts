@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    // ✅ Only allowed fields
+    // ✅ Only allowed field
     const payload = {
       name: body.name,
       displayName: body.displayName,

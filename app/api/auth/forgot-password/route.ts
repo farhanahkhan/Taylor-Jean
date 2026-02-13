@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "@/app/constants/route";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -11,16 +12,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const response = await fetch(
-      "http://mobileapp.designswebs.com:5431/api/Auth/forgotPassword",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}/api/Auth/forgotPassword`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
 
     const data = await response.json();
 

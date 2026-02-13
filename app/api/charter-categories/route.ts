@@ -10,9 +10,10 @@
 //   return NextResponse.json(data);
 // }
 
+import { API_BASE_URL } from "@/app/constants/route";
 import { NextRequest, NextResponse } from "next/server";
 
-const API_URL = "http://mobileapp.designswebs.com:5431/api/charter-categories";
+const API_URL = `${API_BASE_URL}/api/charter-categories`;
 
 // GET categories
 export async function GET() {

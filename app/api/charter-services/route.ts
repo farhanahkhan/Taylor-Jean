@@ -1,11 +1,10 @@
+import { API_BASE_URL } from "@/app/constants/route";
 import { NextResponse } from "next/server";
 
 // GET handler
 export async function GET() {
   try {
-    const res = await fetch(
-      "http://mobileapp.designswebs.com:5431/api/charter-services"
-    );
+    const res = await fetch(`${API_BASE_URL}/api/charter-services`);
 
     if (!res.ok) {
       return NextResponse.json(
@@ -29,16 +28,13 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const res = await fetch(
-      "http://mobileapp.designswebs.com:5431/api/charter-services",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    const res = await fetch(`${API_BASE_URL}/api/charter-services`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
 
     if (!res.ok) {
       return NextResponse.json(

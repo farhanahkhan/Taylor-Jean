@@ -1,17 +1,15 @@
+import { API_BASE_URL } from "@/app/constants/route";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
     const payload = await req.json();
 
-    const apiRes = await fetch(
-      "http://mobileapp.designswebs.com:5431/api/charter-bookings",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
+    const apiRes = await fetch(`${API_BASE_URL}/api/charter-bookings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
     const data = await apiRes.json();
 

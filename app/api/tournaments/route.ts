@@ -1,11 +1,10 @@
+import { API_BASE_URL } from "@/app/constants/route";
 import { NextResponse } from "next/server";
 
 // GET - fetch all tournaments from external API
 export async function GET() {
   try {
-    const res = await fetch(
-      "http://mobileapp.designswebs.com:5431/api/tournaments/get-all"
-    );
+    const res = await fetch(`${API_BASE_URL}/api/tournaments/get-all`);
 
     if (!res.ok) {
       return NextResponse.json(

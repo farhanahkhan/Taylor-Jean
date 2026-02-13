@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_BASE_URL } from "@/app/constants/route";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,12 +23,12 @@ export async function POST(req: NextRequest) {
     }
 
     const backendRes = await fetch(
-      "http://mobileapp.designswebs.com:5431/api/team-activities/review",
+      `${API_BASE_URL}/api/team-activities/review`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ YAHI MAIN CHEEZ HAI
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           activityId,
@@ -38,7 +39,6 @@ export async function POST(req: NextRequest) {
 
     const data = await backendRes.json();
 
-    // 🔥 backend error ko 그대로 forward karo
     if (!backendRes.ok) {
       return NextResponse.json(
         {

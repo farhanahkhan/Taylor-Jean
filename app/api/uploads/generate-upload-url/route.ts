@@ -1,7 +1,7 @@
+import { API_BASE_URL } from "@/app/constants/route";
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL =
-  "http://mobileapp.designswebs.com:5431/api/uploads/generate-upload-url";
+const BACKEND_URL = `${API_BASE_URL}/api/uploads/generate-upload-url`;
 
 export async function GET(req: NextRequest) {
   try {

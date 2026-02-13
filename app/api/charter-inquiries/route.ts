@@ -1,7 +1,7 @@
+import { API_BASE_URL } from "@/app/constants/route";
 import { NextResponse } from "next/server";
 
-const API_URL =
-  "http://mobileapp.designswebs.com:5431/api/CharterBookingInquiries";
+const API_URL = `${API_BASE_URL}/api/CharterBookingInquiries`;
 
 export async function GET() {
   try {

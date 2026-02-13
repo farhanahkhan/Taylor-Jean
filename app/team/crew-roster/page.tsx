@@ -1,27 +1,179 @@
 "use client";
 
-import { useState } from "react";
-import useSWR, { mutate } from "swr";
-import { getCrewMembers, addCrewMember, searchAnglers } from "@/lib/crew-store";
+import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Settings, Users } from "lucide-react";
 import { TeamSidebar } from "@/app/Components/team-sidebar";
 import { TeamHeader } from "@/app/Components/team-header";
-import type { AvailableAngler } from "@/lib/crew-store";
+import { useParams } from "next/navigation";
+
+type CrewMemberApi = {
+  id: string;
+  fullName: string | null;
+  email: string;
+};
+
+type CrewMember = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  initials: string;
+};
+
+type UserApi = {
+  id: string;
+  fullName: string | null;
+  email: string;
+};
+
+type AvailableAngler = {
+  id: string;
+  name: string;
+  email: string;
+  initials: string;
+};
 
 export default function CrewRosterPage() {
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [crewMembers, setCrewMembers] = useState<CrewMember[]>([]);
+  const [loadingCrew, setLoadingCrew] = useState(false);
+
+  const [allUsers, setAllUsers] = useState<UserApi[]>([]);
+  const [searchResults, setSearchResults] = useState<AvailableAngler[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
-  const { data: crewMembers = [] } = useSWR("crew-members", getCrewMembers);
-  const searchResults = searchAnglers(searchQuery);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const handleAddMember = (angler: AvailableAngler) => {
-    addCrewMember(angler, "ANGLER");
-    mutate("crew-members");
-    setSearchQuery("");
+  const params = useParams();
+  const teamId = params.teamId as string;
+
+  // Fetch crew members
+  useEffect(() => {
+    if (!teamId) return;
+    const fetchCrewMembers = async () => {
+      try {
+        setLoadingCrew(true);
+
+        // const res = await fetch(`/api/general-teams/${teamId}/members`);
+        const res = await fetch(`/api/users?type=members&teamId=${teamId}`);
+        const result: { status: boolean; data: CrewMemberApi[] } =
+          await res.json();
+
+        if (result.status) {
+          setCrewMembers(
+            result.data.map((item) => ({
+              id: item.id,
+              name: item.fullName ?? item.email,
+              email: item.email,
+              role: "ANGLER",
+              status: "Active",
+              initials: item.fullName
+                ? item.fullName.slice(0, 2).toUpperCase()
+                : item.email.slice(0, 2).toUpperCase(),
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("Failed to fetch crew members", err);
+      } finally {
+        setLoadingCrew(false);
+      }
+    };
+
+    fetchCrewMembers();
+  }, []);
+
+  // 1️⃣ Fetch all users once
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      try {
+        const res = await fetch(`/api/users?type=users`);
+        const result: { status: boolean; data: UserApi[] } = await res.json();
+        if (result.status) {
+          setAllUsers(result.data);
+
+          // ✅ Initialize searchResults with all users
+          const initialResults = result.data.map((user) => ({
+            id: user.id,
+            name: user.fullName ?? user.email,
+            email: user.email,
+            initials: user.fullName
+              ? user.fullName.slice(0, 2).toUpperCase()
+              : user.email.slice(0, 2).toUpperCase(),
+          }));
+          setSearchResults(initialResults);
+        }
+      } catch (err) {
+        console.error("Failed to fetch users", err);
+      }
+    };
+
+    fetchAllUsers();
+  }, []);
+
+  // 3️⃣ Filter locally on searchQuery
+  useEffect(() => {
+    const filtered = allUsers
+      .filter((user) =>
+        (user.fullName ?? user.email)
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
+      )
+      .map((user) => ({
+        id: user.id,
+        name: user.fullName ?? user.email,
+        email: user.email,
+        initials: user.fullName
+          ? user.fullName.slice(0, 2).toUpperCase()
+          : user.email.slice(0, 2).toUpperCase(),
+      }));
+
+    setSearchResults(filtered);
+  }, [searchQuery, allUsers]);
+
+  // Add member
+  const handleAddMember = async (angler: AvailableAngler) => {
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "add-member", // ✅ important
+          generalTeamId: teamId,
+          userId: angler.id,
+        }),
+      });
+      const result: { status: boolean } = await res.json();
+
+      if (result.status) {
+        setSearchQuery("");
+
+        // Refresh crew members
+        const res2 = await fetch(`/api/general-teams/${teamId}/members`);
+        const refreshed: { status: boolean; data: CrewMemberApi[] } =
+          await res2.json();
+
+        if (refreshed.status) {
+          setCrewMembers(
+            refreshed.data.map((item) => ({
+              id: item.id,
+              name: item.fullName ?? item.email,
+              email: item.email,
+              role: "ANGLER",
+              status: "Active",
+              initials: item.fullName
+                ? item.fullName.slice(0, 2).toUpperCase()
+                : item.email.slice(0, 2).toUpperCase(),
+            }))
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Failed to add member", err);
+    }
   };
-
   return (
     <div className="flex min-h-screen bg-gray-50">
       <TeamSidebar />

@@ -20,6 +20,10 @@ interface ApiMember {
   id: string;
   userId: string;
   designation: number;
+  user: {
+    fullName: string;
+    email: string;
+  };
 }
 
 interface ApiTeam {
@@ -65,6 +69,8 @@ export default function TeamTournamentPage() {
     id: member.id,
     userId: member.userId,
     name: member.userId,
+    fullname: member.user?.fullName,
+    email: member.user?.email,
     role: getRoleFromDesignation(member.designation),
     image: "/images/player-1.jpg",
   }));
@@ -342,10 +348,11 @@ export default function TeamTournamentPage() {
                             </div>
                             <div>
                               <p className="font-bold text-foreground">
-                                {player.name}
+                                {player.fullname}
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                {player.role}
+                                {/* {player.role} */}
+                                {/* {player.email} */}
                               </p>
                             </div>
                           </div>

@@ -131,43 +131,6 @@ export default function TournamentsPage() {
     fetchTournaments();
   }, []);
 
-  // const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0];
-  //   if (file) {
-  //     const reader = new FileReader();
-  //     reader.onloadend = () => {
-  //       setBannerPreview(reader.result as string);
-  //     };
-  //     reader.readAsDataURL(file);
-  //   }
-  // };
-
-  // const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0];
-  //   if (!file) return;
-
-  //   const formData = new FormData();
-  //   formData.append("file", file);
-
-  //   try {
-  //     const res = await fetch("/api/upload-banner", {
-  //       method: "POST",
-  //       body: formData,
-  //     });
-
-  //     const data = await res.json();
-
-  //     if (res.ok) {
-  //       setBannerPreview(data.url); // <- save the URL
-  //     } else {
-  //       alert(data.message || "Upload failed");
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     alert("Something went wrong while uploading the banner");
-  //   }
-  // };
-
   const toggleSpecies = (speciesId: string) => {
     setSelectedSpecies((prev) =>
       prev.includes(speciesId)

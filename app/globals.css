@@ -135,3 +135,6 @@
 button {
   cursor: pointer;
 }
+.swiper-slide {
+  width: 32% !important;
+}

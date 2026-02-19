@@ -81,13 +81,41 @@ export default function TournamentTeamsPage() {
     setOptions(newOptions);
   };
 
-  const handlePublishMarket = () => {
-    setShowLaunchModal(false);
-    setMarketTitle("");
-    setMarketRules("");
-    setMarketOpens("");
-    setMarketCloses("");
-    setOptions([{ option: "", odds: 1 }]);
+  const handlePublishMarket = async () => {
+    try {
+      const payload = {
+        tournamentId: tournamentId, // dynamic bhi kar sakte ho
+        title: marketTitle,
+        description: marketRules,
+        startTime: new Date(marketOpens).toISOString(),
+        endTime: new Date(marketCloses).toISOString(),
+        options: options.map((opt) => ({
+          optionName: opt.option,
+          initialOdds: Number(opt.odds),
+        })),
+      };
+
+      const res = await fetch("/api/bets", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Something went wrong");
+        return;
+      }
+
+      alert("Market Published Successfully ✅");
+      setShowLaunchModal(false);
+    } catch (error) {
+      console.error(error);
+      alert("Server Error ❌");
+    }
   };
 
   useEffect(() => {

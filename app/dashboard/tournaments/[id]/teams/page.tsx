@@ -39,11 +39,27 @@ interface Team {
   status: 0 | 1 | 2; // ✅ ONLY TYPE
 }
 
+// Bet
+interface BetOption {
+  optionId: string;
+  optionName: string;
+  currentOdds: number;
+}
+
+interface Bet {
+  betId: string;
+  title: string;
+  options: BetOption[];
+}
+
 export default function TournamentTeamsPage() {
   // const { id: tournamentId } = useParams<{ id: string }>();
   const params = useParams<{ id: string }>();
   const tournamentId = params?.id;
   const tournament = { title: "Team Activity" };
+
+  const [bets, setBets] = useState<Bet[]>([]);
+  const [betsLoading, setBetsLoading] = useState(true);
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
@@ -153,6 +169,7 @@ export default function TournamentTeamsPage() {
     fetchTeams();
   }, [tournamentId]);
 
+  // POST API
   const reviewEntry = async (activityId: string, approve: boolean) => {
     try {
       setActionLoading(true); // 🔄 start loading
@@ -186,6 +203,33 @@ export default function TournamentTeamsPage() {
       alert("Action failed");
     }
   };
+  // GET API
+  useEffect(() => {
+    const fetchBets = async () => {
+      if (!tournamentId) return;
+
+      try {
+        setBetsLoading(true);
+        const res = await fetch(`/api/bets/tournament/${tournamentId}`);
+
+        const json = await res.json();
+
+        if (!res.ok) {
+          console.error(json.message);
+          setBets([]);
+          return;
+        }
+
+        setBets(json.data || []);
+      } catch (err) {
+        console.error(err);
+        setBets([]);
+      } finally {
+        setBetsLoading(false);
+      }
+    };
+    fetchBets();
+  }, [tournamentId]);
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -312,41 +356,46 @@ export default function TournamentTeamsPage() {
                 Open Betting Markets
               </h2>
 
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 mb-4">
-                    Winning Weight Prediction
-                  </h3>
-                  <div className="grid grid-cols-1 gap-4 overflow-y-auto h-[116px]">
-                    <div className="flex justify-between items-center border-1 rounded-md p-3 ">
-                      <p className="text-md font-semibold text-slate-600 ">
-                        Team Apex
-                      </p>
-                      <p className="text-md font-bold text-primary">2.50x</p>
-                    </div>
-                    <div className="flex justify-between items-center border-1 rounded-md p-3">
-                      <p className="text-md font-semibold text-slate-600 ">
-                        Sea Serpent
-                      </p>
-                      <p className="text-md font-bold text-primary">3.10x</p>
-                    </div>
-                    <div className="flex justify-between items-center border-1 rounded-md p-3">
-                      <p className="text-mdfont-semibold text-slate-600 ">
-                        Ocean Drifter
-                      </p>
-                      <p className="text-md font-bold text-primary">1.80x</p>
+              {betsLoading && (
+                <p className="text-slate-500">Loading markets...</p>
+              )}
+
+              {!betsLoading && bets.length === 0 && (
+                <p className="text-slate-500">No active markets found</p>
+              )}
+
+              <div className="space-y-6 overflow-auto h-[40vh]">
+                {bets.map((bet) => (
+                  <div key={bet.betId}>
+                    <h3 className="text-base font-bold text-slate-900 mb-4">
+                      {bet.title}
+                    </h3>
+
+                    <div className="grid grid-cols-1 gap-4 overflow-y-auto">
+                      {bet.options.map((opt) => (
+                        <div
+                          key={opt.optionId}
+                          className="flex justify-between items-center border rounded-md p-3"
+                        >
+                          <p className="text-md font-semibold text-slate-600">
+                            {opt.optionName}
+                          </p>
+                          <p className="text-md font-bold text-primary">
+                            {opt.currentOdds}x
+                          </p>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-200 flex gap-4">
-                  <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 w-[50%] bg-foreground text-white font-medium rounded-lg  transition-colors">
-                    SETTLE MARKET
-                  </button>
-                  <button className="inline-flex w-[50%]  items-center justify-center gap-2 px-4 py-2.5  text-red-400 font-medium rounded-lg  transition-colors border">
-                    STOP MARKET
-                  </button>
-                </div>
+                ))}
+              </div>
+              <div className="pt-4 border-t border-slate-200 flex gap-4 mt-4">
+                <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 w-[50%] bg-foreground text-white font-medium rounded-lg transition-colors">
+                  SETTLE MARKET
+                </button>
+                <button className="inline-flex w-[50%] items-center justify-center gap-2 px-4 py-2.5 text-red-400 font-medium rounded-lg transition-colors border">
+                  STOP MARKET
+                </button>
               </div>
             </div>
           </div>

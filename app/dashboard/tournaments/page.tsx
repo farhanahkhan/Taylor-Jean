@@ -384,7 +384,7 @@ export default function TournamentsPage() {
                     }}
                   />
 
-                  {bannerPreview && (
+                  {/* {bannerPreview && (
                     <div className="mt-2 relative w-full h-40 rounded overflow-hidden border border-gray-200">
                       <Image
                         src={bannerPreview}
@@ -393,7 +393,7 @@ export default function TournamentsPage() {
                         className="object-cover"
                       />
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Event Title */}

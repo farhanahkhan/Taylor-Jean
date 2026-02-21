@@ -28,6 +28,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "img.drz.lazcdn.com",
       },
+      {
+        protocol: "https",
+        hostname: "404b1b6975af8c5105361c5803268457.r2.cloudflarestorage.com",
+        pathname: "/**",
+      },
     ],
   },
 };

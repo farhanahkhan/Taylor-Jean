@@ -144,8 +144,8 @@ export default function TournamentsPage() {
   };
 
   const handleLaunchTournament = async () => {
-    if (!uploadedImageUrl) {
-      alert("Please upload a tournament banner first!");
+    if (uploadedImageUrl) {
+      // alert("Please upload a tournament banner first!");
       return;
     }
     // Validate required fields

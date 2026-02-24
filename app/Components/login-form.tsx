@@ -181,8 +181,8 @@
 
 import type React from "react";
 import { motion, Variants } from "framer-motion";
-import { NextResponse } from "next/server";
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import * as Label from "@radix-ui/react-label";
@@ -193,8 +193,15 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<string | null>(null);
 
   const router = useRouter();
+  // new add
+  useEffect(() => {
+    const storedRole = localStorage.getItem("role");
+    setRole(storedRole);
+  }, []);
+
   const formVariants: Variants = {
     hidden: { opacity: 0, y: 30 },
     visible: {
@@ -207,14 +214,6 @@ export function LoginForm() {
     },
   };
 
-  //   const handleSubmit = async (e: React.FormEvent) => {
-  //     e.preventDefault();
-  //     setIsLoading(true);
-  //     await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  //     setIsLoading(false);
-  //     router.push("/dashboard");
-  //   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -329,16 +328,17 @@ export function LoginForm() {
           "Login"
         )}
       </button>
-
-      <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
-        <Link
-          href="/signup"
-          className="font-semibold text-accent hover:text-accent/80 transition-colors"
-        >
-          Sign up
-        </Link>
-      </p>
+      {!role && (
+        <p className="text-center text-sm text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/signup"
+            className="font-semibold text-accent hover:text-accent/80 transition-colors"
+          >
+            Sign up
+          </Link>
+        </p>
+      )}
 
       <div className="relative py-2">
         <div className="absolute inset-0 flex items-center">

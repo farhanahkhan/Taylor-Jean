@@ -52,6 +52,13 @@ interface Bet {
   options: BetOption[];
 }
 
+// team-activities/team-points
+interface TeamPoint {
+  tournamentTeamId: string;
+  teamName: string;
+  totalPoints: number;
+}
+
 export default function TournamentTeamsPage() {
   // const { id: tournamentId } = useParams<{ id: string }>();
   const params = useParams<{ id: string }>();
@@ -62,9 +69,11 @@ export default function TournamentTeamsPage() {
   const [betsLoading, setBetsLoading] = useState(true);
 
   const [teams, setTeams] = useState<Team[]>([]);
+  const [teamsPoint, setTeamsPoint] = useState<TeamPoint[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const [showLaunchModal, setShowLaunchModal] = useState(false);
   const [marketTitle, setMarketTitle] = useState("");
@@ -74,6 +83,16 @@ export default function TournamentTeamsPage() {
   const [options, setOptions] = useState<MarketOption[]>([
     { option: "", odds: 1 },
   ]);
+  const [selectedOptions, setSelectedOptions] = useState<
+    Record<string, string>
+  >({});
+
+  const handleSelect = (betId: string, optionId: string) => {
+    setSelectedOptions((prev) => ({
+      ...prev,
+      [betId]: optionId,
+    }));
+  };
 
   const addOption = () => {
     setOptions([...options, { option: "", odds: 1 }]);
@@ -231,6 +250,70 @@ export default function TournamentTeamsPage() {
     fetchBets();
   }, [tournamentId]);
 
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const res = await fetch(
+          `/api/bets/tournament/${tournamentId}/team-points`
+        );
+
+        const data = await res.json();
+
+        if (data?.data) {
+          const sorted = [...data.data].sort(
+            (a: TeamPoint, b: TeamPoint) => b.totalPoints - a.totalPoints
+          );
+
+          setTeamsPoint(sorted);
+        }
+      } catch (error) {
+        console.error("Leaderboard error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (tournamentId) {
+      fetchLeaderboard();
+    }
+  }, [tournamentId]);
+
+  // post bet id
+
+  const handleSettleMarket = async (betId: string) => {
+    const winningOptionId = selectedOptions[betId];
+
+    if (!winningOptionId) {
+      alert("Please select a winning option first");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/bets/${betId}/close`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ winningOptionId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Something went wrong");
+        return;
+      }
+
+      alert("Market settled successfully ✅");
+
+      // optional: modal close
+      // setIsOpen(false);
+    } catch (error) {
+      console.error(error);
+      // alert("Server error");
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <DashboardSidebar />
@@ -309,52 +392,48 @@ export default function TournamentTeamsPage() {
                 </h2>
               </div>
 
-              <div className="space-y-4">
-                {[
-                  {
-                    rank: 1,
-                    team: "Apex Predators",
-                    logs: "14 logs",
-                    score: "1240",
-                  },
-                  {
-                    rank: 2,
-                    team: "Sea Serpent II",
-                    logs: "11 logs",
-                    score: "1105",
-                  },
-                  {
-                    rank: 3,
-                    team: "Blue Wave",
-                    logs: "9 logs",
-                    score: "980",
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.rank}
-                    className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">
-                        {item.rank}
-                      </span>
-                      <div>
-                        <p className="font-semibold text-slate-900">
-                          {item.team}
-                        </p>
-                        <p className="text-xs text-slate-600">{item.logs}</p>
+              {loading ? (
+                <p className="text-sm text-slate-500">Loading...</p>
+              ) : (
+                <div className="space-y-4">
+                  {teamsPoint.map((team, index) => (
+                    <div
+                      key={team.tournamentTeamId}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">
+                          {index + 1}
+                        </span>
+                        <div>
+                          <p className="font-semibold text-slate-900">
+                            {team.teamName}
+                          </p>
+                          <p className="text-xs text-slate-600">Total Points</p>
+                        </div>
                       </div>
+                      <p className="font-bold text-slate-900">
+                        {team.totalPoints}
+                      </p>
                     </div>
-                    <p className="font-bold text-slate-900">{item.score}</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="lg:col-span-1 bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-6">
-                Open Betting Markets
-              </h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-slate-900 mb-6">
+                  Open Betting Markets
+                </h2>
+
+                <button
+                  onClick={() => setIsOpen(true)}
+                  className="px-3 py-1 text-sm bg-primary text-white rounded"
+                >
+                  View All
+                </button>
+              </div>
 
               {betsLoading && (
                 <p className="text-slate-500">Loading markets...</p>
@@ -389,15 +468,81 @@ export default function TournamentTeamsPage() {
                   </div>
                 ))}
               </div>
-              <div className="pt-4 border-t border-slate-200 flex gap-4 mt-4">
-                <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 w-[50%] bg-foreground text-white font-medium rounded-lg transition-colors">
-                  SETTLE MARKET
-                </button>
-                <button className="inline-flex w-[50%] items-center justify-center gap-2 px-4 py-2.5 text-red-400 font-medium rounded-lg transition-colors border">
-                  STOP MARKET
-                </button>
-              </div>
             </div>
+          </div>
+          <div className="w-[90%]">
+            {isOpen && (
+              <div className="fixed inset-0 bg-[#000000bd] flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg w-[70%] max-w-xl p-6 relative">
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="absolute top-4 right-4 text-slate-500 font-bold"
+                  >
+                    ✕
+                  </button>
+                  <h2 className="text-lg font-bold mb-4">
+                    All Betting Markets
+                  </h2>
+                  <div className="space-y-6 max-h-[80vh] overflow-y-auto">
+                    {bets.map((bet) => (
+                      <div key={bet.betId}>
+                        <h3 className="text-base font-bold text-slate-900 mb-4">
+                          {bet.title}
+                        </h3>
+
+                        <div className="grid grid-cols-1 gap-4">
+                          {bet.options.map((opt) => (
+                            <div
+                              key={opt.optionId}
+                              className={`flex flex-col rounded-md   p-3 cursor-pointer
+                          ${
+                            selectedOptions[bet.betId] === opt.optionId
+                              ? "bg-primary/20"
+                              : "bg-white"
+                          }`}
+                              onClick={() =>
+                                handleSelect(bet.betId, opt.optionId)
+                              }
+                            >
+                              <h3 className="text-base font-bold text-slate-900 mb-4">
+                                {bet.title}
+                              </h3>
+                              <div className="flex justify-between items-center p-3 border rounded-md">
+                                <p className="text-md font-semibold text-slate-600">
+                                  {opt.optionName}
+                                </p>
+                                <p className="text-md font-bold text-primary">
+                                  {opt.currentOdds}x
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="pt-4 border-t border-slate-200 flex gap-4 mt-4">
+                          <button
+                            onClick={() => handleSettleMarket(bet.betId)}
+                            disabled={!selectedOptions[bet.betId]}
+                            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 w-[50%] font-medium rounded-lg transition-colors
+    ${
+      selectedOptions[bet.betId]
+        ? "bg-foreground text-white"
+        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+    }
+  `}
+                          >
+                            SETTLE MARKET
+                          </button>
+                          <button className="inline-flex w-[50%] items-center justify-center gap-2 px-4 py-2.5 text-red-400 font-medium rounded-lg transition-colors border">
+                            STOP MARKET
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mb-8">

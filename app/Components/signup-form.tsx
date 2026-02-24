@@ -32,35 +32,28 @@ export function SignupForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
+    // ✅ Role check
+    if (!role || role !== "Team") {
+      alert("Please select Team role to signup");
+      return;
+    }
+
+    setIsLoading(true);
     try {
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName,
-          email,
-          password,
-          role,
-        }),
+        body: JSON.stringify({ fullName, email, password, role }),
       });
-      // const res = await fetch("/api/login", { ... });
       const data = await res.json();
-      console.log(data);
 
       if (!res.ok) {
         alert(data.message || "Signup failed");
         setIsLoading(false);
         return;
       }
-      // if (data.role === "Team") {
-      //   router.push("/team");
-      // } else {
-      //   router.push("/dashboard");
-      // }
 
-      // Signup success
       alert("Signup successful!");
       router.push("/login");
     } catch (err) {
@@ -167,6 +160,7 @@ export function SignupForm() {
           <option value="Team">Team</option>
         </select>
       </div>
+      <input type="hidden" value="Team" name="role" />
 
       <button
         type="submit"

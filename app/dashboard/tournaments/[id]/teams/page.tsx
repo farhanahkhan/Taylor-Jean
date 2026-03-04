@@ -17,6 +17,18 @@ interface MarketOption {
   odds: number;
 }
 
+interface BetOption {
+  optionId: string;
+  optionName: string;
+  currentOdds: number;
+}
+
+interface Bet {
+  betId: string;
+  title: string;
+  options: BetOption[];
+}
+
 interface ApiTeamActivity {
   id: string;
   createdAt: string;
@@ -87,13 +99,6 @@ export default function TournamentTeamsPage() {
     Record<string, string>
   >({});
 
-  const handleSelect = (betId: string, optionId: string) => {
-    setSelectedOptions((prev) => ({
-      ...prev,
-      [betId]: optionId,
-    }));
-  };
-
   const addOption = () => {
     setOptions([...options, { option: "", odds: 1 }]);
   };
@@ -119,7 +124,7 @@ export default function TournamentTeamsPage() {
   const handlePublishMarket = async () => {
     try {
       const payload = {
-        tournamentId: tournamentId, // dynamic bhi kar sakte ho
+        tournamentId: tournamentId,
         title: marketTitle,
         description: marketRules,
         startTime: new Date(marketOpens).toISOString(),
@@ -229,7 +234,9 @@ export default function TournamentTeamsPage() {
 
       try {
         setBetsLoading(true);
-        const res = await fetch(`/api/bets/tournament/${tournamentId}`);
+        const res = await fetch(
+          `/api/bets/tournament/${tournamentId}/bets-tournament`
+        );
 
         const json = await res.json();
 
@@ -281,12 +288,24 @@ export default function TournamentTeamsPage() {
   // post bet id
 
   const handleSettleMarket = async (betId: string) => {
+    debugger;
+    console.log("BET ID RECEIVED:", betId);
+    console.log("SELECTED OPTIONS:", selectedOptions);
+    debugger;
+
+    if (!betId) {
+      alert("Bet ID missing ❌");
+      return;
+    }
+    debugger;
     const winningOptionId = selectedOptions[betId];
+    debugger;
 
     if (!winningOptionId) {
       alert("Please select a winning option first");
       return;
     }
+    debugger;
 
     try {
       const res = await fetch(`/api/bets/${betId}/close`, {
@@ -296,6 +315,7 @@ export default function TournamentTeamsPage() {
         },
         body: JSON.stringify({ winningOptionId }),
       });
+      debugger;
 
       const data = await res.json();
 
@@ -303,6 +323,7 @@ export default function TournamentTeamsPage() {
         alert(data.message || "Something went wrong");
         return;
       }
+      debugger;
 
       alert("Market settled successfully ✅");
 
@@ -313,6 +334,49 @@ export default function TournamentTeamsPage() {
       // alert("Server error");
     }
   };
+
+  const handleSelect = (betId: string, optionId: string) => {
+    setSelectedOptions((prev) => ({
+      ...prev,
+      [betId]: optionId,
+    }));
+  };
+
+  // const handleSettleMarket = async (betId: string) => {
+  //   debugger;
+  //   console.log("Calling API with Bet ID:", betId);
+  //   const winningOptionId = selectedOptions[betId];
+  //   debugger;
+
+  //   if (!winningOptionId) {
+  //     alert("Please select a winning option first ❌");
+  //     return;
+  //   }
+  //   debugger;
+
+  //   try {
+  //     const res = await fetch(`/api/bets/${betId}/close`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+
+  //       credentials: "include", // 🔥 THIS LINE IMPORTANT
+  //       body: JSON.stringify({ winningOptionId }),
+  //     });
+  //     debugger;
+
+  //     const data = await res.json();
+  //     debugger;
+  //     if (!res.ok) {
+  //       alert(data.message || "Something went wrong ❌");
+  //       return;
+  //     }
+  //     debugger;
+
+  //     alert("Market settled successfully ✅");
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -494,19 +558,15 @@ export default function TournamentTeamsPage() {
                           {bet.options.map((opt) => (
                             <div
                               key={opt.optionId}
-                              className={`flex flex-col rounded-md   p-3 cursor-pointer
-                          ${
-                            selectedOptions[bet.betId] === opt.optionId
-                              ? "bg-primary/20"
-                              : "bg-white"
-                          }`}
+                              className={`flex flex-col rounded-md p-3 cursor-pointer ${
+                                selectedOptions[bet.betId] === opt.optionId
+                                  ? "bg-primary/20"
+                                  : "bg-white"
+                              }`}
                               onClick={() =>
                                 handleSelect(bet.betId, opt.optionId)
                               }
                             >
-                              <h3 className="text-base font-bold text-slate-900 mb-4">
-                                {bet.title}
-                              </h3>
                               <div className="flex justify-between items-center p-3 border rounded-md">
                                 <p className="text-md font-semibold text-slate-600">
                                   {opt.optionName}
@@ -521,15 +581,15 @@ export default function TournamentTeamsPage() {
 
                         <div className="pt-4 border-t border-slate-200 flex gap-4 mt-4">
                           <button
-                            onClick={() => handleSettleMarket(bet.betId)}
+                            onClick={() =>
+                              handleSettleMarket(String(bet.betId))
+                            }
                             disabled={!selectedOptions[bet.betId]}
-                            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 w-[50%] font-medium rounded-lg transition-colors
-    ${
-      selectedOptions[bet.betId]
-        ? "bg-foreground text-white"
-        : "bg-gray-300 text-gray-500 cursor-not-allowed"
-    }
-  `}
+                            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 w-[50%] font-medium rounded-lg transition-colors ${
+                              selectedOptions[bet.betId]
+                                ? "bg-foreground text-white"
+                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            }`}
                           >
                             SETTLE MARKET
                           </button>

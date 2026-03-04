@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: tournamentId } = await params; // ✅ IMPORTANT
+    const { id: tournamentId } = await params;
 
     console.log("Tournament ID:", tournamentId);
 

@@ -39,7 +39,7 @@ const navItems = [
   { icon: DollarSign, label: "Payments & Commerce", href: "#" },
   { icon: FileText, label: "Content Moderation", href: "#" },
   { icon: ClipboardList, label: "CMS", href: "#" },
-  { icon: Bell, label: "Notifications", href: "#" },
+  { icon: Bell, label: "Notifications", href: "/dashboard/notifications" },
   { icon: MessageSquare, label: "Support & Tickets", href: "#" },
   { icon: Settings, label: "Settings", href: "#" },
   { icon: FileBarChart, label: "Audit Logs", href: "#" },

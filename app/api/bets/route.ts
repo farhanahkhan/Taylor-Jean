@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    // ✅ Get token from cookie
     const accessToken = req.cookies.get("accessToken")?.value;
 
     if (!accessToken) {
@@ -14,7 +13,6 @@ export async function POST(req: NextRequest) {
     const { tournamentId, title, description, startTime, endTime, options } =
       body;
 
-    // ✅ Basic validation
     if (!tournamentId || !title || !description || !startTime || !endTime) {
       return NextResponse.json(
         { message: "All required fields must be filled." },

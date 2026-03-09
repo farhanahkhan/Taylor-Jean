@@ -3,7 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function BettingMarketsPage({ bets }: { bets: any[] }) {
+interface BetOption {
+  optionId: string;
+  optionName: string;
+  currentOdds: number;
+}
+
+interface Bet {
+  betId: string;
+  title: string;
+  options: BetOption[];
+}
+
+export default function BettingMarketsPage({ bets }: { bets: Bet[] }) {
   const router = useRouter();
   const [selectedOptions, setSelectedOptions] = useState<{
     [key: string]: string;

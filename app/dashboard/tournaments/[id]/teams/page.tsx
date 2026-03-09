@@ -308,12 +308,15 @@ export default function TournamentTeamsPage() {
     debugger;
 
     try {
-      const res = await fetch(`/api/bets/${betId}/close`, {
+      const res = await fetch(`/api/Bets/${betId}/close`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ winningOptionId }),
+        body: JSON.stringify({
+          betId: betId,
+          winningOptionId: winningOptionId,
+        }),
       });
       debugger;
 

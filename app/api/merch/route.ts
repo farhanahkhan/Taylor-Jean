@@ -1,52 +1,40 @@
-// app/api/merch/route.ts
+// route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 const BASE_URL = "http://mobileapp.designswebs.com:5431/api/merch";
 
-/* =======================
-   POST HANDLER (CREATE PRODUCT)
-======================= */
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json();
 
-    // --- Ensure valid image URL ---
-    const imageUrl =
-      payload.imageUrl && payload.imageUrl.trim() !== ""
-        ? payload.imageUrl
-        : "https://mobileapp.designswebs.com/placeholder.svg";
-
-    const body = {
-      name: payload.name,
-      price: payload.price,
-      categoryId: payload.categoryId, // must send ID
-      description: payload.description || "",
-      imageUrl,
-      colorIds: payload.colorIds || [],
-      sizeIds: payload.sizeIds || [],
-      isActive: true,
-    };
-
     const res = await fetch(`${BASE_URL}/products/create`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => null);
+      console.error("Backend returned error:", errorData);
+      return NextResponse.json(
+        { message: errorData?.message || "Backend error" },
+        { status: res.status }
+      );
+    }
 
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (err) {
-    console.error("POST error:", err);
+    console.error("POST route error:", err);
     return NextResponse.json(
-      { message: "Create product failed" },
+      { message: "Internal server error" },
       { status: 500 }
     );
   }
 }
 
-/* =======================
-   GET HANDLER (for categories/colors/sizes)
-======================= */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type");

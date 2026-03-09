@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { Upload, ImageIcon, X } from "lucide-react";
@@ -8,9 +8,14 @@ import * as Select from "@radix-ui/react-select";
 import { ChevronDown, Check } from "lucide-react";
 import Image from "next/image";
 
-import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
-import { DashboardHeader } from "@/app/Components/dashboard-header";
 import ImageUploader from "@/app/Components/ImageUploader";
+import { TeamSidebar } from "@/app/Components/team-sidebar";
+import { TeamHeader } from "@/app/Components/team-header";
+
+export type TeamMember = {
+  id: string;
+  name: string;
+};
 
 export type Color = {
   id: string;
@@ -42,25 +47,60 @@ export default function AddProductPage() {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
 
   const [colors, setColors] = useState<Color[]>([]);
   const [sizesFromAPI, setSizesFromAPI] = useState<Size[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  // const [imageUrl, setImageUrl] = useState("");
 
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
-  // useEffect(() => {
-  //   const savedImage = localStorage.getItem("temp_product_image");
-  //   if (savedImage) {
-  //     setImagePreview(savedImage);
-  //   }
-  // }, []);
-  // Load categories
+  const [variants, setVariants] = useState([
+    {
+      sizes: [] as string[], // store size IDs
+      colors: [] as string[], // store color IDs
+      quantity: "",
+    },
+  ]);
 
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [selectedMember, setSelectedMember] = useState("");
+  const [selectedMemberId, setSelectedMemberId] = useState("");
+
+  // --- Variant Handlers ---
+  const toggleSizeVariant = (variantIndex: number, sizeId: string) => {
+    const updated = [...variants];
+    const sizes = updated[variantIndex].sizes;
+    if (sizes.includes(sizeId)) {
+      updated[variantIndex].sizes = sizes.filter((s) => s !== sizeId);
+    } else {
+      updated[variantIndex].sizes = [...sizes, sizeId];
+    }
+    setVariants(updated);
+  };
+
+  const toggleColorVariant = (variantIndex: number, colorId: string) => {
+    const updated = [...variants];
+    const colors = updated[variantIndex].colors;
+    if (colors.includes(colorId)) {
+      updated[variantIndex].colors = colors.filter((c) => c !== colorId);
+    } else {
+      updated[variantIndex].colors = [...colors, colorId];
+    }
+    setVariants(updated);
+  };
+
+  const updateQuantity = (index: number, value: string) => {
+    const updated = [...variants];
+    updated[index].quantity = value;
+    setVariants(updated);
+  };
+
+  const addVariant = () => {
+    setVariants([...variants, { sizes: [], colors: [], quantity: "" }]);
+  };
+
+  // --- Load Data ---
   useEffect(() => {
     async function loadCategories() {
       try {
@@ -75,7 +115,6 @@ export default function AddProductPage() {
     loadCategories();
   }, []);
 
-  // Load colors
   useEffect(() => {
     async function loadColors() {
       try {
@@ -90,7 +129,6 @@ export default function AddProductPage() {
     loadColors();
   }, []);
 
-  // Load sizes
   useEffect(() => {
     async function loadSizes() {
       try {
@@ -113,64 +151,94 @@ export default function AddProductPage() {
     loadSizes();
   }, []);
 
-  const toggleSize = (size: string) => {
-    setSelectedSizes((prev) =>
-      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
-    );
-  };
-
-  const toggleColor = (colorId: string) => {
-    setSelectedColors((prev) =>
-      prev.includes(colorId)
-        ? prev.filter((c) => c !== colorId)
-        : [...prev, colorId]
-    );
-  };
-
-  // --- FINAL HANDLE SUBMIT ---
+  // --- Handle Submit ---
   const handleSubmit = async () => {
     if (!uploadedImageUrl) {
       alert("Please upload product image");
       return;
     }
-    const res = await fetch("/api/merch", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: productName,
-        price: Number(price),
-        categoryId: category,
-        description,
-        imageUrl: uploadedImageUrl, // ✅ BACKEND SAFE
-        colorIds: selectedColors,
-        sizeIds: selectedSizes
-          .map((s) => sizesFromAPI.find((x) => x.sizeValue === s)?.id)
-          .filter(Boolean),
-        isActive: true,
-      }),
-    });
 
-    const data = await res.json();
+    // --- Map only valid variants ---
+    console.log("Variants state:", variants);
+    console.log("Variants state before submit:", variants);
 
-    if (!res.ok) {
-      alert(data.message || "Failed");
+    const mappedVariants = variants
+      .filter(
+        (v) =>
+          v.sizes.length > 0 && v.colors.length > 0 && Number(v.quantity) > 0
+      )
+      .flatMap((v) =>
+        v.colors.flatMap((colorId) =>
+          v.sizes.map((sizeId) => ({
+            colorId,
+            sizeId,
+            stockQuantity: Number(v.quantity),
+          }))
+        )
+      );
+
+    console.log("Mapped Variants:", mappedVariants);
+
+    if (mappedVariants.length === 0) {
+      alert(
+        "Please add at least one variant with size, color, and quantity > 0"
+      );
       return;
     }
 
-    // ✅ clear temp image after save
-    // localStorage.removeItem("temp_product_image");
+    const body = {
+      name: productName,
+      price: Number(price),
+      categoryId: category,
+      generalTeamId: selectedMemberId,
+      description,
+      imageUrl: uploadedImageUrl,
+      isActive: true,
+      variants: mappedVariants,
+    };
 
-    alert("Product created successfully");
-    router.push("/dashboard/merch");
+    try {
+      const res = await fetch("/api/merch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to create product");
+        return;
+      }
+
+      alert("Product created successfully");
+      router.push("/team/merch");
+    } catch (err) {
+      console.error("Create product failed:", err);
+      alert("Something went wrong. Check console.");
+    }
   };
+
+  useEffect(() => {
+    async function loadMembers() {
+      try {
+        const res = await fetch("/api/team-members");
+        const json = await res.json();
+        if (json.status && Array.isArray(json.data)) {
+          setTeamMembers(json.data); // [{id, name}, ...]
+        }
+      } catch (err) {
+        console.error("Failed to fetch members", err);
+      }
+    }
+    loadMembers();
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-900 flex">
-      <DashboardSidebar />
+      <TeamSidebar />
       <div className="flex-1 flex flex-col min-h-screen">
-        <DashboardHeader />
+        <TeamHeader />
         <div className="flex flex-col items-center justify-center lg:w-full bg-gray-50">
           <main className="flex-1 p-4 md:p-6 lg:p-8 sm:w-[80%] lg:w-[80%] xl:w-[55%]">
             <div className="mb-6">
@@ -261,51 +329,116 @@ export default function AddProductPage() {
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                   />
                 </div>
+
+                <div className="mb-6 w-60">
+                  <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Team Member
+                  </Label.Root>
+                  <Select.Root
+                    value={selectedMemberId}
+                    onValueChange={setSelectedMemberId}
+                  >
+                    <Select.Trigger className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+                      <Select.Value placeholder="Select team member" />
+                      <Select.Icon>
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                      </Select.Icon>
+                    </Select.Trigger>
+                    <Select.Portal>
+                      <Select.Content className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden z-50">
+                        <Select.Viewport className="p-1">
+                          {teamMembers.map((member) => (
+                            <Select.Item
+                              key={member.id}
+                              value={member.id}
+                              className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer outline-none rounded"
+                            >
+                              <Select.ItemText>{member.name}</Select.ItemText>
+                              <Select.ItemIndicator>
+                                <Check className="h-4 w-4 text-primary" />
+                              </Select.ItemIndicator>
+                            </Select.Item>
+                          ))}
+                        </Select.Viewport>
+                      </Select.Content>
+                    </Select.Portal>
+                  </Select.Root>
+                </div>
               </div>
 
               {/* Variants */}
-              <div className="mb-8 space-y-4">
-                <div>
-                  <Label.Root className="block text-sm font-medium text-gray-700 mb-2">
-                    Available Sizes
-                  </Label.Root>
-                  <div className="flex flex-wrap gap-2">
-                    {sizesFromAPI.map((sizeObj) => (
-                      <button
-                        key={sizeObj.id}
-                        onClick={() => toggleSize(sizeObj.sizeValue)}
-                        className={`px-4 py-2 text-sm font-medium border rounded-lg transition-colors ${
-                          selectedSizes.includes(sizeObj.sizeValue)
-                            ? "bg-slate-800 text-white border-slate-800"
-                            : "bg-white text-gray-700 border-gray-200 hover:border-gray-400"
-                        }`}
-                      >
-                        {sizeObj.sizeValue}
-                      </button>
-                    ))}
-                  </div>
+              <div className="mb-8 space-y-6">
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={addVariant}
+                    className="px-5 py-2 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700"
+                  >
+                    Add Variant
+                  </button>
                 </div>
 
-                <div>
-                  <Label.Root className="block text-sm font-medium text-gray-700 mb-2">
-                    Available Colors
-                  </Label.Root>
-                  <div className="flex flex-wrap gap-3">
-                    {colors.map((color) => (
-                      <button
-                        key={color.id}
-                        onClick={() => toggleColor(color.id)}
-                        title={color.name}
-                        className={`w-10 h-10 rounded-full border-2 transition-all ${
-                          selectedColors.includes(color.id)
-                            ? "ring-2 ring-offset-2 ring-slate-800 border-slate-800"
-                            : "border-gray-200 hover:border-gray-400"
-                        }`}
-                        style={{ backgroundColor: color.hexCode }}
+                {variants.map((variant, index) => (
+                  <div key={index} className="border p-4 rounded-lg space-y-4">
+                    {/* Sizes */}
+                    <div>
+                      <Label.Root className="block text-sm font-medium text-gray-700 mb-2">
+                        Available Sizes
+                      </Label.Root>
+                      <div className="flex flex-wrap gap-2">
+                        {sizesFromAPI.map((sizeObj) => (
+                          <button
+                            key={sizeObj.id}
+                            onClick={() => toggleSizeVariant(index, sizeObj.id)}
+                            className={`px-4 py-2 text-sm font-medium border rounded-lg transition-colors ${
+                              variant.sizes.includes(sizeObj.id)
+                                ? "bg-slate-800 text-white border-slate-800"
+                                : "bg-white text-gray-700 border-gray-200 hover:border-gray-400"
+                            }`}
+                          >
+                            {sizeObj.sizeValue}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Colors */}
+                    <div>
+                      <Label.Root className="block text-sm font-medium text-gray-700 mb-2">
+                        Available Colors
+                      </Label.Root>
+                      <div className="flex flex-wrap gap-3">
+                        {colors.map((color) => (
+                          <button
+                            key={color.id}
+                            onClick={() => toggleColorVariant(index, color.id)}
+                            title={color.name}
+                            className={`w-10 h-10 rounded-full border-2 transition-all ${
+                              variant.colors.includes(color.id)
+                                ? "ring-2 ring-offset-2 ring-slate-800 border-slate-800"
+                                : "border-gray-200 hover:border-gray-400"
+                            }`}
+                            style={{ backgroundColor: color.hexCode }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Quantity */}
+                    <div>
+                      <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Quantity
+                      </Label.Root>
+                      <input
+                        type="number"
+                        value={variant.quantity}
+                        onChange={(e) => updateQuantity(index, e.target.value)}
+                        placeholder="Enter quantity"
+                        className="w-40 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm"
                       />
-                    ))}
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
 
               {/* Image Upload */}
@@ -313,70 +446,11 @@ export default function AddProductPage() {
                 <Label.Root className="block text-sm font-medium text-gray-700 mb-2">
                   Product Image
                 </Label.Root>
-                {/* <div className="flex gap-4">
-                  <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                    {imagePreview ? (
-                      <div className="relative w-full h-full">
-                        <Image
-                          src={imagePreview}
-                          alt="Preview"
-                          fill
-                          className="object-cover rounded"
-                        />
-                        <button
-                          onClick={() => {
-                            setImagePreview(null);
-                            setFile(null);
-                            localStorage.removeItem("product_image"); // ✅ CLEAR
-                          }}
-                          className="absolute top-1 right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow"
-                        >
-                          <X className="w-3 h-3 text-gray-600" />
-                        </button>
-                      </div>
-                    ) : (
-                      <ImageIcon className="w-8 h-8 text-gray-400" />
-                    )}
-                  </div>
 
-                  <div
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onClick={() => fileInputRef.current?.click()}
-                    className={`flex-1 border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${
-                      isDragging
-                        ? "border-primary bg-primary/5"
-                        : "border-gray-200 hover:border-gray-400"
-                    }`}
-                  >
-                    <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-600">
-                      <span className="text-primary font-medium">
-                        Upload a file
-                      </span>{" "}
-                      or drag and drop
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      PNG, JPG, GIF up to 10MB
-                    </p>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      onChange={handleFileChange}
-                    />
-                  </div>
-                </div> */}
-                {/* <ImageUploader
-                  onUploadSuccess={(url) => {
-                    setImageUrl(url);
-                  }}
-                /> */}
                 <ImageUploader
                   onUploadSuccess={(finalImageUrl) => {
-                    setUploadedImageUrl(finalImageUrl); // DB ke liye
-                    setBannerPreview(finalImageUrl); // browser preview
+                    setUploadedImageUrl(finalImageUrl);
+                    setBannerPreview(finalImageUrl);
                   }}
                 />
 

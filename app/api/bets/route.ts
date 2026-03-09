@@ -20,12 +20,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!options || options.length === 0) {
-      return NextResponse.json(
-        { message: "At least one option is required." },
-        { status: 400 }
-      );
-    }
+    // if (!options || options.length === 0) {
+    //   return NextResponse.json(
+    //     { message: "At least one option is required." },
+    //     { status: 400 }
+    //   );
+    // }
 
     // ✅ Call Backend with Authorization header
     const response = await fetch(

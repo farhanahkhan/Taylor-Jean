@@ -9,10 +9,11 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 // import { getCategories } from "../../../lib/product-store";
 
 // import { getProducts } from "../../../lib/product-store";
-import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
-import { DashboardHeader } from "@/app/Components/dashboard-header";
+
 import { MerchProductCard } from "@/app/Components/merch-product-card";
 import { Product, Category } from "@/lib/product-store";
+import { TeamHeader } from "@/app/Components/team-header";
+import { TeamSidebar } from "@/app/Components/team-sidebar";
 
 const sortOptions = [
   "Newest First",
@@ -134,10 +135,10 @@ export default function MerchPage() {
 
   return (
     <div className="min-h-screen bg-slate-900 flex">
-      <DashboardSidebar />
+      <TeamSidebar />
 
       <div className="flex-1 flex flex-col min-h-screen">
-        <DashboardHeader />
+        <TeamHeader />
 
         <main className="flex-1 bg-gray-50 p-4 md:p-6 lg:p-8">
           {/* Page Header */}
@@ -156,7 +157,7 @@ export default function MerchPage() {
                 Products
               </button>
               <button
-                onClick={() => router.push("/dashboard/merch/add")}
+                onClick={() => router.push("/team/merch/add")}
                 className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors"
               >
                 <Plus className="h-4 w-4" />

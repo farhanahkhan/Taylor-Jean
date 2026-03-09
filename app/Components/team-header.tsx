@@ -26,7 +26,8 @@ import * as Dialog from "@radix-ui/react-dialog";
 
 const navItems = [
   { icon: LayoutGrid, label: "Dashboard", href: "/team" },
-  { icon: Zap, label: "Vessel Profile", href: "/team/vessel-profile" },
+  { icon: Zap, label: "Team Profile", href: "/team/vessel-profile" },
+  { icon: ShoppingBag, label: "Merch", href: "/team/merch" },
   { icon: Users2, label: "Crew Roster", href: "/team/crew-roster" },
   { icon: Compass, label: "Discover Events", href: "/team/discover-events" },
   { icon: Calendar, label: "Charter Calendar", href: "/team/charter-calendar" },

@@ -97,17 +97,14 @@ export async function POST(
       );
     }
 
-    const externalRes = await fetch(
-      `http://mobileapp.designswebs.com:5431/api/Bets/${betId}/close`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ winningOptionId }),
-      }
-    );
+    const externalRes = await fetch(`${API_BASE_URL}/api/Bets/${betId}/close`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ winningOptionId }),
+    });
 
     const contentType = externalRes.headers.get("content-type");
 

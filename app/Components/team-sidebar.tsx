@@ -19,6 +19,7 @@ import {
 const navItems = [
   { icon: LayoutGrid, label: "Dashboard", href: "/team" },
   { icon: Users2, label: "Team Profile", href: "/team/vessel-profile" },
+  { icon: ShoppingBag, label: "Merch", href: "/team/merch" },
   { icon: User, label: "Crew Roster", href: "/team/crew-roster" },
   { icon: Compass, label: "Discover Events", href: "/team/discover-events" },
   { icon: Calendar, label: "Charter Calendar", href: "/team/charter-calendar" },

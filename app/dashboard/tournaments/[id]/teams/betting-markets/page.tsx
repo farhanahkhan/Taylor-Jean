@@ -80,10 +80,10 @@ export default function BettingMarketsPage({ bets }: { bets: Bet[] }) {
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 >
-                  SETTLE MARKET
+                  SETTLE BET
                 </button>
                 <button className="inline-flex w-[50%] items-center justify-center gap-2 px-4 py-2.5 text-red-400 font-medium rounded-lg transition-colors border">
-                  STOP MARKET
+                  STOP BET
                 </button>
               </div>
             </div>

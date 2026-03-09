@@ -409,7 +409,7 @@ export default function TournamentTeamsPage() {
                 onClick={() => setShowLaunchModal(true)}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-foreground text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Launch New Market
+                Launch New Bet
               </button>
             </div>
           </div>
@@ -594,10 +594,10 @@ export default function TournamentTeamsPage() {
                                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
                             }`}
                           >
-                            SETTLE MARKET
+                            SETTLE Bet
                           </button>
                           <button className="inline-flex w-[50%] items-center justify-center gap-2 px-4 py-2.5 text-red-400 font-medium rounded-lg transition-colors border">
-                            STOP MARKET
+                            STOP Bet
                           </button>
                         </div>
                       </div>
@@ -933,7 +933,7 @@ export default function TournamentTeamsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    MARKET OPENS
+                    Bet OPENS
                   </label>
                   <input
                     type="datetime-local"
@@ -945,7 +945,7 @@ export default function TournamentTeamsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    MARKET CLOSES
+                    Bet CLOSES
                   </label>
                   <input
                     type="datetime-local"

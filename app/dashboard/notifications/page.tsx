@@ -3,9 +3,37 @@
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import ImageUploader from "@/app/Components/ImageUploader";
-import { Upload, BarChart3, Search } from "lucide-react";
-import { useState } from "react";
 
+// interface Notification
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+
+import { Check } from "lucide-react";
+
+import { Upload, BarChart3, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@radix-ui/react-dropdown-menu";
+
+// import { Label } from "@/components/ui/label";
 interface Notification {
   id: string;
   title: string;
@@ -21,6 +49,42 @@ interface Notification {
   engagement: number;
   engagementPercentage: number;
   status: "SENT" | "SCHEDULED" | "DRAFT";
+}
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  userId: string | null;
+  userName: string | null;
+  teamId: string | null;
+  teamName: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface NotificationsResponse {
+  message: string;
+  statusCode: number;
+  status: boolean;
+  data: {
+    data: NotificationItem[];
+    totalRecords: number;
+    pageNumber: number;
+    pageSize: number;
+  };
+}
+export interface User {
+  id: string;
+  displayName: string | null;
+  email: string;
+  fullName: string | null;
+}
+export interface Team {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
 }
 
 const mockNotifications: Notification[] = [
@@ -82,10 +146,35 @@ export default function NotificationsPage() {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  // const [selectedAudience, setSelectedAudience] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+
+  // const [selectedTeam, setSelectedTeam] = useState("");
+  // const userOptions = ["User 1", "User 2", "User 3", "User 4", "User 5"];
+  // const teamOptions = ["Team A", "Team B", "Team C"];
+  // const [userOptions, setUserOptions] = useState([]);
+  const [userOptions, setUserOptions] = useState<User[]>([]);
+  const [teamOptions, setTeamOptions] = useState<Team[]>([]);
+  const [selectedTeam, setSelectedTeam] = useState("");
+
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   const filteredNotifications = mockNotifications.filter((notif) =>
     notif.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const res = await fetch("/api/notifications");
+      const data: NotificationsResponse = await res.json();
+
+      if (data?.data?.data) {
+        setNotifications(data.data.data); // 👈 nested data
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -100,6 +189,121 @@ export default function NotificationsPage() {
     }
   };
 
+  // selected user API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const res = await fetch("/api/user-Team");
+      const data = await res.json();
+
+      if (data?.data) {
+        setUserOptions(data.data);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+  // Team ApI DropDown
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const res = await fetch("/api/team/team-profile");
+        const data = await res.json();
+
+        if (data?.data) {
+          setTeamOptions(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching teams:", error);
+      }
+    };
+
+    fetchTeams();
+  }, []);
+
+  // const handleSendNotification = async () => {
+  //   try {
+  //     // 👉 ALL USERS (multi select)
+  //     if (selectedAudience === "ALL_USERS") {
+  //       for (const userId of selectedUsers) {
+  //         await fetch("/api/notifications", {
+  //           method: "POST",
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //           body: JSON.stringify({
+  //             title,
+  //             message,
+  //             userId,
+  //             teamId: null,
+  //           }),
+  //         });
+  //       }
+  //     }
+
+  //     // 👉 TEAMS ONLY
+  //     if (selectedAudience === "TEAMS_ONLY") {
+  //       await fetch("/api/notifications", {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({
+  //           title,
+  //           message,
+  //           userId: null,
+  //           teamId: selectedTeam,
+  //         }),
+  //       });
+  //     }
+
+  //     alert("Notification sent ✅");
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Error sending notification ❌");
+  //   }
+  // };
+
+  const handleSendNotification = async () => {
+    try {
+      // ✅ ALL USERS → loop se IDs uthao
+      if (selectedAudience === "ALL_USERS") {
+        for (const userId of selectedUsers) {
+          await fetch("/api/notification", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              title,
+              message,
+              userId: userId, // 👈 yahan se ID uth rahi
+              teamId: null,
+            }),
+          });
+        }
+      }
+
+      // ✅ TEAM → direct ID bhejo
+      if (selectedAudience === "TEAMS_ONLY") {
+        await fetch("/api/notification", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title,
+            message,
+            userId: null,
+            teamId: selectedTeam, // 👈 yahan se ID uth rahi
+          }),
+        });
+      }
+
+      console.log("Notification sent ✅");
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
   return (
     <div className="flex min-h-screen bg-slate-50">
       <DashboardSidebar />
@@ -168,25 +372,19 @@ export default function NotificationsPage() {
                   </div>
 
                   {/* Cover Image */}
-                  <div>
+                  {/* <div>
                     <label className="text-xs font-semibold text-slate-600 uppercase block mb-2">
                       Cover Image
                     </label>
                     <ImageUploader />
-                    {/* <div className="border-2 border-dashed border-slate-300 rounded-lg p-12 text-center hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer">
-                      <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                      <p className="text-sm font-medium text-blue-600">
-                        CLICK TO UPLOAD MEDIA
-                      </p>
-                    </div> */}
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
               {/* Section 2 & 3: Category and Audience */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Category */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8">
+                {/* <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8">
                   <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
                     <div className="w-6 h-6 rounded-full bg-primary/50 text-white flex items-center justify-center text-sm font-bold">
                       2
@@ -211,7 +409,7 @@ export default function NotificationsPage() {
                       </button>
                     ))}
                   </div>
-                </div>
+                </div> */}
 
                 {/* Target Audience */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8">
@@ -224,7 +422,7 @@ export default function NotificationsPage() {
                     </h3>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3 mb-3">
                     {audienceOptions.map((option) => (
                       <button
                         key={option.id}
@@ -241,11 +439,84 @@ export default function NotificationsPage() {
                       </button>
                     ))}
                   </div>
+                  {selectedAudience === "TEAMS_ONLY" && (
+                    <div className="mt-4">
+                      <Label className="text-xs font-medium text-slate-500 uppercase mb-2 block">
+                        Select Team
+                      </Label>
+
+                      <Select
+                        value={selectedTeam}
+                        onValueChange={setSelectedTeam}
+                      >
+                        <SelectTrigger className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+                          <SelectValue placeholder="Select Team" />
+                        </SelectTrigger>
+
+                        <SelectContent>
+                          {teamOptions.map((team) => (
+                            <SelectItem key={team.id} value={team.id}>
+                              {team.displayName || team.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {selectedAudience === "ALL_USERS" && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-left flex justify-between items-center">
+                          {selectedUsers.length > 0
+                            ? `${selectedUsers.length} users selected`
+                            : "Select Users"}
+                          <span>▾</span>
+                        </button>
+                      </PopoverTrigger>
+
+                      <PopoverContent className="w-[var(--radix-popper-anchor-width)] p-0 bg-white border border-gray-200 shadow-lg rounded-lg max-h-60 overflow-y-auto">
+                        <Command>
+                          <CommandInput placeholder="Search users..." />
+
+                          <CommandGroup>
+                            {userOptions.map((user) => {
+                              const isSelected = selectedUsers.includes(
+                                user.id
+                              );
+
+                              return (
+                                <CommandItem
+                                  key={user.id}
+                                  onSelect={() => {
+                                    setSelectedUsers((prev) =>
+                                      isSelected
+                                        ? prev.filter((id) => id !== user.id)
+                                        : [...prev, user.id]
+                                    );
+                                  }}
+                                >
+                                  <Check
+                                    className={`mr-2 h-4 w-4 ${
+                                      isSelected ? "opacity-100" : "opacity-0"
+                                    }`}
+                                  />
+
+                                  {/* show name or email */}
+                                  {user.fullName || user.email}
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  )}
                 </div>
               </div>
 
               {/* Section 4: Dispatch Mode */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8">
+              {/* <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8">
                 <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
                   <div className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">
                     📅
@@ -261,7 +532,7 @@ export default function NotificationsPage() {
                       onClick={() => setDispatchMode("immediately")}
                       className={`flex-1 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
                         dispatchMode === "immediately"
-                          ? "bg-blue-100 text-blue-700 border border-blue-300"
+                          ? "bg-blue-100 text-primary border border-primary"
                           : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                       }`}
                     >
@@ -287,14 +558,17 @@ export default function NotificationsPage() {
                     />
                   )}
                 </div>
-              </div>
+              </div> */}
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="px-8 py-3 border border-slate-300 text-slate-700 font-semibold rounded-full hover:bg-slate-50 transition-colors">
+                {/* <button className="px-8 py-3 border border-slate-300 text-slate-700 font-semibold rounded-full hover:bg-slate-50 transition-colors">
                   SAVE AS DRAFT
-                </button>
-                <button className="px-8 py-3 text-white bg-slate-800 rounded-full hover:bg-slate-700 font-semibold  transition-colors">
+                </button> */}
+                <button
+                  className="px-8 py-3 text-white bg-slate-800 rounded-full hover:bg-slate-700 font-semibold  transition-colors"
+                  onClick={handleSendNotification}
+                >
                   {dispatchMode === "immediately"
                     ? "SEND NOW"
                     : "SCHEDULE FOR LATER"}
@@ -342,15 +616,15 @@ export default function NotificationsPage() {
                       <th className="text-left py-3 px-4 font-semibold text-slate-700 uppercase text-xs">
                         Engagement
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700 uppercase text-xs">
+                      {/* <th className="text-left py-3 px-4 font-semibold text-slate-700 uppercase text-xs">
                         Status
                       </th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-700 uppercase text-xs">
                         Actions
-                      </th>
+                      </th> */}
                     </tr>
                   </thead>
-                  <tbody>
+                  {/* <tbody>
                     {filteredNotifications.map((notif) => (
                       <tr
                         key={notif.id}
@@ -411,6 +685,28 @@ export default function NotificationsPage() {
                           <button className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
                             <BarChart3 className="w-4 h-4 text-slate-600" />
                           </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody> */}
+                  <tbody>
+                    {notifications.map((notif) => (
+                      <tr key={notif.id}>
+                        <td className="py-4 px-4">
+                          <p className="font-semibold">{notif.title}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(notif.createdAt).toLocaleString()}
+                          </p>
+                        </td>
+
+                        <td className="py-4 px-4">
+                          {notif.teamName || notif.userName || "—"}
+                        </td>
+
+                        <td className="py-4 px-4">{notif.message}</td>
+
+                        <td className="py-4 px-4">
+                          {notif.isRead ? "Read" : "Unread"}
                         </td>
                       </tr>
                     ))}

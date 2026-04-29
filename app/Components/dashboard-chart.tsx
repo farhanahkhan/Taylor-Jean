@@ -9,6 +9,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import * as Select from "@radix-ui/react-select";
+import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 const data = [
   { name: "Jan", revenue: 4000, orders: 240 },
@@ -21,18 +24,49 @@ const data = [
 ];
 
 export function DashboardChart() {
+  const [selectedType, setSelectedType] = useState("Charter");
+
   return (
     <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
-        <div>
+        <div className="flex items-center gap-3">
           <h3 className="text-base sm:text-lg font-semibold text-foreground">
-            Revenue Overview
+            Charters
           </h3>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Monthly revenue and orders
-          </p>
+          <Select.Root value={selectedType} onValueChange={setSelectedType}>
+            <Select.Trigger className="flex items-center gap-2 px-3 py-1.5 text-sm bg-accent/50 border border-border rounded-lg text-foreground hover:bg-accent focus:outline-none focus:border-primary">
+              <Select.Value />
+              <Select.Icon>
+                <ChevronDown className="h-4 w-4" />
+              </Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content className="bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50">
+                <Select.Viewport className="p-1">
+                  <Select.Item
+                    value="Charter"
+                    className="px-3 py-2 text-sm text-foreground hover:bg-accent rounded cursor-pointer outline-none"
+                  >
+                    <Select.ItemText>Charter</Select.ItemText>
+                  </Select.Item>
+                  <Select.Item
+                    value="Service"
+                    className="px-3 py-2 text-sm text-foreground hover:bg-accent rounded cursor-pointer outline-none"
+                  >
+                    <Select.ItemText>Service</Select.ItemText>
+                  </Select.Item>
+                  <Select.Item
+                    value="Charter Booking"
+                    className="px-3 py-2 text-sm text-foreground hover:bg-accent rounded cursor-pointer outline-none"
+                  >
+                    <Select.ItemText>Charter Booking</Select.ItemText>
+                  </Select.Item>
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
         </div>
-        <select className="px-3 py-1.5 text-sm bg-primary/10 border-border rounded-lg text-foreground focus:outline-none focus:border-primary w-full sm:w-auto">
+        <select className="px-3 py-1.5 text-sm bg-accent/50 border border-border rounded-lg text-foreground focus:outline-none focus:border-primary w-full sm:w-auto">
           <option>Last 7 months</option>
           <option>Last 12 months</option>
           <option>This year</option>

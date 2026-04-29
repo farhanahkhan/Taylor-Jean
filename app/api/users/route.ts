@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     if (body.type === "add-member") {
-      const { generalTeamId, userId } = body;
+      const { generalTeamId, userId, generalTeamName } = body;
 
       const res = await fetch(`${API_BASE_URL}/api/general-teams/add-member`, {
         method: "POST",
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ generalTeamId, userId }),
+        body: JSON.stringify({ generalTeamId, userId, generalTeamName }),
       });
 
       const data = await res.json();

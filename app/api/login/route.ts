@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     if (!apiRes.ok) {
       return NextResponse.json(
         { message: result.message || "Login failed" },
-        { status: 400 }
+        { status: 500 }
       );
     }
 

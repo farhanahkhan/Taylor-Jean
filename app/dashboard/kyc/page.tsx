@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Search,
@@ -22,14 +22,53 @@ import * as Dialog from "@radix-ui/react-dialog";
 interface KYCRequest {
   id: string;
   user: string;
-  email: string;
-  documentType: string;
-  verificationLevel: string;
+  dateOfBirth: string;
   riskScore: number;
   riskLevel: string;
   submitted: string;
-  status: "pending" | "approved" | "review" | "rejected";
+  status: string;
+
+  fileUrl: string | null;
 }
+
+interface ApiKyc {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  fileUrl: string | null;
+  createdAt: string;
+  status: number;
+}
+
+export const getAllKyc = async (): Promise<ApiKyc[]> => {
+  const res = await fetch("/api/kyc");
+  const json = await res.json();
+  return json.data;
+};
+
+export const updateKycStatus = async (
+  id: string,
+  status: "approved" | "rejected" | "review",
+  notes?: string
+) => {
+  const body = { isApproved: status === "approved", notes };
+
+  const res = await fetch(`/api/kyc/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    // Throw backend error message
+    throw new Error(json?.message || "Failed to update KYC");
+  }
+
+  return json;
+};
 
 export default function KYCPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,121 +78,81 @@ export default function KYCPage() {
   const [selectedRequest, setSelectedRequest] = useState<KYCRequest | null>(
     null
   );
-  const [kycRequests, setKycRequests] = useState<KYCRequest[]>([
-    {
-      id: "#1",
-      user: "John Smith",
-      email: "john.smith@email.com",
-      documentType: "Passport",
-      verificationLevel: "Advanced",
-      riskScore: 15,
-      riskLevel: "Low Risk",
-      submitted: "2024-06-15 10:30",
-      status: "pending",
-    },
-    {
-      id: "#2",
-      user: "Sarah Johnson",
-      email: "sarah.j@email.com",
-      documentType: "Driver License",
-      verificationLevel: "Intermediate",
-      riskScore: 8,
-      riskLevel: "Low Risk",
-      submitted: "2024-06-14 14:20",
-      status: "approved",
-    },
-    {
-      id: "#3",
-      user: "Mike Davis",
-      email: "mdavis@email.com",
-      documentType: "National ID",
-      verificationLevel: "Advanced",
-      riskScore: 42,
-      riskLevel: "Medium Risk",
-      submitted: "2024-06-13 09:15",
-      status: "review",
-    },
-    {
-      id: "#4",
-      user: "Emma Wilson",
-      email: "emma.w@email.com",
-      documentType: "Passport",
-      verificationLevel: "Basic",
-      riskScore: 75,
-      riskLevel: "High Risk",
-      submitted: "2024-06-12 16:45",
-      status: "rejected",
-    },
-    {
-      id: "#5",
-      user: "Chris Brown",
-      email: "cbrown@email.com",
-      documentType: "Driver License",
-      verificationLevel: "Intermediate",
-      riskScore: 12,
-      riskLevel: "Low Risk",
-      submitted: "2024-06-11 11:30",
-      status: "pending",
-    },
-  ]);
+  const [kycRequests, setKycRequests] = useState<KYCRequest[]>([]);
 
   const handleReviewClick = (request: KYCRequest) => {
     setSelectedRequest(request);
     setIsModalOpen(true);
     setDecisionNotes("");
   };
+  const handleApprove = async () => {
+    if (!selectedRequest) return;
 
-  const handleApprove = () => {
-    if (selectedRequest) {
-      setKycRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req.id === selectedRequest.id
-            ? { ...req, status: "approved" as const }
-            : req
+    try {
+      await updateKycStatus(selectedRequest.id, "approved", decisionNotes);
+
+      setKycRequests((prev) =>
+        prev.map((req) =>
+          req.id === selectedRequest.id ? { ...req, status: "approved" } : req
         )
       );
+
       setIsModalOpen(false);
       setSelectedRequest(null);
       setDecisionNotes("");
+
+      alert("KYC approved successfully!");
+    } catch (error: any) {
+      // Backend se error message show kare
+      console.error("Approve Error:", error);
+      alert(`Failed to approve KYC: ${error.message}`);
     }
   };
 
-  const handleReject = () => {
-    if (selectedRequest) {
-      setKycRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req.id === selectedRequest.id
-            ? { ...req, status: "rejected" as const }
-            : req
+  const handleReject = async () => {
+    if (!selectedRequest) return;
+
+    try {
+      await updateKycStatus(selectedRequest.id, "rejected", decisionNotes);
+
+      setKycRequests((prev) =>
+        prev.map((req) =>
+          req.id === selectedRequest.id ? { ...req, status: "rejected" } : req
         )
       );
+
       setIsModalOpen(false);
       setSelectedRequest(null);
       setDecisionNotes("");
+
+      alert("KYC rejected successfully!");
+    } catch (error: any) {
+      console.error("Reject Error:", error);
+      alert(`Failed to reject KYC: ${error.message}`);
     }
   };
 
-  const handleRequestMoreInfo = () => {
-    if (selectedRequest) {
-      setKycRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req.id === selectedRequest.id
-            ? { ...req, status: "review" as const }
-            : req
-        )
-      );
-      setIsModalOpen(false);
-      setSelectedRequest(null);
-      setDecisionNotes("");
-    }
-  };
+  // const handleRequestMoreInfo = () => {
+  //   if (selectedRequest) {
+  //     setKycRequests((prevRequests) =>
+  //       prevRequests.map((req) =>
+  //         req.id === selectedRequest.id
+  //           ? { ...req, status: "review" as const }
+  //           : req
+  //       )
+  //     );
+  //     setIsModalOpen(false);
+  //     setSelectedRequest(null);
+  //     setDecisionNotes("");
+  //   }
+  // };
 
   const filteredRequests = useMemo(() => {
     return kycRequests.filter((request) => {
-      const matchesSearch =
-        request.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        request.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        request.documentType.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = request.user
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      // request.documentType.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesStatus =
         statusFilter === "all" || request.status === statusFilter;
@@ -222,6 +221,38 @@ export default function KYCPage() {
       </div>
     );
   };
+
+  useEffect(() => {
+    const fetchKyc = async () => {
+      try {
+        const data: ApiKyc[] = await getAllKyc();
+
+        const mapped: KYCRequest[] = data.map((item) => ({
+          id: item.id,
+          user: `${item.firstName} ${item.lastName}`,
+          dateOfBirth: new Date(item.dateOfBirth).toLocaleDateString(),
+          riskScore: 20,
+          riskLevel: "Low Risk",
+          submitted: new Date(item.createdAt).toLocaleString(),
+          fileUrl: item.fileUrl,
+          status:
+            item.status === 1
+              ? "pending"
+              : item.status === 2
+              ? "approved"
+              : item.status === 3
+              ? "rejected"
+              : "unknown",
+        }));
+
+        setKycRequests(mapped);
+      } catch (error) {
+        console.error("Error fetching KYC:", error);
+      }
+    };
+
+    fetchKyc();
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-slate-50 max-w-full">
@@ -316,6 +347,7 @@ export default function KYCPage() {
                 {stats.pending}
               </p>
             </div>
+
             <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6">
               <h3 className="text-sm font-medium text-slate-600 mb-1">
                 Approved
@@ -326,7 +358,7 @@ export default function KYCPage() {
             </div>
             <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6">
               <h3 className="text-sm font-medium text-slate-600 mb-1">
-                High Risk
+                Rejected
               </h3>
               <p className="text-2xl sm:text-3xl font-bold text-pink-600">
                 {stats.highRisk}
@@ -341,23 +373,13 @@ export default function KYCPage() {
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50">
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Request ID
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       User
                     </th>
+
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Email
+                      Date of Birth
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Document Type
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Verification Level
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Risk Score
-                    </th>
+
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Submitted
                     </th>
@@ -375,27 +397,20 @@ export default function KYCPage() {
                       key={request.id}
                       className="hover:bg-accent-foreground cursor-pointer"
                     >
-                      <td className="px-4 py-4 text-sm font-medium text-slate-900">
-                        {request.id}
-                      </td>
                       <td className="px-4 py-4 text-sm text-slate-900">
                         {request.user}
                       </td>
-                      <td className="px-4 py-4 text-sm text-slate-600">
-                        {request.email}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-slate-900">
+
+                      {/* <td className="px-4 py-4 text-sm text-slate-900">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-slate-400" />
                           {request.documentType}
                         </div>
+                      </td> */}
+                      <td className="px-4 py-4 text-sm text-slate-900">
+                        {request.dateOfBirth}
                       </td>
-                      <td className="px-4 py-4 text-sm text-slate-600">
-                        {request.verificationLevel}
-                      </td>
-                      <td className="px-4 py-4 text-sm">
-                        {getRiskBadge(request.riskLevel, request.riskScore)}
-                      </td>
+
                       <td className="px-4 py-4 text-sm text-slate-600">
                         {request.submitted}
                       </td>
@@ -464,19 +479,22 @@ export default function KYCPage() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-600 mb-1">Email</p>
-                        <p className="text-sm font-medium text-blue-600">
-                          {selectedRequest.email}
+                        <p className="text-xs text-slate-600 mb-1">
+                          Date of Birth
+                        </p>
+                        <p className="text-sm font-medium text-slate-900">
+                          {selectedRequest.dateOfBirth}
                         </p>
                       </div>
-                      <div>
+
+                      {/* <div>
                         <p className="text-xs text-slate-600 mb-1">
                           Document Type
                         </p>
                         <p className="text-sm font-medium text-slate-900">
                           {selectedRequest.documentType}
                         </p>
-                      </div>
+                      </div> */}
                       <div>
                         <p className="text-xs text-slate-600 mb-1">
                           Submitted Date
@@ -494,15 +512,15 @@ export default function KYCPage() {
                       Verification Details
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
+                      {/* <div>
                         <p className="text-xs text-slate-600 mb-1">
                           Verification Level
                         </p>
                         <p className="text-sm font-medium text-slate-900">
                           {selectedRequest.verificationLevel}
                         </p>
-                      </div>
-                      <div>
+                      </div> */}
+                      {/* <div>
                         <p className="text-xs text-slate-600 mb-1">
                           Risk Assessment
                         </p>
@@ -522,7 +540,7 @@ export default function KYCPage() {
                             {selectedRequest.riskLevel}
                           </span>
                         </div>
-                      </div>
+                      </div> */}
                       <div>
                         <p className="text-xs text-slate-600 mb-1">
                           Current Status
@@ -533,8 +551,6 @@ export default function KYCPage() {
                               ? "bg-blue-100 text-blue-700"
                               : selectedRequest.status === "approved"
                               ? "bg-green-100 text-green-700"
-                              : selectedRequest.status === "review"
-                              ? "bg-orange-100 text-orange-700"
                               : "bg-red-100 text-red-700"
                           }`}
                         >
@@ -546,17 +562,27 @@ export default function KYCPage() {
 
                   {/* Document Preview */}
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-900 mb-3">
-                      Document Preview
-                    </h3>
-                    <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg p-8 flex flex-col items-center justify-center">
-                      <FileText className="h-16 w-16 text-slate-300 mb-3" />
-                      <p className="text-sm text-slate-500 mb-1">
-                        Document preview would appear here
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        {selectedRequest.documentType}
-                      </p>
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900 mb-3">
+                        Document Preview
+                      </h3>
+                      <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg p-4 flex flex-col items-center justify-center">
+                        {selectedRequest.fileUrl ? (
+                          <img
+                            src={selectedRequest.fileUrl}
+                            alt="Document Preview"
+                            className="max-h-60 object-contain rounded"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center">
+                            <FileText className="h-16 w-16 text-slate-300 mb-3" />
+                            <p className="text-sm text-slate-500 mb-1">
+                              Document preview would appear here
+                            </p>
+                            <p className="text-xs text-slate-400"></p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -573,13 +599,13 @@ export default function KYCPage() {
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Approve Request
                       </Button>
-                      <Button
+                      {/* <Button
                         onClick={handleRequestMoreInfo}
                         className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
                       >
                         <Info className="h-4 w-4 mr-2" />
                         Request More Info
-                      </Button>
+                      </Button> */}
                       <Button
                         onClick={handleReject}
                         className="flex-1 bg-red-600 hover:bg-red-700 text-white"

@@ -37,6 +37,7 @@ interface Species {
   name: string;
   description: string;
   isActive: boolean;
+  points: number;
 }
 export interface Tournament {
   id: string;
@@ -531,13 +532,16 @@ export default function TournamentsPage() {
                       <button
                         key={species.id}
                         onClick={() => toggleSpecies(species.id)}
-                        className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                        className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors flex justify-around ${
                           selectedSpecies.includes(species.id)
                             ? "bg-primary/10 text-primary border-primary/10"
                             : "bg-white text-slate-700 border-slate-200 hover:bg-gray-100"
                         }`}
                       >
-                        {species.name} {/* Name show */}
+                        {species.name}
+                        <span>
+                          {species.points} {/* Name show */}
+                        </span>
                       </button>
                     ))}
                   </div>

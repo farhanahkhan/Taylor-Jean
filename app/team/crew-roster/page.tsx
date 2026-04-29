@@ -143,6 +143,7 @@ export default function CrewRosterPage() {
           type: "add-member", // ✅ important
           generalTeamId: teamId,
           userId: angler.id,
+          generalTeamName: "Team Horror",
         }),
       });
       const result: { status: boolean } = await res.json();

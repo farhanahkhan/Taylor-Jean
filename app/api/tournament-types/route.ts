@@ -1,10 +1,9 @@
+import { API_BASE_URL } from "@/lib/constants/route";
 import { NextRequest, NextResponse } from "next/server";
 
 // APIs
-const TOURNAMENT_TYPES_API =
-  "http://mobileapp.designswebs.com:5431/api/setup/tournament-types/get-all";
-const SPECIES_API =
-  "http://mobileapp.designswebs.com:5431/api/charter-categories/species_type";
+const TOURNAMENT_TYPES_API = `${API_BASE_URL}/api/setup/tournament-types/get-all`;
+const SPECIES_API = `${API_BASE_URL}/api/charter-categories/species_type`;
 
 // Interfaces
 interface TournamentType {

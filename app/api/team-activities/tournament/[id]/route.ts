@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "@/lib/constants/route";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -17,7 +18,7 @@ export async function GET(
     }
 
     const res = await fetch(
-      `http://mobileapp.designswebs.com:5431/api/team-activities/tournament/${tournamentId}`,
+      `${API_BASE_URL}/api/team-activities/tournament/${tournamentId}`,
       {
         method: "GET",
         headers: {

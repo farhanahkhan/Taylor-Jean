@@ -1,8 +1,9 @@
 // app/api/CharterServiceItem/route.ts
-import { NextResponse } from "next/server";
 
-const EXTERNAL_API =
-  "http://mobileapp.designswebs.com:5431/api/CharterServiceItem";
+import { NextResponse } from "next/server";
+import { API_BASE_URL } from "@/lib/constants/route";
+
+const EXTERNAL_API = `${API_BASE_URL}/api/CharterServiceItem`;
 
 export async function GET() {
   try {

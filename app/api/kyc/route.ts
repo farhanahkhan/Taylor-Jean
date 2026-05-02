@@ -1,6 +1,7 @@
+import { API_BASE_URL } from "@/lib/constants/route";
 import { NextResponse } from "next/server";
 
-const API_BASE_URL = "http://mobileapp.designswebs.com:5431/api/kyc/admin";
+const BASE_URL = `${API_BASE_URL}/api/kyc/admin`;
 const AUTH_HEADER = {
   Authorization: `Bearer ${process.env.API_TOKEN}`,
 };
@@ -8,7 +9,7 @@ const AUTH_HEADER = {
 // ✅ GET all KYC requests
 export async function GET() {
   try {
-    const res = await fetch(`${API_BASE_URL}/all`, {
+    const res = await fetch(`${BASE_URL}/all`, {
       method: "GET",
       headers: AUTH_HEADER,
     });

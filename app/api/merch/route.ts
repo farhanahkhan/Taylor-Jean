@@ -1,7 +1,8 @@
 // route.ts
+import { API_BASE_URL } from "@/lib/constants/route";
 import { NextRequest, NextResponse } from "next/server";
 
-const BASE_URL = "http://mobileapp.designswebs.com:5431/api/merch";
+const BASE_URL = `${API_BASE_URL}/api/merch`;
 
 export async function POST(req: NextRequest) {
   try {

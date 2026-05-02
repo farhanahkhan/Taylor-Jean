@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "@/lib/constants/route";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -28,17 +29,14 @@ export async function POST(req: NextRequest) {
     // }
 
     // ✅ Call Backend with Authorization header
-    const response = await fetch(
-      "http://mobileapp.designswebs.com:5431/api/Bets",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`, // 🔥 IMPORTANT
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}/api/Bets`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`, // 🔥 IMPORTANT
+      },
+      body: JSON.stringify(body),
+    });
 
     const data = await response.json();
 

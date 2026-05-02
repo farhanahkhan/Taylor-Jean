@@ -108,9 +108,10 @@
 //     );
 //   }
 // }
+import { API_BASE_URL } from "@/lib/constants/route";
 import { NextRequest, NextResponse } from "next/server";
 
-const API_BASE_URL = "http://mobileapp.designswebs.com:5431/api/kyc/admin";
+const BASE_URL = `${API_BASE_URL}/api/kyc/admin`;
 
 interface BackendError {
   message?: string;
@@ -135,7 +136,7 @@ export async function PUT(
 
     const body: { isApproved: boolean; notes?: string } = await req.json();
 
-    const res = await fetch(`${API_BASE_URL}/review/${id}`, {
+    const res = await fetch(`${BASE_URL}/review/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

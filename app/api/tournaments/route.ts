@@ -42,16 +42,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const res = await fetch(
-      "http://mobileapp.designswebs.com:5431/api/tournaments/create",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    const res = await fetch(`${API_BASE_URL}/api/tournaments/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
 
     if (!res.ok) {
       const errorData = await res.json();

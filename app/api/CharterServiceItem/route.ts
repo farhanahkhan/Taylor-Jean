@@ -25,9 +25,10 @@
 //   const data = await res.json();
 //   return NextResponse.json(data);
 // }
+import { API_BASE_URL } from "@/lib/constants/route";
 import { NextResponse } from "next/server";
 
-const BASE_URL = "http://mobileapp.designswebs.com:5431/api/CharterServiceItem";
+const BASE_URL = `${API_BASE_URL}/api/CharterServiceItem`;
 
 /* ================= GET ================= */
 export async function GET() {

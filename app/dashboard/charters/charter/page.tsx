@@ -27,6 +27,16 @@ type CharterCategory = {
   name: string;
 };
 
+type Charter = {
+  id: string;
+  charterName: string;
+  description: string;
+  baseAmount: number;
+  categoryId: string;
+  imageUrl: string;
+  isActive: boolean;
+};
+
 export default function ServicePage() {
   const [charterCategories, setCharterCategories] = useState<
     { id: string; name: string }[]
@@ -48,14 +58,26 @@ export default function ServicePage() {
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [amount, setAmount] = useState<string | number>(0);
+  const [editId, setEditId] = useState<string | null>(null);
 
-  // const charterTypes = [
-  //   "Private Charter",
-  //   "Shared Charter",
-  //   "Corporate Charter",
-  //   "Fishing Charter",
-  //   "Sunset Cruise",
-  // ];
+  const handleEdit = (item: Charter) => {
+    if (!item?.id) {
+      console.log("NO ID FOUND", item);
+      return;
+    }
+
+    console.log("EDIT ITEM:", item);
+
+    setShowForm(true);
+    setEditId(String(item.id)); // 🔥 important fix
+
+    setName(item.charterName);
+    setDescription(item.description);
+    setAmount(item.baseAmount);
+    setCharterCategoryId(item.categoryId);
+    setUploadedFileName(item.imageUrl);
+    setIsActive(item.isActive);
+  };
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -97,34 +119,109 @@ export default function ServicePage() {
     }
   };
 
+  // const handleSubmit = async () => {
+  //   if (!name || !amount || !description || !charterCategoryId) {
+  //     alert("Please fill all required fields");
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsSubmitting(true); // 🔄 loader ON
+  //     const payload = {
+  //       charterName: name, // API field
+  //       description: description,
+  //       baseAmount: amount,
+  //       categoryId: charterCategoryId,
+  //       imageUrl: uploadedFileName, // file name only
+  //       isActive: isActive,
+  //     };
+  //     let res; // ✅ yahan declare karo
+
+  //     if (editId) {
+  //       res = await fetch(`/api/charter-services/${editId}`, {
+  //         method: "PUT",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(payload),
+  //       });
+  //     } else {
+  //       res = await fetch("/api/charter-services", {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(payload),
+  //       });
+  //     }
+
+  //     const data = await res.json();
+
+  //     if (data.status) {
+  //       alert("Charter added successfully!");
+  //       // Reset form
+  //       setName("");
+  //       setAmount(0);
+  //       setDescription("");
+  //       setCharterCategoryId("");
+  //       setUploadedFileName("");
+  //       setIsActive(true);
+  //       setShowForm(false);
+
+  //       mutate();
+  //     } else {
+  //       alert("Failed to add charter: " + data.message);
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Something went wrong!");
+  //   }
+  // };
+
   const handleSubmit = async () => {
+    debugger;
+    console.log("EDIT ID BEFORE API:", editId);
     if (!name || !amount || !description || !charterCategoryId) {
       alert("Please fill all required fields");
       return;
     }
+    debugger;
+    console.log("EDIT ID BEFORE API:", editId);
 
     try {
-      setIsSubmitting(true); // 🔄 loader ON
-      const payload = {
-        charterName: name, // API field
-        description: description,
-        baseAmount: amount,
-        categoryId: charterCategoryId,
-        imageUrl: uploadedFileName, // file name only
-        isActive: isActive,
-      };
+      setIsSubmitting(true);
 
-      const res = await fetch("/api/charter-services", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const payload = {
+        charterName: name,
+        description,
+        baseAmount: Number(amount),
+        categoryId: charterCategoryId,
+        imageUrl: uploadedFileName,
+        isActive,
+      };
+      debugger;
+
+      let res;
+
+      if (editId) {
+        // UPDATE
+        res = await fetch(`/api/charter-services/${editId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        // CREATE
+        res = await fetch(`/api/charter-services`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
 
       const data = await res.json();
+      console.log("STATUS:", res.status);
+      console.log("DATA:", data);
 
-      if (data.status) {
-        alert("Charter added successfully!");
-        // Reset form
+      if (res.status === 200 && data?.status === true) {
+        alert(editId ? "Updated successfully!" : "Created successfully!");
+
         setName("");
         setAmount(0);
         setDescription("");
@@ -132,17 +229,21 @@ export default function ServicePage() {
         setUploadedFileName("");
         setIsActive(true);
         setShowForm(false);
+        setEditId(null);
 
         mutate();
+        debugger;
       } else {
-        alert("Failed to add charter: " + data.message);
+        alert(data.message || "Request failed");
       }
     } catch (err) {
       console.error(err);
       alert("Something went wrong!");
+    } finally {
+      setIsSubmitting(false);
     }
+    debugger;
   };
-
   const handleDelete = (id: string) => {
     // deleteCharters(id);
     mutate();
@@ -427,12 +528,18 @@ export default function ServicePage() {
                               align="end"
                               className="min-w-[140px] bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50"
                             >
-                              <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 outline-none">
+                              <DropdownMenu.Item
+                                onClick={() => handleEdit(charters)}
+                                className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 outline-none"
+                              >
                                 <Pencil className="h-4 w-4" />
                                 Edit
                               </DropdownMenu.Item>
                               <DropdownMenu.Item
-                                onClick={() => handleDelete(charters.id)}
+                                // onClick={() => {
+                                //   console.log("EDIT CLICKED", charters);
+                                //   handleEdit(charters);
+                                // }}
                                 className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-red-50 text-red-600 outline-none"
                               >
                                 <Trash2 className="h-4 w-4" />

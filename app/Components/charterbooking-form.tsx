@@ -94,20 +94,32 @@ export function CharterBookingForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     const amount = formData.amount
       ? Number.parseFloat(formData.amount)
       : charterPrices[formData.charterType] || 0;
 
+    const splitName = (fullName: string) => {
+      const parts = fullName.trim().split(/\s+/);
+      return {
+        firstName: parts[0] || "",
+        lastName: parts.slice(1).join(" ") || "-",
+      };
+    };
+
+    const { firstName, lastName } = splitName(formData.fullName);
+
     const payload = {
-      fullName: formData.fullName,
-      email: formData.email,
-      contact: formData.phoneNumber,
-      emergencyName: formData.emergencyName,
-      emergencyContact: formData.emergencyContact,
-      preferredDate: formData.charterDate,
-      backUpDate: formData.backupCharterDate,
-      charterType: formData.charterType,
-      amount,
+      FirstName: firstName,
+      LastName: lastName,
+      Email: formData.email,
+      Contact: formData.phoneNumber,
+      EmergencyName: formData.emergencyName,
+      EmergencyContact: formData.emergencyContact,
+      PreferredDate: formData.charterDate,
+      BackUpDate: formData.backupCharterDate,
+      CharterType: formData.charterType,
+      Amount: amount,
     };
 
     try {
@@ -116,6 +128,7 @@ export function CharterBookingForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -123,17 +136,17 @@ export function CharterBookingForm({
         return;
       }
 
-      // ✅ Success
       alert("Booking successful!");
+
       onSubmit({
-        fullName: payload.fullName,
-        email: payload.email,
-        charterDate: payload.preferredDate, // API me preferredDate, form me charterDate
-        charterType: payload.charterType,
-        amount: payload.amount,
+        fullName: formData.fullName,
+        email: formData.email,
+        charterDate: formData.charterDate,
+        charterType: formData.charterType,
+        amount: amount,
       });
     } catch (err) {
-      //   alert("Something went wrong: " + err.message);
+      console.error(err);
     }
   };
 

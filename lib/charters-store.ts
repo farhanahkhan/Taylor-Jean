@@ -12,11 +12,16 @@ export interface Charter {
 // Fetch charters from API
 export async function fetchCharters(): Promise<Charter[]> {
   try {
-    const res = await fetch("/api/charter-services"); // Next.js API route
+    const res = await fetch("/api/charter-services");
+
+    if (!res.ok) throw new Error("Failed to fetch");
+
     const json = await res.json();
-    if (json.status) {
-      return json.data; // array of charters
-    }
+
+    // handle multiple response formats
+    if (Array.isArray(json)) return json;
+    if (Array.isArray(json.data)) return json.data;
+
     return [];
   } catch (err) {
     console.error(err);

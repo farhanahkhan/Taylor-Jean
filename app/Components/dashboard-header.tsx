@@ -55,8 +55,8 @@ const navItems = [
     href: "/dashboard/betting&compliance",
   },
   { icon: FileCheck, label: "KYC", href: "/dashboard/kyc" },
-  { icon: DollarSign, label: "Payments & Commerce", href: "#" },
-  { icon: FileText, label: "Content Moderation", href: "#" },
+  // { icon: DollarSign, label: "Payments & Commerce", href: "#" },
+  // { icon: FileText, label: "Content Moderation", href: "#" },
   { icon: ClipboardList, label: "CMS", href: "#" },
   { icon: Bell, label: "Notifications", href: "/dashboard/notifications" },
   { icon: MessageSquare, label: "Support & Tickets", href: "#" },
@@ -172,7 +172,7 @@ export function DashboardHeader() {
                               >
                                 Services
                               </Link>
-                              <Link
+                              {/* <Link
                                 href="/dashboard/charters/charterbooking"
                                 className={`block px-3 py-2 text-sm font-medium rounded-md ${
                                   pathname ===
@@ -182,7 +182,7 @@ export function DashboardHeader() {
                                 }`}
                               >
                                 Charter Booking
-                              </Link>
+                              </Link> */}
                               <Link
                                 href="/dashboard/charters/charterbooking"
                                 className={`block px-3 py-2 text-sm font-medium rounded-md ${

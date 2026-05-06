@@ -217,12 +217,36 @@ export default function CharterPage() {
     setEditForm({ ...charter });
   };
 
-  const handleSaveEdit = (id: string) => {
-    // TODO: Replace with API PUT call
-    console.log("Save edit", id, editForm);
-    setEditingId(null);
-    setEditForm({});
-    mutate();
+  const handleSaveEdit = async (id: string) => {
+    try {
+      const parts = (editForm.fullName || "").trim().split(/\s+/);
+
+      const firstName = parts[0] || "";
+      const lastName = parts.slice(1).join(" ") || "-";
+
+      const payload = {
+        FirstName: firstName,
+        LastName: lastName,
+        Email: editForm.email,
+        PreferredDate: editForm.charterDate,
+        CharterType: editForm.charterType,
+        Amount: editForm.amount,
+      };
+
+      await fetch(`/api/charter-bookingList/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      setEditingId(null);
+      setEditForm({});
+      mutate();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleCancelEdit = () => {

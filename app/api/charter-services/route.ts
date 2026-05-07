@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 // GET handler
 export async function GET() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/charter-services`);
+    const res = await fetch(`${API_BASE_URL}/api/charter-services/all`);
 
     if (!res.ok) {
       return NextResponse.json(

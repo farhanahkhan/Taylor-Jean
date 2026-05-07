@@ -19,7 +19,7 @@ const API_URL = `${API_BASE_URL}/api/charter-categories`;
 // GET categories
 export async function GET() {
   try {
-    const res = await fetch(API_URL, {
+    const res = await fetch(API_URL+"/all", {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",

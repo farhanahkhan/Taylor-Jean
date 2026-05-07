@@ -1,10 +1,11 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as Select from "@radix-ui/react-select";
 import * as Label from "@radix-ui/react-label";
 import { Check, ChevronDown } from "lucide-react";
+import { mutate } from "swr";
 
 interface Props {
   onSubmit: (data: {
@@ -16,7 +17,23 @@ interface Props {
   onCancel: () => void;
 }
 
-export function ServiceForm({ onSubmit, onCancel }: Props) {
+interface Props {
+  initialData?: {
+    fullName: string;
+    description: string;
+    amount: number;
+    isActive: boolean;
+  };
+  onSubmit: (data: {
+    fullName: string;
+    description: string;
+    amount: number;
+    isActive: boolean;
+  }) => void;
+  onCancel: () => void;
+}
+
+export function ServiceForm({ initialData, onSubmit, onCancel }: Props) {
   const [formData, setFormData] = useState({
     fullName: "",
     description: "",

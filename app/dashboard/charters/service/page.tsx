@@ -38,6 +38,8 @@ export default function CharterPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Service>>({});
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [formKey, setFormKey] = useState(0);
 
   // 3️⃣ Filter table by search
   const filteredCharters = useMemo(() => {
@@ -47,11 +49,6 @@ export default function CharterPage() {
         service.description.toLowerCase().includes(search.toLowerCase())
     );
   }, [charters, search]);
-
-  // 4️⃣ Add Service form open
-  const handleAddForm = () => {
-    if (!isFormOpen) setIsFormOpen(true);
-  };
 
   // 5️⃣ Form submit (POST to API)
   const handleFormSubmit = async (formData: {
@@ -68,11 +65,32 @@ export default function CharterPage() {
     };
     console.log("POST PAYLOAD:", payload);
 
-    const res = await fetch("/api/CharterServiceItems", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    // const res = await fetch("/api/CharterServiceItems", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify(payload),
+    // });
+    let res;
+
+    if (editId) {
+      // UPDATE
+      res = await fetch(`/api/CharterServiceItems/${editId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+    } else {
+      // CREATE
+      res = await fetch("/api/CharterServiceItems", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+    }
 
     if (!res.ok) {
       console.error("API failed");
@@ -85,6 +103,16 @@ export default function CharterPage() {
   };
 
   // 6️⃣ Edit / Delete (local only, API edit not implemented)
+  // const handleEdit = (service: Service) => {
+  //   setEditingId(service.id);
+  //   setEditForm({
+  //     serviceName: service.serviceName,
+  //     description: service.description,
+  //     price: service.price,
+  //     isActive: service.isActive,
+  //   });
+  //   setIsFormOpen(true);
+  // };
   const handleEdit = (service: Service) => {
     setEditingId(service.id);
     setEditForm({
@@ -93,22 +121,35 @@ export default function CharterPage() {
       price: service.price,
       isActive: service.isActive,
     });
+
+    setFormKey((prev) => prev + 1);
+    setIsFormOpen(true);
   };
 
-  const handleSaveEdit = (id: string) => {
-    // local update only
-    setEditingId(null);
-    setEditForm({});
-  };
+  // const handleSaveEdit = (id: string) => {
+  //   // local update only
+  //   setEditingId(null);
+  //   setEditForm({});
+  // };
 
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditForm({});
   };
 
-  const handleDelete = (id: string) => {
-    // local delete only
-    // or call API if needed
+  const handleDelete = async (id: string) => {
+    const confirmDelete = confirm("Are you sure?");
+
+    if (!confirmDelete) return;
+
+    const res = await fetch(`/api/CharterServiceItems/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      alert("Delete failed");
+      return;
+    }
   };
 
   return (
@@ -127,7 +168,7 @@ export default function CharterPage() {
               </p>
             </div>
             <button
-              onClick={handleAddForm}
+              // onClick={handleAddForm}
               className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
             >
               <Plus className="h-4 w-4" />
@@ -139,8 +180,13 @@ export default function CharterPage() {
           {isFormOpen && (
             <div className="mb-6">
               <ServiceForm
+                key={formKey}
+                // initialData={initialData}
                 onSubmit={handleFormSubmit}
-                onCancel={() => setIsFormOpen(false)}
+                onCancel={() => {
+                  setIsFormOpen(false);
+                  setEditId(null);
+                }}
               />
             </div>
           )}
@@ -217,7 +263,7 @@ export default function CharterPage() {
                           {editingId === service.id ? (
                             <div className="flex items-center justify-end gap-2">
                               <button
-                                onClick={() => handleSaveEdit(service.id)}
+                                // onClick={() => handleSaveEdit(service.id)}
                                 className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                               >
                                 <Check className="h-4 w-4" />
@@ -242,7 +288,7 @@ export default function CharterPage() {
                                   className="min-w-[140px] bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50"
                                 >
                                   <DropdownMenu.Item
-                                    onClick={() => handleEdit(service)}
+                                    // onClick={() => handleEdit(service.id)}
                                     className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 outline-none"
                                   >
                                     <Pencil className="h-4 w-4" /> Edit

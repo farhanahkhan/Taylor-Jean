@@ -45,7 +45,7 @@ import { API_BASE_URL } from "@/lib/constants/route";
 
 export async function PUT(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } }
 ) {
   try {
     const accessToken = req.cookies.get("accessToken")?.value;
@@ -54,11 +54,7 @@ export async function PUT(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await context.params;
-
-    if (!id) {
-      return NextResponse.json({ message: "ID is required" }, { status: 400 });
-    }
+    const { id } = context.params;
 
     const body = await req.json();
 
@@ -80,6 +76,42 @@ export async function PUT(
       body: JSON.stringify(payload),
     });
 
+    const data = await res.json();
+
+    return NextResponse.json(data, { status: res.status });
+  } catch (error) {
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const accessToken = req.cookies.get("accessToken")?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await context.params;
+
+    if (!id) {
+      return NextResponse.json({ message: "ID is required" }, { status: 400 });
+    }
+
+    const res = await fetch(`${API_BASE_URL}/api/CharterServiceItem/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
     const contentType = res.headers.get("content-type");
 
     const responseBody = contentType?.includes("application/json")
@@ -98,7 +130,7 @@ export async function PUT(
       }
     );
   } catch (error) {
-    console.error("PUT Charter Service Error:", error);
+    console.error("DELETE Charter Service Error:", error);
 
     return NextResponse.json(
       { message: "Internal Server Error" },

@@ -69,7 +69,7 @@ export default function ServicePage() {
     console.log("EDIT ITEM:", item);
 
     setShowForm(true);
-    setEditId(String(item.id)); // 🔥 important fix
+    setEditId(String(item.id));
 
     setName(item.charterName);
     setDescription(item.description);
@@ -77,6 +77,27 @@ export default function ServicePage() {
     setCharterCategoryId(item.categoryId);
     setUploadedFileName(item.imageUrl);
     setIsActive(item.isActive);
+  };
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/charter-services/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Delete failed");
+        return;
+      }
+
+      alert("Deleted successfully");
+
+      mutate();
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong");
+    }
   };
 
   useEffect(() => {
@@ -244,10 +265,10 @@ export default function ServicePage() {
     }
     debugger;
   };
-  const handleDelete = (id: string) => {
-    // deleteCharters(id);
-    mutate();
-  };
+  // const handleDelete = (id: string) => {
+  //   // deleteCharters(id);
+  //   mutate();
+  // };
 
   return (
     <div className="flex min-h-screen bg-slate-900">
@@ -540,6 +561,7 @@ export default function ServicePage() {
                                 //   console.log("EDIT CLICKED", charters);
                                 //   handleEdit(charters);
                                 // }}
+                                onClick={() => handleDelete(charters.id)}
                                 className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-red-50 text-red-600 outline-none"
                               >
                                 <Trash2 className="h-4 w-4" />

@@ -75,11 +75,16 @@ export default function ServiceInquiryPage() {
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<ServiceInquiry>>({});
-  const { data: inquiries = [], mutate } = useSWR(
-    "charter-inquiries",
-    fetchCharterInquiries
-  );
+  // const { data: inquiries = [], mutate } = useSWR(
+  //   "charter-inquiries",
+  //   fetchCharterInquiries
+  // );
 
+  const {
+    data: inquiries = [],
+    mutate,
+    isLoading,
+  } = useSWR("charter-inquiries", fetchCharterInquiries);
   const filteredInquiries = useMemo(() => {
     return inquiries.filter((inquiry) => {
       const name = inquiry.name?.toLowerCase() || "";
@@ -416,17 +421,18 @@ export default function ServiceInquiryPage() {
                 </tbody>
               </table>
 
-              {filteredInquiries.length === 0 && (
-                // <div className="text-center py-12 text-muted-foreground">
-                //   No service inquiries found
-                // </div>
+              {isLoading ? (
                 <div className="col-span-full flex justify-center items-center h-48">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
                   <span className="ml-2 text-gray-700">
                     Loading Service Inquiries
                   </span>
                 </div>
-              )}
+              ) : filteredInquiries.length === 0 ? (
+                <div className="col-span-full flex justify-center items-center h-48 text-gray-500">
+                  No Service Inquiries Found
+                </div>
+              ) : null}
             </div>
           </div>
         </main>

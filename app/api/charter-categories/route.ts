@@ -17,11 +17,20 @@ import { NextRequest, NextResponse } from "next/server";
 const API_URL = `${API_BASE_URL}/api/charter-categories`;
 
 // GET categories
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const accessToken = req.cookies.get("accessToken")?.value;
+
+  if (!accessToken) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
   try {
     const res = await fetch(API_URL, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+
       cache: "no-store",
     });
 
@@ -45,10 +54,18 @@ export async function GET() {
 // POST category
 export async function POST(req: NextRequest) {
   try {
+    const accessToken = req.cookies.get("accessToken")?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
     const body = await req.json();
     const res = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(body),
     });
 

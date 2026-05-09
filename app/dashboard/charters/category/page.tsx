@@ -10,6 +10,7 @@ import { Search, Filter, Plus, MoreVertical, Upload } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
+import { mutate } from "swr";
 
 interface Category {
   id: string;
@@ -42,6 +43,7 @@ export default function CategoryPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -49,11 +51,21 @@ export default function CategoryPage() {
       setFormData({ ...formData, imageUrl: file.name });
     }
   };
+  const handleEdit = (cat: Category) => {
+    setEditId(cat.id);
+
+    setFormData({
+      name: cat.name,
+      description: cat.description,
+      imageUrl: cat.imageUrl || "",
+      isSuccess: cat.isActive,
+    });
+  };
   // Function must be inside component
   const fetchCategories = async (): Promise<void> => {
     setLoading(true);
     try {
-      const res = await fetch("/api/charter-categories"); // yeh aapki API route
+      const res = await fetch("/api/charter-categories");
       if (!res.ok) throw new Error("Failed to fetch");
       const json = await res.json();
       setCategories(json.data);
@@ -113,50 +125,116 @@ export default function CategoryPage() {
   //     }
   //   };
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+  //   setError("");
+  //   setSuccess(false);
+
+  //   try {
+  //     const res = await fetch("/api/charter-categories", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         name: formData.name,
+  //         description: formData.description,
+  //         imageUrl: formData.imageUrl,
+  //       }),
+  //     });
+
+  //     if (!res.ok) throw new Error("Failed to create category");
+
+  //     // const data: CategoryResponse = await res.json(); // optional
+
+  //     // Reset form
+  //     setFormData({
+  //       name: "",
+  //       description: "",
+  //       imageUrl: "",
+  //       isSuccess: false,
+  //     });
+  //     setSuccess(true);
+
+  //     // ✅ Refresh table
+  //     await fetchCategories();
+  //   } catch (err: unknown) {
+  //     if (err instanceof Error) setError(err.message);
+  //     else setError("Something went wrong");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setLoading(true);
-    setError("");
-    setSuccess(false);
 
     try {
-      const res = await fetch("/api/charter-categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          description: formData.description,
-          imageUrl: formData.imageUrl,
-        }),
-      });
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        // imageUrl: formData.imageUrl,
+        isActive: formData.isSuccess,
+      };
 
-      if (!res.ok) throw new Error("Failed to create category");
+      let res;
 
-      // const data: CategoryResponse = await res.json(); // optional
+      if (editId) {
+        res = await fetch(`/api/charter-categories/${editId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch("/api/charter-categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
 
-      // Reset form
+      if (!res.ok) throw new Error("Failed");
+
+      await fetchCategories();
+
+      setEditId(null);
+
       setFormData({
         name: "",
         description: "",
         imageUrl: "",
         isSuccess: false,
       });
-      setSuccess(true);
-
-      // ✅ Refresh table
-      await fetchCategories();
-    } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError("Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = (id: string) => {
-    setCategories(categories.filter((cat) => cat.id !== id));
-  };
+  const handleDelete = async (id: string) => {
+    const confirmDelete = confirm("Are you sure?");
 
+    if (!confirmDelete) return;
+    try {
+      const res = await fetch(`/api/charter-categories/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Delete failed");
+        return;
+      }
+
+      alert("Deleted successfully");
+
+      // mutate();
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong");
+    }
+  };
   const filteredCategories = categories.filter(
     (cat) =>
       (cat.name ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -377,7 +455,10 @@ export default function CategoryPage() {
                                   className="min-w-[160px] bg-white rounded-lg shadow-lg border border-slate-200 p-1 z-50"
                                   sideOffset={5}
                                 >
-                                  <DropdownMenu.Item className="px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded cursor-pointer outline-none">
+                                  <DropdownMenu.Item
+                                    onClick={() => handleEdit(category)}
+                                    className="px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded cursor-pointer outline-none"
+                                  >
                                     Edit
                                   </DropdownMenu.Item>
                                   <DropdownMenu.Item

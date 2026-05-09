@@ -79,6 +79,9 @@ export default function ServicePage() {
     setIsActive(item.isActive);
   };
   const handleDelete = async (id: string) => {
+    const confirmDelete = confirm("Are you sure?");
+
+    if (!confirmDelete) return;
     try {
       const res = await fetch(`/api/charter-services/${id}`, {
         method: "DELETE",

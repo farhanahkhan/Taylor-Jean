@@ -1,50 +1,5 @@
-// import { API_BASE_URL } from "@/lib/constants/route";
-// import { NextRequest, NextResponse } from "next/server";
-
-// export async function PUT(
-//   req: NextRequest,
-//   context: { params: { id: string } }
-// ) {
-//   const { params } = context;
-
-//   console.log("PARAM ID:", params?.id);
-
-//   const accessToken = req.cookies.get("accessToken")?.value;
-
-//   if (!accessToken) {
-//     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-//   }
-
-//   try {
-//     const body = await req.json();
-
-//     const res = await fetch(
-//       `${API_BASE_URL}/api/charter-services/${params.id}`,
-//       {
-//         method: "PUT",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify(body),
-//       }
-//     );
-
-//     const data = await res.json();
-
-//     // return NextResponse.json(data);
-//     return NextResponse.json(data, { status: res.status });
-//   } catch (error) {
-//     return NextResponse.json(
-//       { status: false, message: "Something went wrong" },
-//       { status: 500 }
-//     );
-//   }
-// }
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/constants/route";
-
-// import { NextRequest, NextResponse } from "next/server";
-// import { API_BASE_URL } from "@/lib/constants/route";
 
 export async function PUT(
   req: NextRequest,
@@ -58,6 +13,7 @@ export async function PUT(
     }
 
     const { id } = await context.params;
+
     if (!id) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
@@ -65,13 +21,13 @@ export async function PUT(
     const body = await req.json();
 
     const payload = {
-      Name: body.Name || body.charterName,
+      name: body.name,
       description: body.description,
-      amount: body.amount ?? body.baseAmount,
+      imageUrl: body.imageUrl || "",
       isActive: body.isActive,
     };
 
-    const res = await fetch(`${API_BASE_URL}/api/CharterServiceItem/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/charter-categories/${id}`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -86,9 +42,19 @@ export async function PUT(
       ? await res.json()
       : await res.text();
 
-    return NextResponse.json(responseBody, { status: res.status });
+    return new NextResponse(
+      typeof responseBody === "string"
+        ? responseBody
+        : JSON.stringify(responseBody),
+      {
+        status: res.status,
+        headers: {
+          "Content-Type": contentType ?? "application/json",
+        },
+      }
+    );
   } catch (error) {
-    console.error("PUT ERROR:", error);
+    console.error("PUT Charter Service Error:", error);
 
     return NextResponse.json(
       { message: "Internal Server Error" },
@@ -96,6 +62,7 @@ export async function PUT(
     );
   }
 }
+
 export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -113,13 +80,16 @@ export async function DELETE(
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const res = await fetch(`${API_BASE_URL}/api/CharterServiceItem/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const res = await fetch(
+      `${API_BASE_URL}/api/charter-categories/category/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     const contentType = res.headers.get("content-type");
 

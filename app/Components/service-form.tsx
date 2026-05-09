@@ -7,29 +7,41 @@ import * as Label from "@radix-ui/react-label";
 import { Check, ChevronDown } from "lucide-react";
 import { mutate } from "swr";
 
-interface Props {
-  onSubmit: (data: {
-    fullName: string;
-    description: string;
-    amount: number;
-    isActive: boolean;
-  }) => void;
-  onCancel: () => void;
+// interface Props {
+//   onSubmit: (data: {
+//     fullName: string;
+//     description: string;
+//     amount: number;
+//     isActive: boolean;
+//   }) => void;
+//   onCancel: () => void;
+// }
+
+// interface Props {
+//   initialData?: {
+//     fullName: string;
+//     description: string;
+//     amount: number;
+//     isActive: boolean;
+//   };
+//   onSubmit: (data: {
+//     fullName: string;
+//     description: string;
+//     amount: number;
+//     isActive: boolean;
+//   }) => void;
+//   onCancel: () => void;
+// }
+interface ServiceFormData {
+  fullName: string;
+  description: string;
+  amount: number;
+  isActive: boolean;
 }
 
 interface Props {
-  initialData?: {
-    fullName: string;
-    description: string;
-    amount: number;
-    isActive: boolean;
-  };
-  onSubmit: (data: {
-    fullName: string;
-    description: string;
-    amount: number;
-    isActive: boolean;
-  }) => void;
+  initialData?: ServiceFormData;
+  onSubmit: (data: ServiceFormData) => void;
   onCancel: () => void;
 }
 
@@ -40,6 +52,17 @@ export function ServiceForm({ initialData, onSubmit, onCancel }: Props) {
     amount: 0,
     isActive: false,
   });
+
+  useEffect(() => {
+    if (!initialData) return;
+
+    setFormData({
+      fullName: initialData.fullName || "",
+      description: initialData.description || "",
+      amount: initialData.amount ?? 0,
+      isActive: initialData.isActive ?? false,
+    });
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

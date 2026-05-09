@@ -1,13 +1,26 @@
 // app/api/CharterServiceItem/route.ts
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/constants/route";
 
 const EXTERNAL_API = `${API_BASE_URL}/api/CharterServiceItem`;
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const res = await fetch(EXTERNAL_API); // server-side fetch
+    const accessToken = req.cookies.get("accessToken")?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const res = await fetch(EXTERNAL_API, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error) {
@@ -18,13 +31,20 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const accessToken = req.cookies.get("accessToken")?.value;
+    if (!accessToken) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
     const body = await req.json();
 
     const res = await fetch(EXTERNAL_API, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(body),
     });
 

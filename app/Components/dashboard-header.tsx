@@ -172,7 +172,7 @@ export function DashboardHeader() {
                               >
                                 Services
                               </Link>
-                              {/* <Link
+                              <Link
                                 href="/dashboard/charters/charterbooking"
                                 className={`block px-3 py-2 text-sm font-medium rounded-md ${
                                   pathname ===
@@ -182,7 +182,7 @@ export function DashboardHeader() {
                                 }`}
                               >
                                 Charter Booking
-                              </Link> */}
+                              </Link>
                               <Link
                                 href="/dashboard/charters/charterbooking"
                                 className={`block px-3 py-2 text-sm font-medium rounded-md ${

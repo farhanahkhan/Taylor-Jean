@@ -177,7 +177,7 @@ export default function CharterPage() {
   // --------- SWR Fetch ---------
   const { data, error, mutate } = useSWR<CharterApiItem[]>(
     "/api/charter-bookingList",
-    fetcher
+    fetcher,
   );
 
   const [search, setSearch] = useState("");
@@ -203,7 +203,7 @@ export default function CharterPage() {
     return charters.filter(
       (c) =>
         c.fullName.toLowerCase().includes(search.toLowerCase()) ||
-        c.email.toLowerCase().includes(search.toLowerCase())
+        c.email.toLowerCase().includes(search.toLowerCase()),
     );
   }, [charters, search]);
 
@@ -275,13 +275,13 @@ export default function CharterPage() {
                 Customize and book your fishing charter experience.
               </p>
             </div>
-            <button
+            {/* <button
               onClick={handleAddForm}
               className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
             >
               <Plus className="h-4 w-4" />
               Add Charter
-            </button>
+            </button> */}
           </div>
 
           {/* Open Forms */}

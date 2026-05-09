@@ -6,7 +6,8 @@ const BASE_URL = `${API_BASE_URL}/api/CharterServiceItem`;
 /* ================= GET ================= */
 export async function GET() {
   try {
-    const res = await fetch(BASE_URL, { cache: "no-store" });
+    
+    const res = await fetch(BASE_URL+"/all", { cache: "no-store" });
     const data = await res.json();
 
     return NextResponse.json(data);

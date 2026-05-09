@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
   try {
-    const res = await fetch(API_URL, {
+    const res = await fetch(API_URL+"/all", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,

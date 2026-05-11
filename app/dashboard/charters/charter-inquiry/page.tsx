@@ -43,6 +43,7 @@ interface APIResponseItem {
   contact: string;
   amount: number;
   paymentStatus: string;
+  bookingStatus: string;
 }
 interface APIResponse {
   data: APIResponseItem[];
@@ -59,6 +60,7 @@ const fetchCharterInquiries = async (): Promise<ServiceInquiry[]> => {
     contact: item.contact,
     amount: item.amount,
     paymentStatus: item.paymentStatus,
+    bookingStatus: item.bookingStatus,
   }));
 };
 
@@ -69,6 +71,7 @@ export interface ServiceInquiry {
   contact: string;
   amount: number;
   paymentStatus: string;
+  bookingStatus: string;
 }
 
 export default function ServiceInquiryPage() {
@@ -99,28 +102,66 @@ export default function ServiceInquiryPage() {
 
   const handleEdit = (inquiry: ServiceInquiry) => {
     setEditingId(inquiry.id);
+
     setEditForm({
       name: inquiry.name,
       email: inquiry.email,
       contact: inquiry.contact,
-      // charterType: inquiry.charterType,
       amount: inquiry.amount,
       paymentStatus: inquiry.paymentStatus,
+      bookingStatus: inquiry.bookingStatus,
     });
   };
 
+  // const handleSaveEdit = async (id: string) => {
+  //   try {
+  //     await updateServiceInquiry(id, editForm); // PUT request
+  //     setEditingId(null);
+  //     setEditForm({});
+  //     mutate(); // re-fetch data
+  //   } catch (error) {
+  //     console.error("Failed to save edit:", error);
+  //     alert("Failed to save changes. Please try again.");
+  //   }
+  // };
+
   const handleSaveEdit = async (id: string) => {
+    debugger;
     try {
-      await updateServiceInquiry(id, editForm); // PUT request
+      const payload = {
+        firstName: editForm.name?.split(" ")[0] || "",
+        lastName: editForm.name?.split(" ")[1] || "",
+        email: editForm.email,
+        contact: editForm.contact,
+        amount: editForm.amount,
+        paymentStatus: editForm.paymentStatus,
+        bookingStatus: editForm.bookingStatus,
+      };
+      debugger;
+      const res = await fetch(`/api/charter-inquiries/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      debugger;
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.message || "Update failed");
+        return;
+      }
+
       setEditingId(null);
       setEditForm({});
-      mutate(); // re-fetch data
+      debugger;
+      mutate(); // refresh list
     } catch (error) {
-      console.error("Failed to save edit:", error);
-      alert("Failed to save changes. Please try again.");
+      console.error(error);
+      alert("Something went wrong");
     }
   };
-
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditForm({});
@@ -223,6 +264,9 @@ export default function ServiceInquiryPage() {
                     </th>
                     <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
                       Payment Status
+                    </th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
+                      Booking Status
                     </th>
                     <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
                       Actions
@@ -365,6 +409,17 @@ export default function ServiceInquiryPage() {
                           }`}
                         >
                           {inquiry.paymentStatus}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            inquiry.bookingStatus === "Pending"
+                              ? "bg-yellow-50 text-yellow-600"
+                              : "bg-green-50 text-green-600"
+                          }`}
+                        >
+                          {inquiry.bookingStatus}
                         </span>
                       </td>
 

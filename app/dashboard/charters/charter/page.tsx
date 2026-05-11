@@ -59,6 +59,8 @@ export default function ServicePage() {
   const [isActive, setIsActive] = useState(true);
   const [amount, setAmount] = useState<string | number>(0);
   const [editId, setEditId] = useState<string | null>(null);
+  const R2_PUBLIC_BASE_URL =
+    "https://pub-a282791a5a174e8daa69fcf36a7fd132.r2.dev";
 
   const handleEdit = (item: Charter) => {
     if (!item?.id) {
@@ -120,7 +122,7 @@ export default function ServicePage() {
           data.data.map((item) => ({
             id: item.id,
             name: item.name,
-          }))
+          })),
         );
       } catch (err) {
         alert("Failed to load charter categories");
@@ -132,14 +134,60 @@ export default function ServicePage() {
 
   const filteredCharters = useMemo(() => {
     return charters.filter((charters) =>
-      charters.charterName.toLowerCase().includes(search.toLowerCase())
+      charters.charterName.toLowerCase().includes(search.toLowerCase()),
     );
   }, [charters, search]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setUploadedFileName(file.name);
+    if (!file) return;
+
+    try {
+      // File name ko safe banao
+      const safeFileName = encodeURIComponent(file.name.replace(/\s/g, "_"));
+
+      const contentType = file.type;
+
+      // 1. Presigned URL generate karo
+      const res = await fetch(
+        `/api/uploads/generate-upload-url?fileName=${safeFileName}&contentType=${encodeURIComponent(
+          contentType,
+        )}`,
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.uploadUrl) {
+        alert(data?.message || "Failed to generate upload URL");
+        return;
+      }
+
+      // 2. File ko Cloudflare R2 par upload karo
+      const uploadRes = await fetch(data.uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": contentType,
+        },
+      });
+
+      if (!uploadRes.ok) {
+        alert("Upload failed");
+        return;
+      }
+
+      // 3. Full public URL banao
+      // Example:
+      // https://pub-a282791a5a174e8daa69fcf36a7fd132.r2.dev/my-image.jpg
+      const finalImageUrl = `${R2_PUBLIC_BASE_URL}/${safeFileName}`;
+
+      // 4. State mein full URL save karo
+      setUploadedFileName(finalImageUrl);
+
+      console.log("Uploaded File URL:", finalImageUrl);
+    } catch (error) {
+      console.error("Upload Error:", error);
+      alert("Something went wrong while uploading file");
     }
   };
 

@@ -6,6 +6,12 @@ const BACKEND_URL = `${API_BASE_URL}/api/uploads/generate-upload-url`;
 
 export async function GET(req: NextRequest) {
   try {
+    const accessToken = req.cookies.get("accessToken")?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
 
     const fileName = searchParams.get("fileName");
@@ -14,22 +20,22 @@ export async function GET(req: NextRequest) {
     if (!fileName || !contentType) {
       return NextResponse.json(
         { message: "fileName and contentType are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const backendRes = await fetch(
       `${BACKEND_URL}?fileName=${encodeURIComponent(
-        fileName
+        fileName,
       )}&contentType=${encodeURIComponent(contentType)}`,
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${process.env.API_TOKEN}`,
+          Authorization: `Bearer ${accessToken}`, // 🔥 IMPORTANT
           Accept: "application/json",
         },
         cache: "no-store",
-      }
+      },
     );
 
     const backendData = await backendRes.json();
@@ -38,7 +44,7 @@ export async function GET(req: NextRequest) {
       console.error("Backend error:", backendData);
       return NextResponse.json(
         { message: "Failed to generate upload URL" },
-        { status: backendRes.status }
+        { status: backendRes.status },
       );
     }
 
@@ -50,7 +56,7 @@ export async function GET(req: NextRequest) {
     console.error("Generate upload URL error:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

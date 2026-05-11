@@ -17,7 +17,12 @@ interface Product {
   sizes: string[];
 }
 
-export function MerchProductCard({ product }: { product: Product }) {
+export function MerchProductCard({
+  product,
+}: {
+  product: Product;
+  onDelete: (id: string) => void;
+}) {
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       <div className="relative aspect-square bg-gray-100">
@@ -60,6 +65,19 @@ export function MerchProductCard({ product }: { product: Product }) {
             </button>
           ))}
         </div>
+        <button
+          // onClick={() => onDelete(product.id)}
+          className="text-red-500 text-sm hover:text-red-700"
+        >
+          Delete
+        </button>
+
+        <button
+          // onClick={() => router.push(`/team/merch/add?id=${product.id}`)}
+          className="text-blue-500 text-sm ml-2"
+        >
+          Edit
+        </button>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
 import { Search, Grid3X3, Plus, ChevronDown } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -98,7 +98,7 @@ export default function MerchPage() {
           json.data.map((c: { id: string; name: string }) => ({
             id: c.id,
             name: c.name,
-          }))
+          })),
         );
       } catch (error) {
         console.error("Failed to load categories:", error);
@@ -132,6 +132,31 @@ export default function MerchPage() {
     "Price: Low to High",
     "Price: High to Low",
   ];
+
+  const handleDelete = async (id: string) => {
+    const confirmDelete = confirm(
+      "Are you sure you want to delete this product?",
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`/api/merch/products/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Delete failed");
+        return;
+      }
+
+      // mutate(); // refresh SWR list
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-900 flex">
@@ -256,7 +281,11 @@ export default function MerchPage() {
           {!isLoading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {sortedProducts.map((product) => (
-                <MerchProductCard key={product.id} product={product} />
+                <MerchProductCard
+                  key={product.id}
+                  product={product}
+                  onDelete={handleDelete}
+                />
               ))}
             </div>
           )}

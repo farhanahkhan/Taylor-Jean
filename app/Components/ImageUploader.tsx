@@ -38,8 +38,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUploadSuccess }) => {
       // 1️⃣ Get presigned URL from backend
       const res = await fetch(
         `/api/uploads/generate-upload-url?fileName=${encodeURIComponent(
-          safeFileName
-        )}&contentType=${encodeURIComponent(contentType)}`
+          safeFileName,
+        )}&contentType=${encodeURIComponent(contentType)}`,
       );
 
       if (!res.ok) throw new Error("Failed to get upload URL");

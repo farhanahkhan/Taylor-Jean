@@ -14,10 +14,6 @@ import {
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Select from "@radix-ui/react-select";
 
-import {
-  updateServiceInquiry,
-  deleteServiceInquiry,
-} from "@/lib/service-inquiry-store";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 
@@ -125,19 +121,43 @@ export default function ServiceInquiryPage() {
   //   }
   // };
 
+  // Replace only your handleSaveEdit function with this version
+
+  // Replace your handleSaveEdit with this version.
+  // IMPORTANT: Backend may require ALL original values, not only edited ones.
+
+  // Replace your handleSaveEdit with this exact code.
+  // This sends the COMPLETE original object merged with edited values,
+  // which is usually required when API returns 200 but data is not updated.
+
   const handleSaveEdit = async (id: string) => {
-    debugger;
     try {
+      const currentInquiry = inquiries.find((item) => item.id === id);
+
+      if (!currentInquiry) {
+        alert("Inquiry not found");
+        return;
+      }
+
+      // Split name into first and last name
+      const fullName = (editForm.name ?? currentInquiry.name).trim();
+      const nameParts = fullName.split(" ");
+
+      // Final payload
       const payload = {
-        firstName: editForm.name?.split(" ")[0] || "",
-        lastName: editForm.name?.split(" ")[1] || "",
-        email: editForm.email,
-        contact: editForm.contact,
-        amount: editForm.amount,
-        paymentStatus: editForm.paymentStatus,
-        bookingStatus: editForm.bookingStatus,
+        id: id, // many APIs require id inside payload as well
+        firstName: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" ") || "",
+        email: editForm.email ?? currentInquiry.email,
+        contact: editForm.contact ?? currentInquiry.contact,
+        amount: editForm.amount ?? currentInquiry.amount,
+        paymentStatus: editForm.paymentStatus ?? currentInquiry.paymentStatus,
+        bookingStatus: editForm.bookingStatus ?? currentInquiry.bookingStatus,
       };
-      debugger;
+
+      console.log("UPDATE URL:", `/api/charter-inquiries/${id}`);
+      console.log("UPDATE PAYLOAD:", payload);
+
       const res = await fetch(`/api/charter-inquiries/${id}`, {
         method: "PUT",
         headers: {
@@ -145,20 +165,27 @@ export default function ServiceInquiryPage() {
         },
         body: JSON.stringify(payload),
       });
-      debugger;
+
+      const response = await res.json().catch(() => null);
+
+      console.log("STATUS:", res.status);
+      console.log("RESPONSE:", response);
 
       if (!res.ok) {
-        const err = await res.json();
-        alert(err.message || "Update failed");
+        alert(response?.message || "Update failed");
         return;
       }
 
+      // Refresh data from API
+      await mutate();
+
+      // Exit edit mode
       setEditingId(null);
       setEditForm({});
-      debugger;
-      mutate(); // refresh list
+
+      alert("Updated successfully");
     } catch (error) {
-      console.error(error);
+      console.error("Update Error:", error);
       alert("Something went wrong");
     }
   };
@@ -169,8 +196,6 @@ export default function ServiceInquiryPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteServiceInquiry(id); // DELETE request
-      mutate(); // re-fetch data
     } catch (error) {
       console.error("Failed to delete inquiry:", error);
       alert("Failed to delete inquiry. Please try again.");

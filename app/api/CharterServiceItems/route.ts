@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const res = await fetch(EXTERNAL_API, {
+    const res = await fetch(EXTERNAL_API + "all", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { message: "Failed to fetch services", error },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { message: "Failed to add service", error },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

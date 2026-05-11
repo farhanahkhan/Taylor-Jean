@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     if (!res.ok) {
       return NextResponse.json(
         { message: "Failed to fetch data from API" },
-        { status: res.status }
+        { status: res.status },
       );
     }
 
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { message: "Server Error", error: String(error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

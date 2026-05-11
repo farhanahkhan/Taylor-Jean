@@ -60,15 +60,15 @@ import { NextRequest, NextResponse } from "next/server";
 // GET handler
 export async function GET(req: NextRequest) {
   try {
-    // const accessToken = req.cookies.get("accessToken")?.value;
+    const accessToken = req.cookies.get("accessToken")?.value;
 
-    // if (!accessToken) {
-    //   return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    // }
+    if (!accessToken) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
     const res = await fetch(`${API_BASE_URL}/api/charter-services/all`, {
       headers: {
-        // Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
     });
@@ -94,18 +94,18 @@ export async function GET(req: NextRequest) {
 // POST handler
 export async function POST(req: NextRequest) {
   try {
-    // const accessToken = req.cookies.get("accessToken")?.value;
+    const accessToken = req.cookies.get("accessToken")?.value;
 
-    // if (!accessToken) {
-    //   return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    // }
+    if (!accessToken) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
     const body = await req.json();
 
     const res = await fetch(`${API_BASE_URL}/api/charter-services`, {
       method: "POST",
       headers: {
-        // Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),

@@ -1,5 +1,4 @@
 // app/api/team-members/route.ts
-
 import { API_BASE_URL } from "@/lib/constants/route";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -7,61 +6,77 @@ const GET_TEAMS_URL = `${API_BASE_URL}/api/general-teams/my`;
 
 export async function GET(req: NextRequest) {
   try {
-    // Cookie se access token lo
     const accessToken = req.cookies.get("accessToken")?.value;
 
     if (!accessToken) {
       return NextResponse.json(
         {
-          status: false,
           message: "Unauthorized",
+          status: false,
           data: [],
         },
         { status: 401 },
       );
     }
 
-    // Backend API call
     const res = await fetch(GET_TEAMS_URL, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        Accept: "application/json",
       },
       cache: "no-store",
     });
 
-    const result = await res.json();
+    const backendData = await res.json();
 
-    // Backend response:
-    // {
-    //   message: "Success",
-    //   statusCode: 200,
-    //   status: true,
-    //   data: [...]
-    // }
+    if (!res.ok) {
+      return NextResponse.json(
+        {
+          message: backendData?.message || "Failed to fetch team members",
+          status: false,
+          data: [],
+        },
+        { status: res.status },
+      );
+    }
 
-    // Frontend expects:
-    // {
-    //   status: true,
-    //   data: [...]
-    // }
+    // Backend response example:
+    // data: [
+    //   {
+    //     id: "...",
+    //     name: "test",
+    //     displayName: "ammar",
+    //     ...
+    //   }
+    // ]
+
+    const transformedData = Array.isArray(backendData?.data)
+      ? backendData.data.map((team: any) => ({
+          id: team.id,
+          // Use displayName first, fallback to name
+          name: team.displayName ?? team.name ?? "Unnamed Team",
+        }))
+      : [];
+
+    // Debug logs (check terminal)
+    console.log("Backend Data:", backendData);
+    console.log("Transformed Data:", transformedData);
 
     return NextResponse.json(
       {
-        status: result?.status ?? false,
-        message: result?.message ?? "Success",
-        data: result?.data ?? [],
+        message: "Success",
+        status: true,
+        data: transformedData,
       },
-      { status: res.status },
+      { status: 200 },
     );
   } catch (error) {
-    console.error("GET Team Members Error:", error);
+    console.error("Failed to fetch team members:", error);
 
     return NextResponse.json(
       {
+        message: "Internal server error",
         status: false,
-        message: "Internal Server Error",
         data: [],
       },
       { status: 500 },

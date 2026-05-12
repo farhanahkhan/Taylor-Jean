@@ -239,13 +239,13 @@ export default function AddProductPage() {
   // }, []);
 
   useEffect(() => {
+    debugger;
     async function loadMembers() {
       try {
-        const res = await fetch("/api/team-members", {
-          credentials: "include",
-        });
+        const res = await fetch("/api/team-members", {});
 
         const json = await res.json();
+        debugger;
 
         console.log("API RESPONSE:", json);
 
@@ -254,10 +254,12 @@ export default function AddProductPage() {
         } else {
           setTeamMembers([]);
         }
+        debugger;
       } catch (err) {
         console.error("Failed to fetch members", err);
         setTeamMembers([]);
       }
+      debugger;
     }
 
     loadMembers();

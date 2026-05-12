@@ -1,24 +1,25 @@
 import { API_BASE_URL } from "@/lib/constants/route";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const BASE_URL = `${API_BASE_URL}/api/kyc/admin`;
-const AUTH_HEADER = {
-  Authorization: `Bearer ${process.env.API_TOKEN}`,
-};
 
 // ✅ GET all KYC requests
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const token = req.cookies.get("accessToken")?.value;
   try {
     const res = await fetch(`${BASE_URL}/all`, {
       method: "GET",
-      headers: AUTH_HEADER,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
     });
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
       { message: "Error fetching KYC", error },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

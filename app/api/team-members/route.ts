@@ -1,4 +1,5 @@
 // app/api/team-members/route.ts
+
 import { API_BASE_URL } from "@/lib/constants/route";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -6,77 +7,85 @@ const GET_TEAMS_URL = `${API_BASE_URL}/api/general-teams/my`;
 
 export async function GET(req: NextRequest) {
   try {
+    // Debug: check cookie
     const accessToken = req.cookies.get("accessToken")?.value;
+    console.log("Access Token:", accessToken);
 
     if (!accessToken) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
           status: false,
+          message: "Unauthorized - Access token not found",
           data: [],
         },
         { status: 401 },
       );
     }
 
+    // Backend API call
     const res = await fetch(GET_TEAMS_URL, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
       },
       cache: "no-store",
     });
 
-    const backendData = await res.json();
+    // Debug: raw response
+    const responseText = await res.text();
+    console.log("Backend Status:", res.status);
+    console.log("Backend Response:", responseText);
 
-    if (!res.ok) {
+    // JSON parse
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("JSON Parse Error:", parseError);
+
       return NextResponse.json(
         {
-          message: backendData?.message || "Failed to fetch team members",
           status: false,
+          message: "Invalid JSON response from backend",
           data: [],
+          rawResponse: responseText,
         },
-        { status: res.status },
+        { status: 500 },
       );
     }
 
-    // Backend response example:
-    // data: [
-    //   {
-    //     id: "...",
-    //     name: "test",
-    //     displayName: "ammar",
-    //     ...
-    //   }
-    // ]
+    // Agar backend se success nahi aaya
+    if (!res.ok || !result?.status) {
+      return NextResponse.json(
+        {
+          status: false,
+          message: result?.message || "Failed to fetch team members",
+          data: [],
+          backendResponse: result,
+        },
+        { status: res.status || 500 },
+      );
+    }
 
-    const transformedData = Array.isArray(backendData?.data)
-      ? backendData.data.map((team: any) => ({
-          id: team.id,
-          // Use displayName first, fallback to name
-          name: team.displayName ?? team.name ?? "Unnamed Team",
-        }))
-      : [];
-
-    // Debug logs (check terminal)
-    console.log("Backend Data:", backendData);
-    console.log("Transformed Data:", transformedData);
+    // Ensure data is always array
+    const members = Array.isArray(result?.data) ? result.data : [];
 
     return NextResponse.json(
       {
-        message: "Success",
         status: true,
-        data: transformedData,
+        message: result?.message || "Success",
+        data: members,
       },
       { status: 200 },
     );
   } catch (error) {
-    console.error("Failed to fetch team members:", error);
+    console.error("GET Team Members Error:", error);
 
     return NextResponse.json(
       {
-        message: "Internal server error",
         status: false,
+        message: "Internal Server Error",
         data: [],
       },
       { status: 500 },

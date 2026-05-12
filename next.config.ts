@@ -11,6 +11,11 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "img.magnific.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "img.sonofatailor.com",
         pathname: "/**",
       },

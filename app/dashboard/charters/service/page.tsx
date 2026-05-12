@@ -46,7 +46,7 @@ export default function ServicePage() {
   // filter
   const filtered = useMemo(() => {
     return services.filter((s) =>
-      s.serviceName.toLowerCase().includes(search.toLowerCase())
+      s.serviceName.toLowerCase().includes(search.toLowerCase()),
     );
   }, [services, search]);
 
@@ -80,11 +80,25 @@ export default function ServicePage() {
     const ok = confirm("Are you sure?");
     if (!ok) return;
 
-    await fetch(`/api/CharterServiceItems/${id}`, {
-      method: "DELETE",
-    });
+    try {
+      const res = await fetch(`/api/CharterServiceItems/${id}`, {
+        method: "DELETE",
+      });
 
-    mutate();
+      const result = await res.json();
+
+      // ✅ API ka message hamesha show karo
+      alert(result?.data?.message || result?.message || "No message from API");
+
+      // ❌ agar delete fail ho gaya to stop
+      if (!res.ok || result?.status === false) return;
+
+      // ✅ success par refresh
+      mutate();
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Something went wrong");
+    }
   };
 
   // SUBMIT (CREATE / UPDATE)
@@ -135,12 +149,13 @@ export default function ServicePage() {
           body: JSON.stringify(payload),
         });
       }
-      debugger;
 
       const data = await res.json();
-      debugger;
-      if (!res.ok) {
-        alert(data?.message || "Error");
+
+      if (res.ok && data?.status !== false) {
+        alert(editId ? "Updated successfully!" : "Created successfully!");
+      } else {
+        alert(data?.message || "Request failed");
         return;
       }
 
@@ -156,7 +171,6 @@ export default function ServicePage() {
     } finally {
       setIsSubmitting(false);
     }
-    debugger;
   };
 
   return (

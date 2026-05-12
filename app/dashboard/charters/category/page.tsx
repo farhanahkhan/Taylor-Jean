@@ -194,7 +194,14 @@ export default function CategoryPage() {
         });
       }
 
-      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data?.message || "Failed");
+        return;
+      }
+
+      alert(editId ? "Updated successfully!" : "Created successfully!");
 
       await fetchCategories();
 
@@ -206,6 +213,9 @@ export default function CategoryPage() {
         imageUrl: "",
         isSuccess: false,
       });
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong");
     } finally {
       setLoading(false);
     }

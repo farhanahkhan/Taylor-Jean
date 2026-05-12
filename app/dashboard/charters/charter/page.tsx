@@ -84,31 +84,61 @@ export default function ServicePage() {
     setIsActive(item.isActive);
     setIsFileChanged(false); // 👈 reset
   };
+  // const handleDelete = async (id: string) => {
+  //   const confirmDelete = confirm("Are you sure?");
+
+  //   if (!confirmDelete) return;
+  //   try {
+  //     const res = await fetch(`/api/charter-services/${id}`, {
+  //       method: "DELETE",
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (!res.ok) {
+  //       alert(data.message || "Delete failed");
+  //       return;
+  //     }
+
+  //     alert("Deleted successfully");
+
+  //     mutate();
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Something went wrong");
+  //   }
+  // };
+
   const handleDelete = async (id: string) => {
     const confirmDelete = confirm("Are you sure?");
 
     if (!confirmDelete) return;
+
     try {
       const res = await fetch(`/api/charter-services/${id}`, {
         method: "DELETE",
       });
 
-      const data = await res.json();
+      const result = await res.json();
 
-      if (!res.ok) {
-        alert(data.message || "Delete failed");
+      // ✅ Har case mein API ka exact message show karo
+      // Example:
+      // "Record successfully deleted"
+      // "Cannot delete. Service is in use"
+      alert(result?.data?.message || result?.message || "No message from API");
+
+      // ❌ Agar delete successful nahi hua to yahin stop
+      if (!res.ok || result?.message === "Cannot delete. Service is in use") {
         return;
       }
 
-      alert("Deleted successfully");
-
+      // ✅ Sirf successful delete par list refresh
       mutate();
     } catch (error) {
-      console.error(error);
+      console.error("Delete error:", error);
       alert("Something went wrong");
     }
   };
-
   useEffect(() => {
     const fetchCategories = async () => {
       try {

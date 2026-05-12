@@ -215,26 +215,65 @@ export default function CategoryPage() {
     const confirmDelete = confirm("Are you sure?");
 
     if (!confirmDelete) return;
+
     try {
       const res = await fetch(`/api/charter-categories/${id}`, {
         method: "DELETE",
       });
 
-      const data = await res.json();
+      const result = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Delete failed");
+        // Error message from API
+        alert(result?.data?.message || result?.message || "Delete failed");
         return;
       }
 
-      alert("Deleted successfully");
+      // ✅ API response:
+      // {
+      //   message: "Success",
+      //   status: true,
+      //   statusCode: 200,
+      //   data: {
+      //     message: "Record successfully deleted"
+      //   }
+      // }
 
-      // mutate();
+      // ✅ Show exact message from API
+      alert(result?.data?.message || "Record successfully deleted");
+
+      // ✅ Refresh categories list
+      await fetchCategories();
     } catch (error) {
-      console.error(error);
+      console.error("Delete error:", error);
       alert("Something went wrong");
     }
   };
+
+  // const handleDelete = async (id: string) => {
+  //   const confirmDelete = confirm("Are you sure?");
+
+  //   if (!confirmDelete) return;
+  //   try {
+  //     const res = await fetch(`/api/charter-categories/${id}`, {
+  //       method: "DELETE",
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (!res.ok) {
+  //       alert(data.message || "Delete failed");
+  //       return;
+  //     }
+
+  //     alert("Deleted successfully");
+
+  //     // mutate();
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Something went wrong");
+  //   }
+  // };
   const filteredCategories = categories.filter(
     (cat) =>
       (cat.name ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||

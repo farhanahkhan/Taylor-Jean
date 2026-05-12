@@ -1,6 +1,92 @@
+// "use client";
+
+// import Image from "next/image";
+// import Router from "next/router";
+
+// interface ProductColor {
+//   name: string;
+//   hex: string;
+// }
+
+// interface Product {
+//   id: string;
+//   name: string;
+//   price: number;
+//   category: string;
+//   image: string;
+//   colors: ProductColor[];
+//   sizes: string[];
+// }
+
+// export function MerchProductCard({
+//   product,
+// }: {
+//   product: Product;
+//   onDelete: (id: string) => void;
+// }) {
+//   return (
+//     <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+//       <div className="relative aspect-square bg-gray-100">
+//         <Image
+//           src={product.image || "/placeholder.svg"}
+//           alt={product.name}
+//           fill
+//           className="object-cover"
+//         />
+//       </div>
+//       <div className="p-4">
+//         <div className="flex items-center justify-between mb-1">
+//           <span className="text-xs text-gray-500">{product.category}</span>
+//           <span className="font-semibold text-gray-900">
+//             ${product.price.toFixed(2)}
+//           </span>
+//         </div>
+//         <h3 className="font-medium text-gray-900 truncate mb-3">
+//           {product.name}
+//         </h3>
+
+//         <div className="flex items-center gap-1.5 mb-3">
+//           {product.colors.map((color) => (
+//             <button
+//               key={color.name}
+//               title={color.name}
+//               className="w-5 h-5 rounded-full border border-gray-200 hover:scale-110 transition-transform"
+//               style={{ backgroundColor: color.hex }}
+//             />
+//           ))}
+//         </div>
+
+//         <div className="flex items-center gap-1.5">
+//           {product.sizes.map((size) => (
+//             <button
+//               key={size}
+//               className="px-2 py-1 text-xs font-medium border border-gray-200 rounded hover:border-gray-400 transition-colors"
+//             >
+//               {size}
+//             </button>
+//           ))}
+//         </div>
+//         <button
+//           // onClick={() => onDelete(product.id)}
+//           className="text-red-500 text-sm hover:text-red-700"
+//         >
+//           Delete
+//         </button>
+
+//         <button
+//           onClick={() => Router.push(`/team/merch/add?id=${product.id}`)}
+//           className="text-blue-500 text-sm ml-2"
+//         >
+//           Edit
+//         </button>
+//       </div>
+//     </div>
+//   );
+// }
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface ProductColor {
   name: string;
@@ -17,12 +103,14 @@ interface Product {
   sizes: string[];
 }
 
-export function MerchProductCard({
-  product,
-}: {
+interface MerchProductCardProps {
   product: Product;
   onDelete: (id: string) => void;
-}) {
+}
+
+export function MerchProductCard({ product, onDelete }: MerchProductCardProps) {
+  const router = useRouter();
+
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       <div className="relative aspect-square bg-gray-100">
@@ -33,6 +121,7 @@ export function MerchProductCard({
           className="object-cover"
         />
       </div>
+
       <div className="p-4">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs text-gray-500">{product.category}</span>
@@ -40,6 +129,7 @@ export function MerchProductCard({
             ${product.price.toFixed(2)}
           </span>
         </div>
+
         <h3 className="font-medium text-gray-900 truncate mb-3">
           {product.name}
         </h3>
@@ -49,35 +139,43 @@ export function MerchProductCard({
             <button
               key={color.name}
               title={color.name}
+              type="button"
               className="w-5 h-5 rounded-full border border-gray-200 hover:scale-110 transition-transform"
               style={{ backgroundColor: color.hex }}
             />
           ))}
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 mb-4 flex-wrap">
           {product.sizes.map((size) => (
             <button
               key={size}
+              type="button"
               className="px-2 py-1 text-xs font-medium border border-gray-200 rounded hover:border-gray-400 transition-colors"
             >
               {size}
             </button>
           ))}
         </div>
-        <button
-          // onClick={() => onDelete(product.id)}
-          className="text-red-500 text-sm hover:text-red-700"
-        >
-          Delete
-        </button>
 
-        <button
-          // onClick={() => router.push(`/team/merch/add?id=${product.id}`)}
-          className="text-blue-500 text-sm ml-2"
-        >
-          Edit
-        </button>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => onDelete(product.id)}
+            className="text-red-500 text-sm hover:text-red-700"
+          >
+            Delete
+          </button>
+
+          <button
+            type="button"
+            onClick={() => router.push(`/team/merch/add?id=${product.id}`)}
+            className="text-blue-500 text-sm hover:text-blue-700"
+          >
+            Edit
+          </button>
+        </div>
       </div>
     </div>
   );

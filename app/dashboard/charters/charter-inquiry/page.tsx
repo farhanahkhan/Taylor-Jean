@@ -293,9 +293,9 @@ export default function ServiceInquiryPage() {
                     <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
                       Booking Status
                     </th>
-                    <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
+                    {/* <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
                       Actions
-                    </th>
+                    </th> */}
                   </tr>
                 </thead>
                 <tbody>
@@ -449,7 +449,7 @@ export default function ServiceInquiryPage() {
                       </td>
 
                       {/* Actions Column */}
-                      <td className="px-6 py-4 text-right">
+                      {/* <td className="px-6 py-4 text-right">
                         {editingId === inquiry.id ? (
                           <div className="flex items-center justify-end gap-2">
                             <button
@@ -495,7 +495,7 @@ export default function ServiceInquiryPage() {
                             </DropdownMenu.Portal>
                           </DropdownMenu.Root>
                         )}
-                      </td>
+                      </td> */}
                     </tr>
                   ))}
                 </tbody>

@@ -141,7 +141,7 @@ export default function AddProductPage() {
             sizeValue: s.sizeValue,
             createdDate: s.createdDate || new Date().toISOString(),
             isActive: s.isActive ?? true,
-          })
+          }),
         );
         setSizesFromAPI(mappedSizes);
       } catch (err) {
@@ -165,7 +165,7 @@ export default function AddProductPage() {
     const mappedVariants = variants
       .filter(
         (v) =>
-          v.sizes.length > 0 && v.colors.length > 0 && Number(v.quantity) > 0
+          v.sizes.length > 0 && v.colors.length > 0 && Number(v.quantity) > 0,
       )
       .flatMap((v) =>
         v.colors.flatMap((colorId) =>
@@ -173,15 +173,15 @@ export default function AddProductPage() {
             colorId,
             sizeId,
             stockQuantity: Number(v.quantity),
-          }))
-        )
+          })),
+        ),
       );
 
     console.log("Mapped Variants:", mappedVariants);
 
     if (mappedVariants.length === 0) {
       alert(
-        "Please add at least one variant with size, color, and quantity > 0"
+        "Please add at least one variant with size, color, and quantity > 0",
       );
       return;
     }
@@ -219,18 +219,47 @@ export default function AddProductPage() {
     }
   };
 
+  // useEffect(() => {
+  //   async function loadMembers() {
+  //     debugger;
+  //     try {
+  //       debugger;
+  //       const res = await fetch("/api/team-members");
+  //       const json = await res.json();
+  //       debugger;
+  //       if (json.status && Array.isArray(json.data)) {
+  //         setTeamMembers(json.data); // [{id, name}, ...]
+  //       }
+  //       debugger;
+  //     } catch (err) {
+  //       console.error("Failed to fetch members", err);
+  //     }
+  //   }
+  //   loadMembers();
+  // }, []);
+
   useEffect(() => {
     async function loadMembers() {
       try {
-        const res = await fetch("/api/team-members");
+        const res = await fetch("/api/team-members", {
+          credentials: "include",
+        });
+
         const json = await res.json();
+
+        console.log("API RESPONSE:", json);
+
         if (json.status && Array.isArray(json.data)) {
-          setTeamMembers(json.data); // [{id, name}, ...]
+          setTeamMembers(json.data);
+        } else {
+          setTeamMembers([]);
         }
       } catch (err) {
         console.error("Failed to fetch members", err);
+        setTeamMembers([]);
       }
     }
+
     loadMembers();
   }, []);
 

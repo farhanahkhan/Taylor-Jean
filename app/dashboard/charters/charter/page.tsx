@@ -59,6 +59,9 @@ export default function ServicePage() {
   const [isActive, setIsActive] = useState(true);
   const [amount, setAmount] = useState<string | number>(0);
   const [editId, setEditId] = useState<string | null>(null);
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [isFileChanged, setIsFileChanged] = useState(false);
   const R2_PUBLIC_BASE_URL =
     "https://pub-a282791a5a174e8daa69fcf36a7fd132.r2.dev";
 
@@ -79,6 +82,7 @@ export default function ServicePage() {
     setCharterCategoryId(item.categoryId);
     setUploadedFileName(item.imageUrl);
     setIsActive(item.isActive);
+    setIsFileChanged(false); // 👈 reset
   };
   const handleDelete = async (id: string) => {
     const confirmDelete = confirm("Are you sure?");
@@ -142,6 +146,9 @@ export default function ServicePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setIsFileChanged(true); // 👈 NEW
+    setIsUploading(true); // 👈 upload start
+
     try {
       // File name ko safe banao
       const safeFileName = encodeURIComponent(file.name.replace(/\s/g, "_"));
@@ -188,6 +195,8 @@ export default function ServicePage() {
     } catch (error) {
       console.error("Upload Error:", error);
       alert("Something went wrong while uploading file");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -247,13 +256,13 @@ export default function ServicePage() {
   // };
 
   const handleSubmit = async () => {
-    debugger;
+    // debugger;
     console.log("EDIT ID BEFORE API:", editId);
     if (!name || !amount || !description || !charterCategoryId) {
       alert("Please fill all required fields");
       return;
     }
-    debugger;
+    // debugger;
     console.log("EDIT ID BEFORE API:", editId);
 
     try {
@@ -267,7 +276,7 @@ export default function ServicePage() {
         imageUrl: uploadedFileName,
         isActive,
       };
-      debugger;
+      // debugger;
 
       let res;
 
@@ -304,7 +313,7 @@ export default function ServicePage() {
         setEditId(null);
 
         mutate();
-        debugger;
+        // debugger;
       } else {
         alert(data.message || "Request failed");
       }
@@ -314,7 +323,7 @@ export default function ServicePage() {
     } finally {
       setIsSubmitting(false);
     }
-    debugger;
+    // debugger;
   };
   // const handleDelete = (id: string) => {
   //   // deleteCharters(id);
@@ -435,16 +444,29 @@ export default function ServicePage() {
                       className="hidden"
                       id="file-upload"
                     />
+
                     <label
                       htmlFor="file-upload"
-                      className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors cursor-pointer"
+                      className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-colors cursor-pointer
+      ${isUploading ? "bg-gray-400 cursor-not-allowed" : "bg-slate-800 hover:bg-slate-700"}
+    `}
                     >
-                      <Upload className="h-4 w-4" />
-                      Upload
+                      {isUploading ? (
+                        <>
+                          <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4" />
+                          Upload
+                        </>
+                      )}
                     </label>
-                    {uploadedFileName && (
+
+                    {uploadedFileName && !isUploading && (
                       <span className="text-sm text-muted-foreground">
-                        {uploadedFileName}
+                        <span>{uploadedFileName}</span>
                       </span>
                     )}
                   </div>
@@ -480,7 +502,7 @@ export default function ServicePage() {
                 </button> */}
                 <button
                   onClick={handleSubmit}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isUploading}
                   className={`px-6 py-2.5 text-sm font-medium text-white rounded-lg transition-colors flex items-center gap-2
     ${
       isSubmitting

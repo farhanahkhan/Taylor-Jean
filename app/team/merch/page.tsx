@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import useSWR, { mutate } from "swr";
+// import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 
 import { Search, Grid3X3, Plus, ChevronDown } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -81,7 +82,11 @@ export default function MerchPage() {
   const [selectedSort, setSelectedSort] = useState<string>("Newest First");
   const [categories, setCategories] = useState<Category[]>([]);
 
-  const { data: products = [], isLoading } = useSWR("products", fetchProducts);
+  const {
+    data: products = [],
+    isLoading,
+    mutate,
+  } = useSWR("products", fetchProducts);
 
   useEffect(() => {
     async function loadCategories() {
@@ -151,7 +156,7 @@ export default function MerchPage() {
         return;
       }
 
-      // mutate(); // refresh SWR list
+      mutate(); // refresh SWR list
     } catch (err) {
       console.error(err);
       alert("Something went wrong");

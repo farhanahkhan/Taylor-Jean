@@ -238,7 +238,7 @@ export default function CategoryPage() {
   const filteredCategories = categories.filter(
     (cat) =>
       (cat.name ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (cat.description ?? "").toLowerCase().includes(searchQuery.toLowerCase())
+      (cat.description ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
   );
   return (
     <div className="flex min-h-screen bg-slate-100">
@@ -317,7 +317,7 @@ export default function CategoryPage() {
                       />
                     </div>
 
-                    <div className="lg:col-span-1">
+                    {/* <div className="lg:col-span-1">
                       <label
                         htmlFor="image"
                         className="text-sm font-medium text-slate-700"
@@ -348,7 +348,7 @@ export default function CategoryPage() {
                           </span>
                         )}
                       </div>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
@@ -415,9 +415,9 @@ export default function CategoryPage() {
                         <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                           DESCRIPTION
                         </th>
-                        <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        {/* <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                           Image
-                        </th>
+                        </th> */}
                         <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                           STATUS
                         </th>
@@ -435,9 +435,9 @@ export default function CategoryPage() {
                           <td className="px-3 py-4 text-sm text-slate-600 whitespace-nowrap">
                             {category.description}
                           </td>
-                          <td className="px-3 py-4 text-sm text-slate-900 whitespace-nowrap">
+                          {/* <td className="px-3 py-4 text-sm text-slate-900 whitespace-nowrap">
                             {category.imageUrl}
-                          </td>
+                          </td> */}
                           <td className="px-3 py-4 text-sm whitespace-nowrap">
                             <span className="inline-flex items-center gap-1 text-slate-700">
                               Active

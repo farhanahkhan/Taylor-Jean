@@ -44,13 +44,17 @@ export async function GET(request: NextRequest) {
           statusCode: 400,
           data: [],
         },
-        { status: 400 }
+        { status: 400 },
       );
   }
 
   try {
+    const token = request.cookies.get("accessToken")?.value;
     const res = await fetch(API_URL, {
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
       cache: "no-store",
     });
     if (!res.ok) {
@@ -61,7 +65,7 @@ export async function GET(request: NextRequest) {
           statusCode: res.status,
           data: [],
         },
-        { status: res.status }
+        { status: res.status },
       );
     }
 
@@ -71,7 +75,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json<ApiResponse<TournamentType | Species>>(
       { message: "Success", status: true, statusCode: 200, data: filteredData },
-      { status: 200 }
+      { status: 200 },
     );
   } catch {
     return NextResponse.json<ApiResponse<unknown>>(
@@ -81,7 +85,7 @@ export async function GET(request: NextRequest) {
         statusCode: 500,
         data: [],
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

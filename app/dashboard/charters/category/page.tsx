@@ -44,11 +44,67 @@ export default function CategoryPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isFileChanged, setIsFileChanged] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState("");
+  const R2_PUBLIC_BASE_URL =
+    "https://pub-a282791a5a174e8daa69fcf36a7fd132.r2.dev";
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setFormData({ ...formData, imageUrl: file.name });
+    if (!file) return;
+
+    setIsFileChanged(true); // 👈 NEW
+    setIsUploading(true); // 👈 upload start
+
+    try {
+      // File name ko safe banao
+      const safeFileName = encodeURIComponent(file.name.replace(/\s/g, "_"));
+
+      const contentType = file.type;
+
+      // 1. Presigned URL generate karo
+      const res = await fetch(
+        `/api/uploads/generate-upload-url?fileName=${safeFileName}&contentType=${encodeURIComponent(
+          contentType,
+        )}`,
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.uploadUrl) {
+        alert(data?.message || "Failed to generate upload URL");
+        return;
+      }
+
+      // 2. File ko Cloudflare R2 par upload karo
+      const uploadRes = await fetch(data.uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": contentType,
+        },
+      });
+
+      if (!uploadRes.ok) {
+        alert("Upload failed");
+        return;
+      }
+
+      // 3. Full public URL banao
+      // Example:
+      // https://pub-a282791a5a174e8daa69fcf36a7fd132.r2.dev/my-image.jpg
+      const finalImageUrl = `${R2_PUBLIC_BASE_URL}/${safeFileName}`;
+
+      // 4. State mein full URL save karo
+      setUploadedFileName(finalImageUrl);
+
+      console.log("Uploaded File URL:", finalImageUrl);
+    } catch (error) {
+      console.error("Upload Error:", error);
+      alert("Something went wrong while uploading file");
+    } finally {
+      setIsUploading(false);
     }
   };
   const handleEdit = (cat: Category) => {
@@ -174,7 +230,7 @@ export default function CategoryPage() {
       const payload = {
         name: formData.name,
         description: formData.description,
-        // imageUrl: formData.imageUrl,
+        imageUrl: formData.imageUrl,
         isActive: formData.isSuccess,
       };
 
@@ -366,38 +422,47 @@ export default function CategoryPage() {
                       />
                     </div>
 
-                    {/* <div className="lg:col-span-1">
-                      <label
-                        htmlFor="image"
-                        className="text-sm font-medium text-slate-700"
-                      >
-                        Image
-                      </label>
-                      <div className="mt-1 flex items-center gap-3">
-                        <input
-                          type="file"
-                          id="image-upload"
-                          accept="image/*"
-                          onChange={handleFileUpload}
-                          className="hidden"
-                        />
-                        <Button
-                          type="button"
-                          onClick={() =>
-                            document.getElementById("image-upload")?.click()
-                          }
-                          className="bg-slate-800 hover:bg-slate-700 text-white"
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          Upload
-                        </Button>
-                        {formData.imageUrl && (
-                          <span className="text-sm text-slate-600 truncate">
-                            {formData.imageUrl}
-                          </span>
-                        )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <div className="mb-6">
+                        <label className="block text-sm font-semibold text-foreground mb-2">
+                          Upload Image
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                            id="file-upload"
+                          />
+
+                          <label
+                            htmlFor="file-upload"
+                            className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-colors cursor-pointer
+                       ${isUploading ? "bg-gray-400 cursor-not-allowed" : "bg-slate-800 hover:bg-slate-700"}
+                     `}
+                          >
+                            {isUploading ? (
+                              <>
+                                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-4" />
+                                Upload
+                              </>
+                            )}
+                          </label>
+
+                          {uploadedFileName && !isUploading && (
+                            <span className="text-sm text-muted-foreground">
+                              <span>{uploadedFileName}</span>
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div> */}
+                    </div>
                   </div>
                 </div>
 

@@ -3,7 +3,7 @@
 import { API_BASE_URL } from "@/lib/constants/route";
 import { NextRequest, NextResponse } from "next/server";
 
-const GET_TEAMS_URL = `${API_BASE_URL}/api/general-teams/my`;
+const GET_TEAMS_URL = `${API_BASE_URL}/api/general-teams`;
 
 export async function GET(req: NextRequest) {
   try {

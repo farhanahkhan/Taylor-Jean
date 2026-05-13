@@ -87,6 +87,20 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import edit from "../../public/edit.svg";
+import deletes from "../../public/delete.svg";
+
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import {
+  Search,
+  Filter,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  Plus,
+  Check,
+  X,
+} from "lucide-react";
 
 interface ProductColor {
   name: string;
@@ -157,25 +171,58 @@ export function MerchProductCard({ product, onDelete }: MerchProductCardProps) {
             </button>
           ))}
         </div>
+        <div className="flex justify-end">
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <button className="p-2 hover:bg-gray-100 rounded-lg">
+                <MoreVertical className="w-4 h-4" />
+              </button>
+            </DropdownMenu.Trigger>
+
+            <DropdownMenu.Content className="bg-white border rounded-lg shadow-lg p-1">
+              <DropdownMenu.Item
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/team/merch/add/${product.id}`);
+                }}
+                className="px-3 py-2 flex gap-2 hover:bg-gray-100 cursor-pointer"
+              >
+                <Pencil className="w-4 h-4" />
+                Edit
+              </DropdownMenu.Item>
+
+              <DropdownMenu.Item
+                onClick={() => onDelete(product.id)}
+                className="px-3 py-2 flex gap-2 hover:bg-red-50 text-red-600 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-3">
+        {/* <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => onDelete(product.id)}
             className="text-red-500 text-sm hover:text-red-700"
           >
-            Delete
+            <Image src={edit} alt="" className="w-5" />
           </button>
 
           <button
             type="button"
-            onClick={() => router.push(`/team/merch/add?id=${product.id}`)}
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/team/merch/add/${product.id}`);
+            }}
             className="text-blue-500 text-sm hover:text-blue-700"
           >
-            Edit
+            <Image src={deletes} alt="" className="w-5" />
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -97,3 +97,46 @@ export async function DELETE(
     );
   }
 }
+
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ type: string; id: string }> },
+) {
+  try {
+    const accessToken = req.cookies.get("accessToken")?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const { type, id } = await context.params;
+
+    if (!ALLOWED_TYPES.includes(type)) {
+      return NextResponse.json({ message: "Invalid type" }, { status: 400 });
+    }
+
+    const res = await fetch(`${API_BASE_URL}/api/merch/${type}/${id}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      return NextResponse.json(
+        { message: data?.message || "Backend error" },
+        { status: res.status },
+      );
+    }
+
+    return NextResponse.json(data, { status: 200 });
+  } catch (error) {
+    console.error("GET Error:", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}

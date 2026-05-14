@@ -17,116 +17,37 @@ interface Category {
   name: string;
   description: string;
   isActive: boolean;
-  imageUrl: string | null;
 }
 
 interface FormData {
   name: string;
   description: string;
-  imageUrl: string;
+
   isSuccess: boolean;
 }
-interface CategoryResponse {
-  name: string;
-  description: string;
-  imageUrl: string;
-}
-export default function CategoryPage() {
+
+export default function CategorySpeciesTypePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState<FormData>({
     name: "",
     description: "",
-    imageUrl: "",
+
     isSuccess: false,
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+
   const [success, setSuccess] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isFileChanged, setIsFileChanged] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState("");
-  const R2_PUBLIC_BASE_URL =
-    "https://pub-a282791a5a174e8daa69fcf36a7fd132.r2.dev";
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsFileChanged(true); // 👈 NEW
-    setIsUploading(true); // 👈 upload start
-
-    try {
-      // File name ko safe banao
-      const safeFileName = encodeURIComponent(file.name.replace(/\s/g, "_"));
-
-      const contentType = file.type;
-
-      // 1. Presigned URL generate karo
-      const res = await fetch(
-        `/api/uploads/generate-upload-url?fileName=${safeFileName}&contentType=${encodeURIComponent(
-          contentType,
-        )}`,
-      );
-
-      const data = await res.json();
-
-      if (!res.ok || !data?.uploadUrl) {
-        alert(data?.message || "Failed to generate upload URL");
-        return;
-      }
-
-      // 2. File ko Cloudflare R2 par upload karo
-      const uploadRes = await fetch(data.uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": contentType,
-        },
-      });
-
-      if (!uploadRes.ok) {
-        alert("Upload failed");
-        return;
-      }
-
-      // 3. Full public URL banao
-      // Example:
-      // https://pub-a282791a5a174e8daa69fcf36a7fd132.r2.dev/my-image.jpg
-      const finalImageUrl = `${R2_PUBLIC_BASE_URL}/${safeFileName}`;
-
-      // 4. State mein full URL save karo
-      setUploadedFileName(finalImageUrl);
-
-      setFormData((prev) => ({
-        ...prev,
-        imageUrl: finalImageUrl,
-      }));
-
-      console.log("Uploaded File URL:", finalImageUrl);
-    } catch (error) {
-      console.error("Upload Error:", error);
-      alert("Something went wrong while uploading file");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-  const handleEdit = (cat: Category) => {
-    setEditId(cat.id);
-
-    setFormData({
-      name: cat.name,
-      description: cat.description,
-      imageUrl: cat.imageUrl || "",
-      isSuccess: cat.isActive,
-    });
-  };
   // Function must be inside component
   const fetchCategories = async (): Promise<void> => {
     setLoading(true);
     try {
-      const res = await fetch("/api/charter-categories");
+      const res = await fetch("/api/charter-species-type");
       if (!res.ok) throw new Error("Failed to fetch");
       const json = await res.json();
       setCategories(json.data);
@@ -140,92 +61,6 @@ export default function CategoryPage() {
     fetchCategories();
   }, []);
 
-  //   const handleSubmit = async (e: React.FormEvent) => {
-  //     e.preventDefault();
-  //     setLoading(true);
-  //     setError("");
-  //     setSuccess(false);
-
-  //     try {
-  //       const res = await fetch("/api/charter-categories", {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({
-  //           name: formData.name,
-  //           description: formData.description,
-  //           imageUrl: formData.imageUrl,
-  //         }),
-  //       });
-
-  //       if (!res.ok) throw new Error("Failed to create category");
-
-  //       const data: CategoryResponse = await res.json(); // ✅ type cast
-
-  //       const newCategory: Category = {
-  //         id: (categories.length + 1).toString(),
-  //         name: data.name,
-  //         description: data.description,
-  //         imageUrl: data.imageUrl,
-  //         isActive: formData.isSuccess,
-  //       };
-
-  //       setCategories([...categories, newCategory]);
-  //       setFormData({
-  //         name: "",
-  //         description: "",
-  //         imageUrl: "",
-  //         isSuccess: false,
-  //       });
-  //       setSuccess(true);
-  //     } catch (err: unknown) {
-  //       // ✅ unknown instead of any
-  //       if (err instanceof Error) setError(err.message);
-  //       else setError("Something went wrong");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-  //   setError("");
-  //   setSuccess(false);
-
-  //   try {
-  //     const res = await fetch("/api/charter-categories", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({
-  //         name: formData.name,
-  //         description: formData.description,
-  //         imageUrl: formData.imageUrl,
-  //       }),
-  //     });
-
-  //     if (!res.ok) throw new Error("Failed to create category");
-
-  //     // const data: CategoryResponse = await res.json(); // optional
-
-  //     // Reset form
-  //     setFormData({
-  //       name: "",
-  //       description: "",
-  //       imageUrl: "",
-  //       isSuccess: false,
-  //     });
-  //     setSuccess(true);
-
-  //     // ✅ Refresh table
-  //     await fetchCategories();
-  //   } catch (err: unknown) {
-  //     if (err instanceof Error) setError(err.message);
-  //     else setError("Something went wrong");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -235,20 +70,20 @@ export default function CategoryPage() {
       const payload = {
         name: formData.name,
         description: formData.description,
-        imageUrl: formData.imageUrl,
+
         isActive: formData.isSuccess,
       };
 
       let res;
 
       if (editId) {
-        res = await fetch(`/api/charter-categories/${editId}`, {
+        res = await fetch(`/api/charter-species-type/${editId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
-        res = await fetch("/api/charter-categories", {
+        res = await fetch("/api/charter-species-type", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -271,7 +106,7 @@ export default function CategoryPage() {
       setFormData({
         name: "",
         description: "",
-        imageUrl: "",
+
         isSuccess: false,
       });
     } catch (error) {
@@ -281,6 +116,16 @@ export default function CategoryPage() {
       setLoading(false);
     }
   };
+  const handleEdit = (cat: Category) => {
+    setEditId(cat.id);
+
+    setFormData({
+      name: cat.name,
+      description: cat.description,
+
+      isSuccess: cat.isActive,
+    });
+  };
 
   const handleDelete = async (id: string) => {
     const confirmDelete = confirm("Are you sure?");
@@ -288,7 +133,7 @@ export default function CategoryPage() {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`/api/charter-categories/${id}`, {
+      const res = await fetch(`/api/charter-species-type/${id}`, {
         method: "DELETE",
       });
 
@@ -363,7 +208,7 @@ export default function CategoryPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
-                  Category
+                  Charter Species Type
                 </h1>
                 <p className="text-sm md:text-base text-slate-600 mt-1">
                   Customize and book your fishing charter experience.
@@ -371,7 +216,7 @@ export default function CategoryPage() {
               </div>
               <Button className="bg-slate-800 hover:bg-slate-700 text-white self-start sm:self-auto">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Category
+                Add Charter Species
               </Button>
             </div>
 
@@ -379,7 +224,7 @@ export default function CategoryPage() {
             <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 md:p-6">
               <div className="mb-6">
                 <h2 className="text-lg md:text-xl font-semibold text-slate-900">
-                  Category
+                  Category Species Type
                 </h2>
                 <p className="text-sm text-slate-600 mt-1">
                   Fill in the details to book your fishing trip.
@@ -426,53 +271,21 @@ export default function CategoryPage() {
                         className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       />
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                      <div className="mb-6">
-                        <label className="block text-sm font-semibold text-foreground mb-2">
-                          Upload Image
-                        </label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                            id="file-upload"
-                          />
-
-                          <label
-                            htmlFor="file-upload"
-                            className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-colors cursor-pointer
-                       ${isUploading ? "bg-gray-400 cursor-not-allowed" : "bg-slate-800 hover:bg-slate-700"}
-                     `}
-                          >
-                            {isUploading ? (
-                              <>
-                                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                Uploading...
-                              </>
-                            ) : (
-                              <>
-                                <Upload className="h-4 w-4" />
-                                Upload
-                              </>
-                            )}
-                          </label>
-
-                          {uploadedFileName && !isUploading && (
-                            <span className="text-sm text-muted-foreground">
-                              <span>{uploadedFileName}</span>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <input type="checkbox" className="h-5 w-6 accent-primary" />
+                  <input
+                    type="checkbox"
+                    checked={formData.isSuccess}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        isSuccess: e.target.checked,
+                      }))
+                    }
+                    className="h-5 w-6 accent-primary"
+                  />
                   <label className="text-sm text-gray-700">Is Active</label>
                 </div>
 
@@ -484,7 +297,6 @@ export default function CategoryPage() {
                       setFormData({
                         name: "",
                         description: "",
-                        imageUrl: "",
                         isSuccess: false,
                       })
                     }
@@ -534,9 +346,7 @@ export default function CategoryPage() {
                         <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                           DESCRIPTION
                         </th>
-                        <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          Image
-                        </th>
+
                         <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                           STATUS
                         </th>
@@ -558,14 +368,7 @@ export default function CategoryPage() {
                               {category.description}
                             </p>
                           </td>
-                          {/* <td className="px-6 py-4 text-sm text-slate-900 whitespace-nowrap">
-                            {category.imageUrl}
-                          </td> */}
-                          <td className="px-3 py-4 w-[30%]">
-                            <p className="text-sm text-muted-foreground">
-                              {category.imageUrl}
-                            </p>
-                          </td>
+
                           <td className="px-3 py-4 text-sm whitespace-nowrap">
                             <p className="text-sm text-muted-foreground">
                               Active
@@ -610,7 +413,7 @@ export default function CategoryPage() {
                     <div className="col-span-full flex justify-center items-center h-48">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
                       <span className="ml-2 text-gray-700">
-                        Loading Category
+                        Loading Charter Type
                       </span>
                     </div>
                   )}

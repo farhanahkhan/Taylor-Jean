@@ -195,6 +195,36 @@ export function DashboardSidebar() {
                     >
                       Category
                     </Link>
+                    <Link
+                      href="/dashboard/charters/charter-trip"
+                      className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                        pathname === "/dashboard/charters/charter-trip"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      }`}
+                    >
+                      Charter Trip
+                    </Link>
+                    <Link
+                      href="/dashboard/charters/category_type"
+                      className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                        pathname === "/dashboard/charters/category_type"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      }`}
+                    >
+                      Charter Type
+                    </Link>
+                    <Link
+                      href="/dashboard/charters/charter_species_type"
+                      className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                        pathname === "/dashboard/charters/charter_species_type"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      }`}
+                    >
+                      Charter Species Type
+                    </Link>
                   </div>
                 )}
               </div>

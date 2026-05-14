@@ -6,11 +6,10 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-import { Search, Filter, Plus, MoreVertical, Upload } from "lucide-react";
+import { Search, Filter, Plus, MoreVertical } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
-import { mutate } from "swr";
 
 interface Category {
   id: string;
@@ -36,11 +35,7 @@ export default function CharterTripPage() {
   });
   const [loading, setLoading] = useState(false);
 
-  const [success, setSuccess] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [isFileChanged, setIsFileChanged] = useState(false);
-  const [uploadedFileName, setUploadedFileName] = useState("");
 
   // Function must be inside component
   const fetchCategories = async (): Promise<void> => {
@@ -143,16 +138,6 @@ export default function CharterTripPage() {
         alert(result?.data?.message || result?.message || "Delete failed");
         return;
       }
-
-      // ✅ API response:
-      // {
-      //   message: "Success",
-      //   status: true,
-      //   statusCode: 200,
-      //   data: {
-      //     message: "Record successfully deleted"
-      //   }
-      // }
 
       // ✅ Show exact message from API
       alert(result?.data?.message || "Record successfully deleted");

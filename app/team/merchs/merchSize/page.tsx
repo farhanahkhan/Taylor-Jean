@@ -16,16 +16,13 @@ import { TeamHeader } from "@/app/Components/team-header";
 
 interface Category {
   id: string;
-  name: string;
-
-  hexCode: string; // ✅ correct key
+  sizeValue: string;
   isActive: boolean;
 }
 
 interface FormData {
-  name: string;
+  sizeValue: string;
 
-  hexCode: string; // ✅ add this
   isSuccess: boolean;
 }
 
@@ -33,9 +30,8 @@ export default function MerchSizePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState<FormData>({
-    name: "",
+    sizeValue: "",
 
-    hexCode: "", // default hex color
     isSuccess: false,
   });
   const [loading, setLoading] = useState(false);
@@ -48,15 +44,15 @@ export default function MerchSizePage() {
 
   // Function must be inside component
   const fetchCategories = async (): Promise<void> => {
-    // setLoading(true);
-    // try {
-    //   const res = await fetch("/api/merch/color");
-    //   if (!res.ok) throw new Error("Failed to fetch");
-    //   const json = await res.json();
-    //   setCategories(json.data);
-    // } catch (err) {
-    //   console.error("Error fetching categories:", err);
-    // }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/merch/sizes");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const json = await res.json();
+      setCategories(json.data);
+    } catch (err) {
+      console.error("Error fetching categories:", err);
+    }
   };
 
   // ✅ useEffect calls the function
@@ -71,22 +67,20 @@ export default function MerchSizePage() {
 
     try {
       const payload = {
-        name: formData.name,
-
-        HexCode: formData.hexCode, // ✅ send hex
+        SizeValue: formData.sizeValue,
         isActive: formData.isSuccess,
       };
 
       let res;
 
       if (editId) {
-        res = await fetch(`/api/merch/color/${editId}`, {
+        res = await fetch(`/api/merch/sizes/${editId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
-        res = await fetch("/api/merch/color", {
+        res = await fetch("/api/merch/sizes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -107,8 +101,7 @@ export default function MerchSizePage() {
       setEditId(null);
 
       setFormData({
-        name: "",
-        hexCode: "",
+        sizeValue: "",
         isSuccess: false,
       });
     } catch (error) {
@@ -122,9 +115,7 @@ export default function MerchSizePage() {
     setEditId(cat.id);
 
     setFormData({
-      name: cat.name,
-
-      hexCode: cat.hexCode,
+      sizeValue: cat.sizeValue,
       isSuccess: cat.isActive,
     });
   };
@@ -135,7 +126,7 @@ export default function MerchSizePage() {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`/api/merch/color/${id}`, {
+      const res = await fetch(`/api/merch/sizes/${id}`, {
         method: "DELETE",
       });
 
@@ -193,7 +184,7 @@ export default function MerchSizePage() {
   //   }
   // };
   const filteredCategories = categories.filter((cat) =>
-    (cat.name ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
+    (cat.sizeValue ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
   );
   return (
     <div className="flex min-h-screen bg-slate-100">
@@ -240,13 +231,16 @@ export default function MerchSizePage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="lg:col-span-1">
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Full Name <span className="text-red-500">*</span>
+                        Size<span className="text-red-500">*</span>
                       </label>
                       <input
                         id="name"
-                        value={formData.name}
+                        value={formData.sizeValue}
                         onChange={(e) =>
-                          setFormData({ ...formData, name: e.target.value })
+                          setFormData({
+                            ...formData,
+                            sizeValue: e.target.value,
+                          })
                         }
                         placeholder="Enter your full name"
                         required
@@ -254,7 +248,7 @@ export default function MerchSizePage() {
                       />
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 pt-6">
                       <input
                         type="checkbox"
                         checked={formData.isSuccess}
@@ -277,9 +271,7 @@ export default function MerchSizePage() {
                     variant="outline"
                     onClick={() =>
                       setFormData({
-                        name: "",
-                        hexCode: "",
-
+                        sizeValue: "",
                         isSuccess: false,
                       })
                     }
@@ -324,10 +316,7 @@ export default function MerchSizePage() {
                     <thead>
                       <tr>
                         <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          NAME
-                        </th>
-                        <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          Hex Code
+                          Size Value
                         </th>
 
                         <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -343,12 +332,7 @@ export default function MerchSizePage() {
                         <tr key={category.id} className="hover:bg-primary/10">
                           <td className="px-3 py-4 text-sm text-slate-900 whitespace-nowrap">
                             <p className="text-sm text-muted-foreground">
-                              {category.name}
-                            </p>
-                          </td>
-                          <td className="px-3 py-4 text-sm text-slate-900 whitespace-nowrap">
-                            <p className="text-sm text-muted-foreground">
-                              {category.hexCode}
+                              {category.sizeValue}
                             </p>
                           </td>
 
@@ -396,7 +380,7 @@ export default function MerchSizePage() {
                     <div className="col-span-full flex justify-center items-center h-48">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
                       <span className="ml-2 text-gray-700">
-                        Loading Charter Type
+                        Loading Merch Size
                       </span>
                     </div>
                   )}

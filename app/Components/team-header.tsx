@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Dialog from "@radix-ui/react-dialog";
+import { usePathname } from "next/navigation";
 
 const navItems = [
   { icon: LayoutGrid, label: "Dashboard", href: "/team" },
@@ -39,6 +40,8 @@ const navItems = [
 export function TeamHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [openMerch, setOpenMerch] = useState(false);
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
@@ -76,17 +79,100 @@ export function TeamHeader() {
                   </Dialog.Close>
                 </div>
                 <nav className="flex-1 p-4 space-y-1">
-                  {navItems.map((item) => (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-all"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      {item.label}
-                    </Link>
-                  ))}
+                  {navItems.map((item) => {
+                    // ✅ Merch dropdown
+                    if (item.label === "Merch") {
+                      const isMerchActive = pathname.startsWith("/team/merch");
+
+                      return (
+                        <div key={item.label}>
+                          <button
+                            type="button"
+                            onClick={() => setOpenMerch(!openMerch)}
+                            className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                              isMerchActive
+                                ? "bg-primary/10 text-primary"
+                                : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <item.icon className="h-5 w-5" />
+                              Merch
+                            </div>
+
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform ${
+                                openMerch ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+
+                          {/* Dropdown Items */}
+                          {openMerch && (
+                            <>
+                              <div className="ml-8 mt-1 space-y-1">
+                                <Link
+                                  href="/team/merchs/merchColor"
+                                  className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                                    pathname === "/team/merchs/merchColor"
+                                      ? "bg-primary/10 text-primary"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                                  }`}
+                                >
+                                  Merch Color
+                                </Link>
+                              </div>
+                              <div className="ml-8 mt-1 space-y-1">
+                                <Link
+                                  href="/team/merchs/merchSize"
+                                  className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                                    pathname === "/team/merch/merchSize"
+                                      ? "bg-primary/10 text-primary"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                                  }`}
+                                >
+                                  Merch Size
+                                </Link>
+                              </div>
+                              <div className="ml-8 mt-1 space-y-1">
+                                <Link
+                                  href="/team/merchs/merchCategory"
+                                  className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                                    pathname === "/team/merch/merchCategory"
+                                      ? "bg-primary/10 text-primary"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                                  }`}
+                                >
+                                  Merch Category
+                                </Link>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    // ✅ Normal menu items
+                    const isActive =
+                      item.href === "/team"
+                        ? pathname === "/team"
+                        : pathname.startsWith(item.href) && item.href !== "#";
+
+                    return (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                          isActive
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                        }`}
+                      >
+                        <item.icon className="h-5 w-5" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
                 </nav>
               </Dialog.Content>
             </Dialog.Portal>

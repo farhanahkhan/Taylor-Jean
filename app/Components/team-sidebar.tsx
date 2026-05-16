@@ -82,6 +82,18 @@ export function TeamSidebar() {
                   <>
                     <div className="ml-8 mt-1 space-y-1">
                       <Link
+                        href="/team/merch"
+                        className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                          pathname === "/team/merch"
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                        }`}
+                      >
+                        Products
+                      </Link>
+                    </div>
+                    <div className="ml-8 mt-1 space-y-1">
+                      <Link
                         href="/team/merchs/merchColor"
                         className={`block px-3 py-2 text-sm font-medium rounded-md ${
                           pathname === "/team/merchs/merchColor"

@@ -34,7 +34,7 @@ type Charter = {
   baseAmount: number;
   categoryId: string;
   imageUrl: string;
-  isActive: boolean;
+  isActive: boolean | string | number;
 };
 
 export default function ServicePage() {
@@ -46,6 +46,16 @@ export default function ServicePage() {
   //   getCharters
   // );
   const { data: charters = [], mutate } = useSWR("charters", fetchCharters);
+  const normalizeIsActive = (value: unknown): boolean => {
+    return value === true || value === "true" || value === 1 || value === "1";
+  };
+
+  const normalizedCharters = useMemo(() => {
+    return charters.map((c) => ({
+      ...c,
+      isActive: normalizeIsActive(c.isActive),
+    }));
+  }, [charters]);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,7 +91,7 @@ export default function ServicePage() {
     setAmount(item.baseAmount);
     setCharterCategoryId(item.categoryId);
     setUploadedFileName(item.imageUrl);
-    setIsActive(item.isActive);
+    setIsActive(Boolean(item.isActive));
     setIsFileChanged(false); // 👈 reset
   };
   // const handleDelete = async (id: string) => {
@@ -167,10 +177,10 @@ export default function ServicePage() {
   }, []);
 
   const filteredCharters = useMemo(() => {
-    return charters.filter((charters) =>
-      charters.charterName.toLowerCase().includes(search.toLowerCase()),
+    return normalizedCharters.filter((c) =>
+      c.charterName.toLowerCase().includes(search.toLowerCase()),
     );
-  }, [charters, search]);
+  }, [normalizedCharters, search]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -599,83 +609,93 @@ export default function ServicePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCharters.map((charters) => (
-                    <tr
-                      key={charters.id}
-                      className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <p className="font-semibold text-foreground">
-                          {charters.charterName}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {charters.description}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                          {charters.categoryId}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-semibold text-foreground">
-                          ${charters.baseAmount}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm text-muted-foreground">
-                          {charters.imageUrl || "-"}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${
-                            charters.isActive
-                              ? "bg-emerald-50 text-emerald-700"
-                              : "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {charters.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <DropdownMenu.Root>
-                          <DropdownMenu.Trigger asChild>
-                            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                              <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                            </button>
-                          </DropdownMenu.Trigger>
-                          <DropdownMenu.Portal>
-                            <DropdownMenu.Content
-                              align="end"
-                              className="min-w-[140px] bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50"
-                            >
-                              <DropdownMenu.Item
-                                onClick={() => handleEdit(charters)}
-                                className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 outline-none"
+                  {normalizedCharters
+                    .filter((charters) =>
+                      charters.charterName
+                        .toLowerCase()
+                        .includes(search.toLowerCase()),
+                    )
+                    .map((charters) => (
+                      <tr
+                        key={charters.id}
+                        className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <p className="font-semibold text-foreground">
+                            {charters.charterName}
+                          </p>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {charters.description}
+                          </p>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                            {charters.categoryId}
+                          </span>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <p className="font-semibold text-foreground">
+                            ${charters.baseAmount}
+                          </p>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <p className="text-sm text-muted-foreground">
+                            {charters.imageUrl || "-"}
+                          </p>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${
+                              charters.isActive
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            {charters.isActive ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+
+                        <td className="px-6 py-4 text-right">
+                          <DropdownMenu.Root>
+                            <DropdownMenu.Trigger asChild>
+                              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                              </button>
+                            </DropdownMenu.Trigger>
+
+                            <DropdownMenu.Portal>
+                              <DropdownMenu.Content
+                                align="end"
+                                className="min-w-[140px] bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50"
                               >
-                                <Pencil className="h-4 w-4" />
-                                Edit
-                              </DropdownMenu.Item>
-                              <DropdownMenu.Item
-                                // onClick={() => {
-                                //   console.log("EDIT CLICKED", charters);
-                                //   handleEdit(charters);
-                                // }}
-                                onClick={() => handleDelete(charters.id)}
-                                className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-red-50 text-red-600 outline-none"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                Delete
-                              </DropdownMenu.Item>
-                            </DropdownMenu.Content>
-                          </DropdownMenu.Portal>
-                        </DropdownMenu.Root>
-                      </td>
-                    </tr>
-                  ))}
+                                <DropdownMenu.Item
+                                  onClick={() => handleEdit(charters)}
+                                  className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 outline-none"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  Edit
+                                </DropdownMenu.Item>
+
+                                <DropdownMenu.Item
+                                  onClick={() => handleDelete(charters.id)}
+                                  className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-red-50 text-red-600 outline-none"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Delete
+                                </DropdownMenu.Item>
+                              </DropdownMenu.Content>
+                            </DropdownMenu.Portal>
+                          </DropdownMenu.Root>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
 

@@ -51,11 +51,7 @@ export default function VesselProfilePage() {
   const [tournamentId, setTournamentId] = useState("");
   const [length, setLength] = useState("");
   const [engines, setEngines] = useState("");
-  const [electronics, setElectronics] = useState([
-    "Garmin Pro",
-    "FLIR Night Vision",
-    "Side-scan Sonar",
-  ]);
+  const [electronics, setElectronics] = useState([]);
   const [newElectronics, setNewElectronics] = useState("");
 
   const [profiles, setProfiles] = useState<VesselProfile[]>([]);
@@ -108,7 +104,7 @@ export default function VesselProfilePage() {
           vesselBio: item.description ?? "",
           isActive: item.isActive,
           createdAt: item.createdDate,
-        })
+        }),
       );
 
       setProfiles(mappedProfiles);
@@ -217,14 +213,14 @@ export default function VesselProfilePage() {
 
   const toggleActive = (id: string) => {
     setProfiles(
-      profiles.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p))
+      profiles.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p)),
     );
   };
 
   const filteredProfiles = profiles.filter(
     (profile) =>
       profile.teamName.toLowerCase().includes(search.toLowerCase()) ||
-      profile.vesselName.toLowerCase().includes(search.toLowerCase())
+      profile.vesselName.toLowerCase().includes(search.toLowerCase()),
   );
 
   // list ki api
@@ -246,7 +242,7 @@ export default function VesselProfilePage() {
             vesselBio: item.description ?? "",
             isActive: item.isActive,
             createdAt: item.createdDate,
-          })
+          }),
         );
 
         setProfiles(mappedProfiles);
@@ -456,8 +452,8 @@ export default function VesselProfilePage() {
                 {isSubmitting
                   ? "Creating..."
                   : editingId
-                  ? "Update Profile"
-                  : "Create Team"}
+                    ? "Update Profile"
+                    : "Create Team"}
               </button>
             </div>
           </div>

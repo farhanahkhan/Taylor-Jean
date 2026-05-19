@@ -348,7 +348,7 @@ export default function ServicePage() {
                             className={`px-2 py-1 text-xs rounded-full ${
                               item.isActive
                                 ? "bg-green-100 text-green-700"
-                                : "bg-gray-100"
+                                : "bg-gray-100 text-gray-700"
                             }`}
                           >
                             {item.isActive ? "Active" : "Inactive"}

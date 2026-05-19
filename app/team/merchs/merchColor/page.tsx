@@ -28,6 +28,12 @@ interface FormData {
   hexCode: string; // ✅ add this
   isSuccess: boolean;
 }
+type CategoryAPI = {
+  id: string;
+  name: string;
+  hexCode: string;
+  isActive: boolean | string;
+};
 
 export default function MerchColorPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -53,7 +59,14 @@ export default function MerchColorPage() {
       const res = await fetch("/api/merch/color");
       if (!res.ok) throw new Error("Failed to fetch");
       const json = await res.json();
-      setCategories(json.data);
+      setCategories(
+        json.data.map((item: CategoryAPI) => ({
+          id: item.id,
+          name: item.name,
+          hexCode: item.hexCode,
+          isActive: item.isActive === true || item.isActive === "true",
+        })),
+      );
     } catch (err) {
       console.error("Error fetching categories:", err);
     }
@@ -393,10 +406,16 @@ export default function MerchColorPage() {
                             </p>
                           </td>
 
-                          <td className="px-3 py-4 text-sm whitespace-nowrap">
-                            <p className="text-sm text-muted-foreground">
-                              Active
-                            </p>
+                          <td className="px-3 py-4 ">
+                            <span
+                              className={`px-2 py-1 text-xs rounded-full ${
+                                category.isActive
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              {category.isActive ? "Active" : "Inactive"}
+                            </span>
                           </td>
                           <td className="px-3 py-4 text-sm whitespace-nowrap">
                             <DropdownMenu.Root>

@@ -335,12 +335,18 @@ export default function MerchSizePage() {
                               {category.sizeValue}
                             </p>
                           </td>
-
-                          <td className="px-3 py-4 text-sm whitespace-nowrap">
-                            <p className="text-sm text-muted-foreground">
-                              Active
-                            </p>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`px-2 py-1 text-xs rounded-full ${
+                                category.isActive
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-gray-100"
+                              }`}
+                            >
+                              {category.isActive ? "Active" : "Inactive"}
+                            </span>
                           </td>
+
                           <td className="px-3 py-4 text-sm whitespace-nowrap">
                             <DropdownMenu.Root>
                               <DropdownMenu.Trigger asChild>

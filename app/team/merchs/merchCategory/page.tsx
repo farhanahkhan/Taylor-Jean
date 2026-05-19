@@ -319,9 +319,6 @@ export default function MerchSizePage() {
                         <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                           NAME
                         </th>
-                        <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          Hex Code
-                        </th>
 
                         <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                           STATUS
@@ -341,9 +338,15 @@ export default function MerchSizePage() {
                           </td>
 
                           <td className="px-3 py-4 text-sm whitespace-nowrap">
-                            <p className="text-sm text-muted-foreground">
-                              Active
-                            </p>
+                            <span
+                              className={`px-2 py-1 text-xs rounded-full ${
+                                category.isActive
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              {category.isActive ? "Active" : "Inactive"}
+                            </span>
                           </td>
                           <td className="px-3 py-4 text-sm whitespace-nowrap">
                             <DropdownMenu.Root>

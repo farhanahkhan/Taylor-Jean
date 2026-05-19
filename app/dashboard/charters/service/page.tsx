@@ -21,7 +21,7 @@ export interface Service {
   serviceName: string;
   description: string;
   price: number;
-  isActive: boolean;
+  isActive: boolean | string | number;
   createdDate: string;
 }
 
@@ -42,13 +42,33 @@ export default function ServicePage() {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<number | "">("");
   const [isActive, setIsActive] = useState(true);
+  const normalizeIsActive = (value: unknown): boolean => {
+    return value === true || value === "true" || value === 1 || value === "1";
+  };
+  const normalizedCharters = useMemo(() => {
+    return services.map((c) => ({
+      ...c,
+      isActive: normalizeIsActive(c.isActive),
+    }));
+  }, [services]);
+
+  // const normalizedServices = useMemo(() => {
+  //   return services.map((item) => ({
+  //     ...item,
+  //     isActive:
+  //       item.isActive === true ||
+  //       item.isActive === "true" ||
+  //       item.isActive === 1 ||
+  //       item.isActive === "1",
+  //   }));
+  // }, [services]);
 
   // filter
   const filtered = useMemo(() => {
-    return services.filter((s) =>
+    return normalizedCharters.filter((s) =>
       s.serviceName.toLowerCase().includes(search.toLowerCase()),
     );
-  }, [services, search]);
+  }, [normalizedCharters, search]);
 
   // EDIT
   // const handleEdit = (item: Service) => {
@@ -71,7 +91,7 @@ export default function ServicePage() {
     setName(item.serviceName);
     setDescription(item.description);
     setAmount(item.price);
-    setIsActive(item.isActive);
+    setIsActive(Boolean(item.isActive));
     setShowForm(true);
   };
 
@@ -110,7 +130,7 @@ export default function ServicePage() {
     if (editId) {
       console.log("UPDATE MODE ID:", editId);
     }
-    debugger;
+
     if (!name || !amount || !description) {
       alert("Fill all fields");
       return;
@@ -125,15 +145,8 @@ export default function ServicePage() {
         amount: Number(amount),
         isActive,
       };
-      //   const payload = {
-      //   Name: name,
-      //   Description: description,
-      //   BaseAmount: Number(amount),
-      //   IsActive: isActive,
-      // };
 
       let res;
-      debugger;
 
       if (editId) {
         res = await fetch(`/api/CharterServiceItems/${editId}`, {
@@ -141,7 +154,6 @@ export default function ServicePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        debugger;
       } else {
         res = await fetch(`/api/CharterServiceItems`, {
           method: "POST",
@@ -246,7 +258,7 @@ export default function ServicePage() {
                     onChange={(e) => setIsActive(e.target.checked)}
                     className="w-4 h-4"
                   />
-                  <span className="text-sm font-medium">Is Active</span>
+                  <span className="text-sm font-medium"> Is Active</span>
                 </label>
               </div>
 

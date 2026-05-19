@@ -43,6 +43,9 @@ export default function CategorySpeciesTypePage() {
   const [isFileChanged, setIsFileChanged] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState("");
 
+  const normalizeBool = (val: unknown): boolean => {
+    return val === true || val === "true" || val === 1 || val === "1";
+  };
   // Function must be inside component
   const fetchCategories = async (): Promise<void> => {
     setLoading(true);
@@ -50,7 +53,12 @@ export default function CategorySpeciesTypePage() {
       const res = await fetch("/api/charter-species-type");
       if (!res.ok) throw new Error("Failed to fetch");
       const json = await res.json();
-      setCategories(json.data);
+      setCategories(
+        json.data.map((item: Category) => ({
+          ...item,
+          isActive: normalizeBool(item.isActive),
+        })),
+      );
     } catch (err) {
       console.error("Error fetching categories:", err);
     }
@@ -123,7 +131,7 @@ export default function CategorySpeciesTypePage() {
       name: cat.name,
       description: cat.description,
 
-      isSuccess: cat.isActive,
+      isSuccess: normalizeBool(cat.isActive),
     });
   };
 
@@ -369,11 +377,15 @@ export default function CategorySpeciesTypePage() {
                             </p>
                           </td>
 
-                          <td className="px-3 py-4 text-sm whitespace-nowrap">
-                            <p className="text-sm text-muted-foreground">
-                              Active
-                            </p>
-                          </td>
+                          <span
+                            className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                              category.isActive
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            {category.isActive ? "Active" : "Inactive"}
+                          </span>
                           <td className="px-3 py-4 text-sm whitespace-nowrap">
                             <DropdownMenu.Root>
                               <DropdownMenu.Trigger asChild>

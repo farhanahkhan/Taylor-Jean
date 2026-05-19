@@ -112,6 +112,10 @@ export default function CategoryPage() {
       setIsUploading(false);
     }
   };
+
+  const normalizeBool = (val: unknown): boolean => {
+    return val === true || val === "true" || val === 1 || val === "1";
+  };
   const handleEdit = (cat: Category) => {
     setEditId(cat.id);
 
@@ -119,19 +123,39 @@ export default function CategoryPage() {
       name: cat.name,
       description: cat.description,
       imageUrl: cat.imageUrl || "",
-      isSuccess: cat.isActive,
+      isSuccess: normalizeBool(cat.isActive),
     });
   };
   // Function must be inside component
+  // const fetchCategories = async (): Promise<void> => {
+  //   setLoading(true);
+  //   try {
+  //     const res = await fetch("/api/charter-categories");
+  //     if (!res.ok) throw new Error("Failed to fetch");
+  //     const json = await res.json();
+  //     setCategories(json.data);
+  //   } catch (err) {
+  //     console.error("Error fetching categories:", err);
+  //   }
+  // };
   const fetchCategories = async (): Promise<void> => {
     setLoading(true);
     try {
       const res = await fetch("/api/charter-categories");
       if (!res.ok) throw new Error("Failed to fetch");
+
       const json = await res.json();
-      setCategories(json.data);
+
+      setCategories(
+        json.data.map((item: Category) => ({
+          ...item,
+          isActive: normalizeBool(item.isActive),
+        })),
+      );
     } catch (err) {
       console.error("Error fetching categories:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -472,7 +496,17 @@ export default function CategoryPage() {
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <input type="checkbox" className="h-5 w-6 accent-primary" />
+                  <input
+                    type="checkbox"
+                    checked={formData.isSuccess}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        isSuccess: e.target.checked,
+                      })
+                    }
+                    className="h-5 w-6 accent-primary"
+                  />
                   <label className="text-sm text-gray-700">Is Active</label>
                 </div>
 
@@ -567,9 +601,15 @@ export default function CategoryPage() {
                             </p>
                           </td>
                           <td className="px-3 py-4 text-sm whitespace-nowrap">
-                            <p className="text-sm text-muted-foreground">
-                              Active
-                            </p>
+                            <span
+                              className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                                category.isActive
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-gray-100 hover:bg-gray-700"
+                              }`}
+                            >
+                              {category.isActive ? "Active" : "Inactive"}
+                            </span>
                           </td>
                           <td className="px-3 py-4 text-sm whitespace-nowrap">
                             <DropdownMenu.Root>

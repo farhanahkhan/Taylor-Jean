@@ -3,7 +3,20 @@
 import type React from "react";
 
 import { useState, useEffect } from "react";
-import { Plus, Calendar, Users } from "lucide-react";
+import {
+  Plus,
+  Calendar,
+  Users,
+  MoreVertical,
+  Trash2,
+  Pencil,
+} from "lucide-react";
+
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+
+import { useRouter } from "next/navigation";
+import { MapContainer, TileLayer, useMapEvents, Marker } from "react-leaflet";
+import dynamic from "next/dynamic";
 
 import {
   Dialog,
@@ -13,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 
 import Image from "next/image";
+import { MapPin } from "lucide-react";
 
 import { Label } from "@radix-ui/react-label";
 import {
@@ -26,6 +40,7 @@ import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 import ImageUploader from "@/app/Components/ImageUploader";
 import Link from "next/link";
+import { mutate } from "swr";
 
 interface TournamentType {
   id: string;
@@ -35,23 +50,88 @@ interface TournamentType {
 interface Species {
   id: string;
   name: string;
-  description: string;
+
   isActive: boolean;
   points: number;
 }
+// export interface Tournament {
+//   id: string;
+//   name: string;
+//   title: string; // add title to display in frontend
+//   startDate: string;
+//   endDate: string;
+//   // image?: string;
+//   status?: string;
+//   teams?: number;
+//   description?: string; // add this
+//   isActive?: boolean;
+//   imageUrl?: string;
+//   points?: number;
+//   entryFee?: number;
+// }
+// export interface Tournament {
+//   id: string;
+//   name: string;
+//   title: string;
+//   startDate: string;
+//   endDate: string;
+
+//   description?: string;
+//   imageUrl?: string;
+
+//   entryFee?: number;
+//   points?: number;
+
+//   latitude?: string;
+//   longitude?: string;
+//   place?: string;
+//   tournamentType?: {
+//     id: string;
+//     name?: string;
+//   };
+
+//   tournamentTypeId?: string;
+
+//   tournamentSpecies?: { speciesId: string }[];
+// }
+
 export interface Tournament {
   id: string;
   name: string;
-  title: string; // add title to display in frontend
+  title: string;
   startDate: string;
   endDate: string;
-  // image?: string;
-  status?: string;
-  teams?: number;
-  description?: string; // add this
-  isActive?: boolean;
+
+  description?: string;
   imageUrl?: string;
+
+  entryFee?: number;
   points?: number;
+
+  latitude?: number;
+  longitude?: number;
+  place?: string;
+  tournamentType?: string;
+
+  // ✅ FIX
+  tournamentTypeId?: string;
+
+  // ✅ ADD THESE
+  typeId?: string;
+
+  // tournamentType?: {
+  //   id: string;
+  //   name: string;
+  // };
+
+  image?: string;
+  banner?: string;
+  bannerUrl?: string;
+
+  tournamentSpecies?: {
+    speciesId: string;
+    points: number;
+  }[];
 }
 
 // API response type
@@ -68,10 +148,23 @@ export default function TournamentsPage() {
   // tournament dropdown api
   const [tournamentTypes, setTournamentTypes] = useState<TournamentType[]>([]);
   const [allowableSpecies, setAllowableSpecies] = useState<Species[]>([]);
-  const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
+  const [selectedSpecies, setSelectedSpecies] = useState<
+    { speciesId: string; points: number }[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true); // New state
   const [teamImage, setTeamImage] = useState("");
+  const [isMapOpen, setIsMapOpen] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>(""); // store finalImageUrl
+  const [selectedPosition, setSelectedPosition] = useState<
+    [number, number] | null
+  >(null);
+  const [speciesWithPoints, setSpeciesWithPoints] = useState<Species[]>([]);
+  const router = useRouter();
+  const MapComponent = dynamic(() => import("../../Components/MapComponent"), {
+    ssr: false,
+  });
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTournamentTypes = async () => {
@@ -97,14 +190,16 @@ export default function TournamentsPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    marina: "",
+
     tournamentType: "",
     startDate: "",
     endDate: "",
     entryFee: "",
-    pointsPerLb: "",
 
+    latitude: "",
+    longitude: "",
     imageUrl: "",
+    location: "", // Google Maps URL
   });
 
   useEffect(() => {
@@ -116,9 +211,14 @@ export default function TournamentsPage() {
         // Safely map API response to include 'title'
         const tournamentsWithTitle: Tournament[] = data.data.map((t) => ({
           ...t,
-          // If t.name exists, use it; otherwise fallback to empty string
+
           title: t.name ?? "",
-          image: t.imageUrl ?? "",
+
+          // ✅ IMAGE FIX
+          imageUrl: t.imageUrl ?? t.image ?? t.banner ?? t.bannerUrl ?? "",
+
+          // ✅ TOURNAMENT TYPE FIX
+          tournamentTypeId: t.tournamentTypeId ?? t.typeId ?? "",
         }));
 
         setTournaments(tournamentsWithTitle);
@@ -132,16 +232,32 @@ export default function TournamentsPage() {
     fetchTournaments();
   }, []);
 
-  const toggleSpecies = (speciesId: string) => {
-    setSelectedSpecies((prev) =>
-      prev.includes(speciesId)
-        ? prev.filter((id) => id !== speciesId)
-        : [...prev, speciesId]
-    );
-  };
-
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const resetForm = () => {
+    setIsEditMode(false);
+    setEditingId(null);
+
+    setFormData({
+      title: "",
+      description: "",
+      tournamentType: "",
+      startDate: "",
+      endDate: "",
+      entryFee: "",
+
+      latitude: "",
+      longitude: "",
+      imageUrl: "",
+      location: "",
+    });
+
+    setSelectedSpecies([]);
+    setUploadedImageUrl("");
+    setBannerPreview(null);
+    setSelectedPosition(null);
   };
 
   const handleLaunchTournament = async () => {
@@ -149,91 +265,153 @@ export default function TournamentsPage() {
       alert("Please upload a tournament banner first!");
       return;
     }
-    // Validate required fields
-    if (
-      !formData.title ||
-      !formData.startDate ||
-      !formData.endDate ||
-      !formData.tournamentType
-    ) {
-      alert("Please fill in all required fields");
+
+    const payload = {
+      name: formData.title,
+      place: formData.location || "",
+      tournamentTypeId: formData.tournamentType,
+      startDate: new Date(formData.startDate).toISOString(),
+      endDate: new Date(formData.endDate).toISOString(),
+      latitude: Number(selectedPosition?.[0]) || 0,
+      longitude: Number(selectedPosition?.[1]) || 0,
+      entryFee: Number(formData.entryFee) || 0,
+
+      description: formData.description || "",
+      imageUrl: uploadedImageUrl || "",
+      tournamentSpecies: selectedSpecies.map((s) => ({
+        speciesId: s.speciesId,
+        points: Number(s.points) || 0,
+      })),
+    };
+
+    const url = isEditMode
+      ? `/api/tournaments/${editingId}`
+      : `/api/tournaments`;
+
+    const method = isEditMode ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Something went wrong");
       return;
     }
 
+    alert(isEditMode ? "Tournament updated!" : "Tournament created!");
+
+    await mutate("/api/tournaments"); // ✅ REAL FIX
+
+    setIsModalOpen(false);
+    resetForm();
+  };
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  const handleDelete = async (id: string) => {
+    const confirmDelete = confirm(
+      "Are you sure you want to delete this product?",
+    );
+    if (!confirmDelete) return;
+
     try {
-      // Prepare request body according to backend API
-      const payload = {
-        name: formData.title,
-        place: formData.marina || "TBD",
-        tournamentTypeId: formData.tournamentType, // id selected from dropdown
-        startDate: new Date(formData.startDate).toISOString(),
-        endDate: new Date(formData.endDate).toISOString(),
-        entryFee: Number(formData.entryFee) || 0,
-        points: Number(formData.pointsPerLb) || 0,
-
-        description:
-          formData.description || "Exciting fishing tournament event.",
-        imageUrl: uploadedImageUrl, // <- persistent image
-        speciesIds: selectedSpecies, // array of species ids
-      };
-
-      console.log("payload", payload);
-      const res = await fetch("/api/tournaments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+      const res = await fetch(`/api/tournaments/${id}`, {
+        method: "DELETE",
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Failed to create tournament");
+        alert(data.message || "Delete failed");
         return;
       }
+      alert("Tournament deleted successfully");
 
-      alert("Tournament created successfully!");
-
-      // Optionally, refresh tournaments list
-      // debugger;
-      const tournamentsRes = await fetch("/api/tournaments");
-      const tournamentsData: TournamentAPIResponse =
-        await tournamentsRes.json();
-      console.log(tournamentsData);
-      setTournaments(
-        tournamentsData.data.map((t) => ({
-          ...t,
-          title: t.name,
-          image: t.imageUrl ?? "",
-        }))
-      );
-
-      // Reset form
-      setIsModalOpen(false);
-      setSelectedSpecies([]);
-      setTeamImage("");
-      // setBannerPreview(null);
-      setFormData({
-        title: "",
-        description: "",
-        marina: "",
-        tournamentType: "",
-        startDate: "",
-        endDate: "",
-        entryFee: "",
-        pointsPerLb: "",
-        imageUrl: "",
-      });
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong while creating the tournament.");
+      window.location.reload(); // 👈 ADD THIS
+      // mutate(); // refresh SWR list
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const toggleSpecies = (speciesId: string) => {
+    setSelectedSpecies((prev) => {
+      const exists = prev.find(
+        (s) => String(s.speciesId) === String(speciesId),
+      );
+
+      if (exists) {
+        return prev.filter((s) => String(s.speciesId) !== String(speciesId));
+      }
+
+      return [...prev, { speciesId, points: 0 }];
+    });
+  };
+
+  const handlePointChange = (speciesId: string, value: string) => {
+    setSelectedSpecies((prev) =>
+      prev.map((item) =>
+        item.speciesId === speciesId
+          ? { ...item, points: Number(value) }
+          : item,
+      ),
+    );
+  };
+
+  const handleLocationInput = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      location: value,
+    }));
+  };
+
+  const handleEdit = (tournament: Tournament) => {
+    resetForm(); // 👈 add this first
+    console.log("EDIT TYPE ID:", tournament.tournamentTypeId); // 👈 YAHAN
+    console.log("SPECIES:", tournament.tournamentSpecies);
+    setIsEditMode(true);
+    setEditingId(tournament.id);
+
+    setFormData({
+      title: tournament.name || "",
+      description: tournament.description || "",
+      tournamentType:
+        tournamentTypes.find((type) => type.name === tournament.tournamentType)
+          ?.id || "",
+      startDate: tournament.startDate?.split("T")[0] || "",
+      endDate: tournament.endDate?.split("T")[0] || "",
+      entryFee: String(tournament.entryFee || 0),
+
+      latitude: String(tournament.latitude || 0),
+      longitude: String(tournament.longitude || 0),
+      imageUrl: tournament.imageUrl || "",
+      location: tournament.place || "",
+    });
+
+    setUploadedImageUrl(tournament.imageUrl || "");
+    setBannerPreview(tournament.imageUrl || "");
+
+    const species = tournament.tournamentSpecies ?? [];
+
+    setSelectedSpecies(
+      Array.isArray(species)
+        ? species
+            .filter((s) => s?.speciesId)
+            .map((s) => ({
+              speciesId: String(s.speciesId),
+              points: Number(s.points ?? 0),
+            }))
+        : [],
+    );
+    setIsModalOpen(true);
   };
 
   return (
@@ -281,52 +459,117 @@ export default function TournamentsPage() {
               // Your existing code for tournament cards
 
               tournaments.map((tournament) => (
-                <Link
-                  href={`/dashboard/tournaments/${tournament.id}/teams`}
+                <div
                   key={tournament.id}
                   className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 hover:shadow-md transition-shadow"
                 >
-                  <div className="relative h-48">
-                    <Image
-                      src={tournament.imageUrl || "/placeholder.svg"}
-                      alt={tournament.title || tournament.name}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute top-3 left-3">
-                      <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-semibold rounded-md">
-                        Active
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                      {tournament.title || tournament.name}
-                    </h3>
-                    <p className="text-sm text-slate-600 mb-4">
-                      {tournament.description || "No description available."}
-                    </p>
-                    <div className="flex items-center gap-4 text-sm text-slate-500">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="h-4 w-4" />
-                        <span>
-                          {formatDate(tournament.startDate)} -{" "}
-                          {formatDate(tournament.endDate)}
+                  {/* NAVIGATION ONLY ON IMAGE + CONTENT */}
+                  <Link href={`/dashboard/tournaments/${tournament.id}/teams`}>
+                    <div className="relative h-48 cursor-pointer">
+                      <Image
+                        src={tournament.imageUrl || "/placeholder.svg"}
+                        alt={tournament.title || tournament.name}
+                        fill
+                        className="object-cover"
+                      />
+
+                      <div className="absolute top-3 left-3">
+                        <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-semibold rounded-md">
+                          Active
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Users className="h-4 w-4" />
-                        <span>{tournament.points || 0} Points</span>
+                    </div>
+
+                    <div className="p-5 cursor-pointer">
+                      <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                        {tournament.title || tournament.name}
+                      </h3>
+
+                      <p className="text-sm text-slate-600 mb-4">
+                        {tournament.description || "No description available."}
+                      </p>
+
+                      <div className="flex items-center gap-4 text-sm text-slate-500">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-4 w-4" />
+                          <span>
+                            {formatDate(tournament.startDate)} -{" "}
+                            {formatDate(tournament.endDate)}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <Users className="h-4 w-4" />
+                          <span>{tournament.points || 0} Points</span>
+                        </div>
                       </div>
                     </div>
+                  </Link>
+
+                  {/* DROPDOWN OUTSIDE LINK (IMPORTANT FIX) */}
+                  <div className="flex justify-end p-3">
+                    <DropdownMenu.Root>
+                      <DropdownMenu.Trigger asChild>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          className="p-2 hover:bg-gray-100 rounded-lg"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                      </DropdownMenu.Trigger>
+
+                      <DropdownMenu.Content
+                        align="end"
+                        className="bg-white border rounded-lg shadow-lg p-1 z-50 min-w-[140px]"
+                      >
+                        {/* EDIT */}
+                        <DropdownMenu.Item
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            handleEdit(tournament);
+                          }}
+                          className="px-3 py-2 flex items-center gap-2 hover:bg-gray-100 cursor-pointer outline-none"
+                        >
+                          <Pencil className="w-4 h-4" />
+                          Edit
+                        </DropdownMenu.Item>
+
+                        {/* DELETE */}
+                        <DropdownMenu.Item
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            handleDelete(tournament.id);
+                          }}
+                          className="px-3 py-2 flex items-center gap-2 hover:bg-red-50 text-red-600 cursor-pointer outline-none"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Content>
+                    </DropdownMenu.Root>
                   </div>
-                </Link>
-                // </Link>
+                </div>
               ))
             )}
           </div>
 
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <Dialog
+            open={isModalOpen}
+            onOpenChange={(open) => {
+              setIsModalOpen(open);
+
+              if (!open) {
+                resetForm(); // 👈 IMPORTANT
+              }
+            }}
+          >
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-xl font-semibold">
@@ -384,6 +627,88 @@ export default function TournamentsPage() {
                       setBannerPreview(finalImageUrl); // show preview
                     }}
                   />
+                  {bannerPreview && (
+                    <div className="mt-4 relative w-50 h-40 rounded-lg overflow-hidden border">
+                      <Image
+                        src={bannerPreview}
+                        alt="Tournament Banner"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <Label
+                      htmlFor="location"
+                      className="text-xs font-medium text-slate-500 uppercase mb-2 block"
+                    >
+                      Tournament Location
+                    </Label>
+
+                    <div className="relative">
+                      <input
+                        id="location"
+                        type="text"
+                        placeholder="Select location from map"
+                        onChange={(e) => handleLocationInput(e.target.value)}
+                        className="w-full pr-12 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        value={formData.location}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => setIsMapOpen(true)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-primary transition-colors"
+                      >
+                        <MapPin className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <Dialog open={isMapOpen} onOpenChange={setIsMapOpen}>
+                    <DialogContent className="max-w-4xl">
+                      <DialogHeader>
+                        <DialogTitle>Select Tournament Location</DialogTitle>
+                      </DialogHeader>
+
+                      <div className="w-full h-[500px] rounded-lg overflow-hidden border">
+                        {/* <MapContainer
+                          center={[30.3753, 69.3451]} // Pakistan zoom out view
+                          zoom={5}
+                          className="h-full w-full"
+                        >
+                          <TileLayer
+                            attribution="&copy; OpenStreetMap contributors"
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          />
+
+                          <LocationSelector
+                            setFormData={setFormData}
+                            setIsMapOpen={setIsMapOpen}
+                            setSelectedPosition={setSelectedPosition}
+                          />
+
+                          {selectedPosition && (
+                            <Marker position={selectedPosition} />
+                          )}
+                        </MapContainer> */}
+                        {/* <MapComponent
+                          setFormData={setFormData}
+                          setSelectedPosition={setSelectedPosition}
+                          selectedPosition={selectedPosition}
+                        /> */}
+                        <MapComponent
+                          setFormData={setFormData}
+                          setSelectedPosition={setSelectedPosition}
+                          selectedPosition={selectedPosition}
+                          setIsMapOpen={setIsMapOpen}
+                        />
+                      </div>
+
+                      {/* Demo Buttons - in buttons par click karne se input fill hoga */}
+                    </DialogContent>
+                  </Dialog>
 
                   {/* {bannerPreview && (
                     <div className="mt-2 relative w-full h-40 rounded overflow-hidden border border-gray-200">
@@ -396,6 +721,9 @@ export default function TournamentsPage() {
                     </div>
                   )} */}
                 </div>
+
+                {/* Longitude and Latitude */}
+                {/* Location (Map Link) */}
 
                 {/* Event Title */}
                 <div>
@@ -435,7 +763,7 @@ export default function TournamentsPage() {
 
                 {/* Marina/Port and Tournament Type */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  {/* <div>
                     <Label
                       htmlFor="marina"
                       className="text-xs font-medium text-slate-500 uppercase mb-2 block"
@@ -446,12 +774,12 @@ export default function TournamentsPage() {
                       id="marina"
                       placeholder="Sunset Marina"
                       className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      value={formData.marina}
+                      // value={formData.marina}
                       onChange={(e) =>
                         handleInputChange("marina", e.target.value)
                       }
                     />
-                  </div>
+                  </div> */}
                   <div>
                     <Label
                       htmlFor="tournament-type"
@@ -461,22 +789,19 @@ export default function TournamentsPage() {
                     </Label>
 
                     <Select
-                      value={formData.tournamentType} // stores ID
-                      onValueChange={(value: string) =>
+                      value={formData.tournamentType || undefined}
+                      onValueChange={(value) =>
                         handleInputChange("tournamentType", value)
                       }
                     >
                       <SelectTrigger className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary">
                         <SelectValue placeholder="Select Tournament Type" />
                       </SelectTrigger>
+
                       <SelectContent>
                         {tournamentTypes.map((type) => (
-                          <SelectItem
-                            key={type.id}
-                            value={type.id}
-                            className="hover:bg-[red]"
-                          >
-                            {type.name} {/* Show name on frontend */}
+                          <SelectItem key={type.id} value={String(type.id)}>
+                            {type.name} {/* 👈 UI pe name show hoga */}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -523,7 +848,7 @@ export default function TournamentsPage() {
                 </div>
 
                 {/* Allowable Species */}
-                <div>
+                {/* <div>
                   <Label className="text-xs font-medium text-slate-500 uppercase mb-2 block">
                     Allowable Species
                   </Label>
@@ -540,10 +865,57 @@ export default function TournamentsPage() {
                       >
                         {species.name}
                         <span>
-                          {species.points} {/* Name show */}
+                          {species.points}
                         </span>
                       </button>
                     ))}
+                  </div>
+                </div> */}
+
+                <div>
+                  <Label className="text-xs font-medium text-slate-500 uppercase mb-2 block">
+                    Allowable Species
+                  </Label>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {allowableSpecies.map((species) => {
+                      const isSelected = selectedSpecies.some(
+                        (s) => String(s.speciesId) === String(species.id),
+                      );
+
+                      return (
+                        <div key={species.id} className="flex flex-col gap-2">
+                          {/* Button */}
+                          <button
+                            onClick={() => toggleSpecies(species.id)}
+                            className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors flex justify-between ${
+                              isSelected
+                                ? "bg-primary/10 text-primary border-primary"
+                                : "bg-white text-slate-700 border-slate-200 hover:bg-gray-100"
+                            }`}
+                          >
+                            {species.name}
+                          </button>
+
+                          {/* Input (only show when selected) */}
+                          {isSelected && (
+                            <input
+                              type="number"
+                              placeholder="Enter points"
+                              value={
+                                selectedSpecies.find(
+                                  (s) => s.speciesId === species.id,
+                                )?.points ?? ""
+                              }
+                              onChange={(e) =>
+                                handlePointChange(species.id, e.target.value)
+                              }
+                              className="px-3 py-2 border rounded-md text-sm outline-none focus:border-primary"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -571,24 +943,7 @@ export default function TournamentsPage() {
                         }
                       />
                     </div>
-                    <div>
-                      <Label
-                        htmlFor="points-lb"
-                        className="text-xs font-medium text-slate-500 uppercase mb-2 block"
-                      >
-                        Points / LB
-                      </Label>
-                      <input
-                        id="points-lb"
-                        type="number"
-                        placeholder="10"
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        value={formData.pointsPerLb}
-                        onChange={(e) =>
-                          handleInputChange("pointsPerLb", e.target.value)
-                        }
-                      />
-                    </div>
+
                     {/* <div>
                       <Label
                         htmlFor="team-cap"

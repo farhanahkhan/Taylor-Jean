@@ -8,6 +8,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
+/* ---------------- TYPES ---------------- */
+
 type Tournament = {
   id: string;
   name: string;
@@ -26,33 +28,23 @@ type Species = {
   isActive: boolean | null;
 };
 
-type ApiTournament = {
+type ApiTeam = {
   id: string;
   name: string;
-  place: string;
-  tournamentType: string;
-  startDate: string;
-  endDate: string;
-  entryFee: number;
-  points: number;
+  displayName: string;
   description: string;
+  length: number;
+  engine: string;
+  gadgets: string;
   imageUrl: string | null;
   isActive: boolean;
-  createdAt: string;
-  speciesList: Species[];
 };
 
 type ApiResponse = {
   message: string;
   statusCode: number;
   status: boolean;
-  data: ApiTournament[];
-};
-
-type CrewMemberApi = {
-  id: string;
-  fullName: string | null;
-  email: string;
+  data: ApiTeam[];
 };
 
 type AvailableAngler = {
@@ -61,23 +53,17 @@ type AvailableAngler = {
   email: string;
   initials: string;
 };
-type CrewMember = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  initials: string;
-};
 
 type UserApi = {
   id: string;
   fullName: string | null;
   email: string;
 };
+
+/* ---------------- COMPONENT ---------------- */
+
 export default function DiscoverEventsPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [crewMembers, setCrewMembers] = useState<CrewMember[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<AvailableAngler[]>([]);
   const [selectedTournament, setSelectedTournament] =
@@ -88,63 +74,52 @@ export default function DiscoverEventsPage() {
   const params = useParams();
   const teamId = params.teamId as string;
 
-  const handleRegister = (tournament: (typeof tournaments)[0]) => {
-    setSelectedTournament(tournament);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedTournament(null);
-  };
-
-  const handleCompleteRegistration = () => {
-    // Handle registration logic here
-    console.log("Registering for:", selectedTournament?.name);
-    setSelectedTournament(null);
-  };
+  /* ---------------- FETCH TEAMS ---------------- */
 
   useEffect(() => {
     const fetchTournaments = async () => {
       try {
-        const res = await fetch("/api/tournaments");
+        const res = await fetch("/api/team/team-profile");
         const response: ApiResponse = await res.json();
 
         if (!res.ok) {
-          console.error("Failed to fetch tournaments");
+          console.error("Failed to fetch teams");
           return;
         }
 
         const formattedData: Tournament[] = response.data.map(
-          (item: ApiTournament) => ({
+          (item: ApiTeam) => ({
             id: item.id,
             name: item.name,
-            location: item.place,
-            description: item.description,
-            startDate: item.startDate.split("T")[0],
-            image: item.imageUrl ?? "/placeholder.svg",
-            entryOpen: item.isActive,
-            species: item.speciesList,
-          })
+            location: item.displayName || "",
+            description: item.description || "",
+            startDate: "",
+            image: "/team.svg", // ✅ SVG instead of API image
+            entryOpen: false,
+            species: [],
+          }),
         );
 
         setTournaments(formattedData);
       } catch (error) {
-        console.error("Error fetching tournaments:", error);
+        console.error("Error fetching teams:", error);
       }
     };
 
     fetchTournaments();
   }, []);
 
-  // 1️⃣ Fetch all users once
+  /* ---------------- FETCH USERS ---------------- */
+
   useEffect(() => {
     const fetchAllUsers = async () => {
       try {
         const res = await fetch(`/api/users?type=users`);
         const result: { status: boolean; data: UserApi[] } = await res.json();
+
         if (result.status) {
           setAllUsers(result.data);
 
-          // ✅ Initialize searchResults with all users
           const initialResults = result.data.map((user) => ({
             id: user.id,
             name: user.fullName ?? user.email,
@@ -153,6 +128,7 @@ export default function DiscoverEventsPage() {
               ? user.fullName.slice(0, 2).toUpperCase()
               : user.email.slice(0, 2).toUpperCase(),
           }));
+
           setSearchResults(initialResults);
         }
       } catch (err) {
@@ -163,22 +139,22 @@ export default function DiscoverEventsPage() {
     fetchAllUsers();
   }, []);
 
-  // Add member
+  /* ---------------- ADD MEMBER ---------------- */
+
   const handleAddMember = async (angler: AvailableAngler) => {
     if (!selectedTournament) return;
 
     try {
-      const res = await fetch("/api/users", {
+      await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "add-member",
-          teamId: selectedTournament.id, // ✅ FIX
+          teamId: selectedTournament.id,
+          generalTeamName: angler.id,
           userId: angler.id,
         }),
       });
-
-      const result: { status: boolean } = await res.json();
     } catch (err) {
       console.error("Failed to add member", err);
     }
@@ -187,11 +163,14 @@ export default function DiscoverEventsPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <TeamSidebar />
+
       <div className="flex-1 flex flex-col w-full min-w-0">
         <TeamHeader />
+
         <main className="flex-1 p-6 md:p-8">
+          {/* HEADER */}
           <div className="mb-8 flex justify-between">
-            <div className="">
+            <div>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                 Team Profile
               </h1>
@@ -199,25 +178,26 @@ export default function DiscoverEventsPage() {
                 Find and register for upcoming events around the globe.
               </p>
             </div>
-            <div className="flex items-center ">
-              <Link href="vessel-profile/add-new-team">
-                <button className="px-2 bg-dark-navy hover:bg-dark text-white font-semibold py-2.5 rounded-lg transition-colors">
-                  Add team Profile
-                </button>
-              </Link>
-            </div>
+
+            <Link href="vessel-profile/add-new-team">
+              <button className="px-2 bg-dark-navy hover:bg-dark text-white font-semibold py-2.5 rounded-lg transition-colors">
+                Add team Profile
+              </button>
+            </Link>
           </div>
 
+          {/* CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tournaments.map((tournament) => (
               <div
                 key={tournament.id}
                 onClick={() => {
-                  setSelectedTournament(tournament); // ✅ yahan set hoga
+                  setSelectedTournament(tournament);
                   setIsAddModalOpen(true);
                 }}
                 className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-md transition-shadow"
               >
+                {/* IMAGE */}
                 <div className="relative h-48 w-full">
                   <Image
                     src={tournament.image || "/placeholder.svg"}
@@ -234,40 +214,24 @@ export default function DiscoverEventsPage() {
                   )}
                 </div>
 
+                {/* BODY */}
                 <div className="p-5">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-bold text-foreground">
-                      {tournament.name}
-                    </h3>
+                  <h3 className="text-lg font-bold text-foreground">
+                    {tournament.name}
+                  </h3>
+
+                  <div className="text-sm text-primary mb-3">
+                    {tournament.location}
                   </div>
 
-                  <div className="flex items-center gap-1.5 text-primary mb-3">
-                    {/* <Globe className="w-4 h-4" /> */}
-                    <span className="text-sm font-medium">
-                      {tournament.location}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <div className="bg-gray-100 rounded-md px-5 mb-4">
-                      <p>Length</p>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {tournament.description}
-                      </p>
-                    </div>
-                    <div className="flex flex-col gap-1.5 text-muted-foreground mb-4 bg-gray-100 rounded-md px-5">
-                      <p className="text-black">Engines</p>
-                      <span className="text-sm">
-                        {tournament.species.length > 0
-                          ? tournament.species.map((s) => s.name).join(", ")
-                          : "No Species"}
-                      </span>
-                    </div>
+                  <div className=" rounded-md pr-5 mb-4">
+                    {/* <p>Description</p> */}
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {tournament.description}
+                    </p>
                   </div>
 
-                  <button
-                    // onClick={() => handleRegister(tournament)}
-                    className="w-full bg-dark-navy hover:bg-dark text-white font-semibold py-2.5 rounded-lg transition-colors"
-                  >
+                  <button className="w-full mt-4 bg-dark-navy hover:bg-dark text-white font-semibold py-2.5 rounded-lg transition-colors">
                     View and Edit Profile
                   </button>
                 </div>
@@ -277,6 +241,7 @@ export default function DiscoverEventsPage() {
         </main>
       </div>
 
+      {/* MODAL */}
       {selectedTournament && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
@@ -284,10 +249,7 @@ export default function DiscoverEventsPage() {
               <h2 className="text-xl font-bold text-gray-900">
                 Register for {selectedTournament.name}
               </h2>
-              <button
-                onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
+              <button onClick={() => setSelectedTournament(null)}>
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -309,7 +271,7 @@ export default function DiscoverEventsPage() {
             </div>
 
             <button
-              onClick={handleCompleteRegistration}
+              // onClick={handleCompleteRegistration}
               className="w-full bg-dark-navy hover:bg-dark text-white font-semibold py-3 rounded-lg transition-colors"
             >
               Complete Registration
@@ -318,7 +280,7 @@ export default function DiscoverEventsPage() {
         </div>
       )}
 
-      {/* Add Member Modal */}
+      {/* ADD MEMBER MODAL */}
       <Dialog.Root open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />

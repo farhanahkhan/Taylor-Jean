@@ -72,7 +72,7 @@ export default function CrewRosterPage() {
               initials: item.fullName
                 ? item.fullName.slice(0, 2).toUpperCase()
                 : item.email.slice(0, 2).toUpperCase(),
-            }))
+            })),
           );
         }
       } catch (err) {
@@ -119,7 +119,7 @@ export default function CrewRosterPage() {
       .filter((user) =>
         (user.fullName ?? user.email)
           .toLowerCase()
-          .includes(searchQuery.toLowerCase())
+          .includes(searchQuery.toLowerCase()),
       )
       .map((user) => ({
         id: user.id,
@@ -167,7 +167,7 @@ export default function CrewRosterPage() {
               initials: item.fullName
                 ? item.fullName.slice(0, 2).toUpperCase()
                 : item.email.slice(0, 2).toUpperCase(),
-            }))
+            })),
           );
         }
       }

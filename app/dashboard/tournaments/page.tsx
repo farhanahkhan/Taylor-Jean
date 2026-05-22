@@ -1,8 +1,7 @@
 "use client";
 
 import type React from "react";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Plus,
   Calendar,
@@ -10,12 +9,11 @@ import {
   MoreVertical,
   Trash2,
   Pencil,
+  MapPin,
 } from "lucide-react";
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-
 import { useRouter } from "next/navigation";
-import { MapContainer, TileLayer, useMapEvents, Marker } from "react-leaflet";
 import dynamic from "next/dynamic";
 
 import {
@@ -26,8 +24,6 @@ import {
 } from "@/components/ui/dialog";
 
 import Image from "next/image";
-import { MapPin } from "lucide-react";
-
 import { Label } from "@radix-ui/react-label";
 import {
   Select,
@@ -47,53 +43,13 @@ interface TournamentType {
   name: string;
   isActive: boolean;
 }
+
 interface Species {
   id: string;
   name: string;
-
   isActive: boolean;
   points: number;
 }
-// export interface Tournament {
-//   id: string;
-//   name: string;
-//   title: string; // add title to display in frontend
-//   startDate: string;
-//   endDate: string;
-//   // image?: string;
-//   status?: string;
-//   teams?: number;
-//   description?: string; // add this
-//   isActive?: boolean;
-//   imageUrl?: string;
-//   points?: number;
-//   entryFee?: number;
-// }
-// export interface Tournament {
-//   id: string;
-//   name: string;
-//   title: string;
-//   startDate: string;
-//   endDate: string;
-
-//   description?: string;
-//   imageUrl?: string;
-
-//   entryFee?: number;
-//   points?: number;
-
-//   latitude?: string;
-//   longitude?: string;
-//   place?: string;
-//   tournamentType?: {
-//     id: string;
-//     name?: string;
-//   };
-
-//   tournamentTypeId?: string;
-
-//   tournamentSpecies?: { speciesId: string }[];
-// }
 
 export interface Tournament {
   id: string;
@@ -101,145 +57,78 @@ export interface Tournament {
   title: string;
   startDate: string;
   endDate: string;
-
   description?: string;
   imageUrl?: string;
-
   entryFee?: number;
   points?: number;
-
   latitude?: number;
   longitude?: number;
   place?: string;
   tournamentType?: string;
-
-  // ✅ FIX
   tournamentTypeId?: string;
-
-  // ✅ ADD THESE
   typeId?: string;
-
-  // tournamentType?: {
-  //   id: string;
-  //   name: string;
-  // };
-
   image?: string;
   banner?: string;
   bannerUrl?: string;
-
   tournamentSpecies?: {
     speciesId: string;
     points: number;
   }[];
 }
 
-// API response type
-
 interface TournamentAPIResponse {
-  data: Omit<Tournament, "title">[]; // API returns 'name', we add 'title'
+  data: Omit<Tournament, "title">[];
 }
 
 export default function TournamentsPage() {
+  // 🛠️ REFRESH FIX 1: Internal Component Refresh Key
+  const [pageRefreshKey, setPageRefreshKey] = useState(0);
+
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
-  // tournament dropdown api
   const [tournamentTypes, setTournamentTypes] = useState<TournamentType[]>([]);
   const [allowableSpecies, setAllowableSpecies] = useState<Species[]>([]);
   const [selectedSpecies, setSelectedSpecies] = useState<
-    { speciesId: string; points: number }[]
+    { speciesId: string; points: string | number }[]
   >([]);
-  const [isLoading, setIsLoading] = useState(true); // New state
-  const [teamImage, setTeamImage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const [isMapOpen, setIsMapOpen] = useState(false);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>(""); // store finalImageUrl
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
   const [selectedPosition, setSelectedPosition] = useState<
     [number, number] | null
   >(null);
-  const [speciesWithPoints, setSpeciesWithPoints] = useState<Species[]>([]);
+
   const router = useRouter();
+
   const MapComponent = dynamic(() => import("../../Components/MapComponent"), {
     ssr: false,
+    loading: () => (
+      <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400">
+        Loading Map Engine...
+      </div>
+    ),
   });
+
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchTournamentTypes = async () => {
-      const res = await fetch("/api/tournament-types?type=tournament-types"); // ✅ correct
-      const result: { data: TournamentType[] } = await res.json();
-      setTournamentTypes(result.data);
-    };
-
-    fetchTournamentTypes();
-  }, []);
-
-  // Species API
-  useEffect(() => {
-    const fetchSpecies = async () => {
-      const res = await fetch("/api/tournament-types?type=species"); // ✅ correct
-      const result: { data: Species[] } = await res.json();
-      setAllowableSpecies(result.data);
-    };
-
-    fetchSpecies();
-  }, []);
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-
     tournamentType: "",
     startDate: "",
     endDate: "",
     entryFee: "",
-
     latitude: "",
     longitude: "",
     imageUrl: "",
-    location: "", // Google Maps URL
+    location: "",
   });
 
-  useEffect(() => {
-    const fetchTournaments = async () => {
-      try {
-        const res = await fetch("/api/tournaments");
-        const data: TournamentAPIResponse = await res.json();
-
-        // Safely map API response to include 'title'
-        const tournamentsWithTitle: Tournament[] = data.data.map((t) => ({
-          ...t,
-
-          title: t.name ?? "",
-
-          // ✅ IMAGE FIX
-          imageUrl: t.imageUrl ?? t.image ?? t.banner ?? t.bannerUrl ?? "",
-
-          // ✅ TOURNAMENT TYPE FIX
-          tournamentTypeId: t.tournamentTypeId ?? t.typeId ?? "",
-        }));
-
-        setTournaments(tournamentsWithTitle);
-      } catch (error) {
-        console.error("Failed to fetch tournaments:", error);
-      } finally {
-        setIsLoading(false); // Stop loader
-      }
-    };
-
-    fetchTournaments();
-  }, []);
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setIsEditMode(false);
     setEditingId(null);
-
     setFormData({
       title: "",
       description: "",
@@ -247,21 +136,77 @@ export default function TournamentsPage() {
       startDate: "",
       endDate: "",
       entryFee: "",
-
       latitude: "",
       longitude: "",
       imageUrl: "",
       location: "",
     });
-
     setSelectedSpecies([]);
     setUploadedImageUrl("");
     setBannerPreview(null);
     setSelectedPosition(null);
+  }, []);
+
+  // 🛠️ REFRESH FIX 2: Internal refresh function bina hard reload kiye
+  const triggerInternalRefresh = useCallback(() => {
+    resetForm();
+    setIsMapOpen(false);
+    setIsModalOpen(false);
+    // Key change hote hi React is pure component ko memory se flush karke naya render karega
+    setPageRefreshKey((prev) => prev + 1);
+  }, [resetForm]);
+
+  useEffect(() => {
+    const fetchTournamentTypes = async () => {
+      const res = await fetch("/api/tournament-types?type=tournament-types");
+      const result: { data: TournamentType[] } = await res.json();
+      setTournamentTypes(result.data);
+    };
+    fetchTournamentTypes();
+  }, [pageRefreshKey]); // Key par dependencies add kardi
+
+  useEffect(() => {
+    const fetchSpecies = async () => {
+      const res = await fetch("/api/tournament-types?type=species");
+      const result: { data: Species[] } = await res.json();
+      setAllowableSpecies(result.data);
+    };
+    fetchSpecies();
+  }, [pageRefreshKey]);
+
+  const fetchTournaments = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/tournaments");
+      const data: TournamentAPIResponse = await res.json();
+
+      const tournamentsWithTitle: Tournament[] = data.data.map((t) => ({
+        ...t,
+        title: t.name ?? "",
+        imageUrl: t.imageUrl ?? t.image ?? t.banner ?? t.bannerUrl ?? "",
+        tournamentTypeId: t.tournamentTypeId ?? t.typeId ?? "",
+      }));
+
+      setTournaments(tournamentsWithTitle);
+    } catch (error) {
+      console.error("Failed to fetch tournaments:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTournaments();
+  }, [pageRefreshKey]);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleLaunchTournament = async () => {
-    if (!uploadedImageUrl) {
+    const finalImage = uploadedImageUrl || formData.imageUrl;
+
+    if (!finalImage) {
       alert("Please upload a tournament banner first!");
       return;
     }
@@ -272,22 +217,21 @@ export default function TournamentsPage() {
       tournamentTypeId: formData.tournamentType,
       startDate: new Date(formData.startDate).toISOString(),
       endDate: new Date(formData.endDate).toISOString(),
-      latitude: Number(selectedPosition?.[0]) || 0,
-      longitude: Number(selectedPosition?.[1]) || 0,
+      latitude: Number(selectedPosition?.[0]) || Number(formData.latitude) || 0,
+      longitude:
+        Number(selectedPosition?.[1]) || Number(formData.longitude) || 0,
       entryFee: Number(formData.entryFee) || 0,
-
       description: formData.description || "",
-      imageUrl: uploadedImageUrl || "",
+      imageUrl: finalImage,
       tournamentSpecies: selectedSpecies.map((s) => ({
         speciesId: s.speciesId,
-        points: Number(s.points) || 0,
+        points: Number(s.points),
       })),
     };
 
     const url = isEditMode
       ? `/api/tournaments/${editingId}`
       : `/api/tournaments`;
-
     const method = isEditMode ? "PUT" : "POST";
 
     const res = await fetch(url, {
@@ -305,11 +249,10 @@ export default function TournamentsPage() {
 
     alert(isEditMode ? "Tournament updated!" : "Tournament created!");
 
-    await mutate("/api/tournaments"); // ✅ REAL FIX
-
-    setIsModalOpen(false);
-    resetForm();
+    // 🛠️ REFRESH FIX 3: Edit/Save success par internal reload
+    triggerInternalRefresh();
   };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -317,15 +260,12 @@ export default function TournamentsPage() {
 
   const handleDelete = async (id: string) => {
     const confirmDelete = confirm(
-      "Are you sure you want to delete this product?",
+      "Are you sure you want to delete this tournament?",
     );
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`/api/tournaments/${id}`, {
-        method: "DELETE",
-      });
-
+      const res = await fetch(`/api/tournaments/${id}`, { method: "DELETE" });
       const data = await res.json();
 
       if (!res.ok) {
@@ -333,9 +273,7 @@ export default function TournamentsPage() {
         return;
       }
       alert("Tournament deleted successfully");
-
-      window.location.reload(); // 👈 ADD THIS
-      // mutate(); // refresh SWR list
+      fetchTournaments();
     } catch (err) {
       console.error(err);
       alert("Something went wrong");
@@ -347,12 +285,10 @@ export default function TournamentsPage() {
       const exists = prev.find(
         (s) => String(s.speciesId) === String(speciesId),
       );
-
       if (exists) {
         return prev.filter((s) => String(s.speciesId) !== String(speciesId));
       }
-
-      return [...prev, { speciesId, points: 0 }];
+      return [...prev, { speciesId, points: "" }];
     });
   };
 
@@ -367,40 +303,40 @@ export default function TournamentsPage() {
   };
 
   const handleLocationInput = (value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      location: value,
-    }));
+    setFormData((prev) => ({ ...prev, location: value }));
   };
 
   const handleEdit = (tournament: Tournament) => {
-    resetForm(); // 👈 add this first
-    console.log("EDIT TYPE ID:", tournament.tournamentTypeId); // 👈 YAHAN
-    console.log("SPECIES:", tournament.tournamentSpecies);
     setIsEditMode(true);
     setEditingId(tournament.id);
+
+    const typedTarget = tournamentTypes.find(
+      (type) =>
+        type.name === tournament.tournamentType ||
+        type.id === tournament.tournamentTypeId,
+    );
 
     setFormData({
       title: tournament.name || "",
       description: tournament.description || "",
-      tournamentType:
-        tournamentTypes.find((type) => type.name === tournament.tournamentType)
-          ?.id || "",
+      tournamentType: typedTarget?.id || tournament.tournamentTypeId || "",
       startDate: tournament.startDate?.split("T")[0] || "",
       endDate: tournament.endDate?.split("T")[0] || "",
       entryFee: String(tournament.entryFee || 0),
-
       latitude: String(tournament.latitude || 0),
       longitude: String(tournament.longitude || 0),
       imageUrl: tournament.imageUrl || "",
       location: tournament.place || "",
     });
 
+    if (tournament.latitude && tournament.longitude) {
+      setSelectedPosition([tournament.latitude, tournament.longitude]);
+    }
+
     setUploadedImageUrl(tournament.imageUrl || "");
     setBannerPreview(tournament.imageUrl || "");
 
     const species = tournament.tournamentSpecies ?? [];
-
     setSelectedSpecies(
       Array.isArray(species)
         ? species
@@ -411,11 +347,13 @@ export default function TournamentsPage() {
             }))
         : [],
     );
+    fetchTournaments();
     setIsModalOpen(true);
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-900">
+    // 🛠️ REFRESH FIX 4: Pure layout container ko dynamic key assign kar di taake dom cleanup instant ho
+    <div key={pageRefreshKey} className="flex min-h-screen bg-slate-900">
       <DashboardSidebar />
       <div className="flex-1 flex flex-col">
         <DashboardHeader />
@@ -431,7 +369,10 @@ export default function TournamentsPage() {
                 </p>
               </div>
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => {
+                  resetForm();
+                  setIsModalOpen(true);
+                }}
                 className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
               >
                 <Plus className="h-4 w-4" />
@@ -442,8 +383,6 @@ export default function TournamentsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {isLoading ? (
-              // Loader while API is fetching
-
               <div className="col-span-full flex justify-center items-center h-48">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
                 <span className="ml-2 text-gray-700">
@@ -451,19 +390,15 @@ export default function TournamentsPage() {
                 </span>
               </div>
             ) : tournaments.length === 0 ? (
-              // Show message if no tournaments
               <p className="col-span-full text-center text-gray-500">
                 No tournaments found.
               </p>
             ) : (
-              // Your existing code for tournament cards
-
               tournaments.map((tournament) => (
                 <div
                   key={tournament.id}
                   className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 hover:shadow-md transition-shadow"
                 >
-                  {/* NAVIGATION ONLY ON IMAGE + CONTENT */}
                   <Link href={`/dashboard/tournaments/${tournament.id}/teams`}>
                     <div className="relative h-48 cursor-pointer">
                       <Image
@@ -472,7 +407,6 @@ export default function TournamentsPage() {
                         fill
                         className="object-cover"
                       />
-
                       <div className="absolute top-3 left-3">
                         <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-semibold rounded-md">
                           Active
@@ -484,11 +418,9 @@ export default function TournamentsPage() {
                       <h3 className="text-lg font-semibold text-slate-900 mb-2">
                         {tournament.title || tournament.name}
                       </h3>
-
                       <p className="text-sm text-slate-600 mb-4">
                         {tournament.description || "No description available."}
                       </p>
-
                       <div className="flex items-center gap-4 text-sm text-slate-500">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="h-4 w-4" />
@@ -497,7 +429,6 @@ export default function TournamentsPage() {
                             {formatDate(tournament.endDate)}
                           </span>
                         </div>
-
                         <div className="flex items-center gap-1.5">
                           <Users className="h-4 w-4" />
                           <span>{tournament.points || 0} Points</span>
@@ -506,7 +437,6 @@ export default function TournamentsPage() {
                     </div>
                   </Link>
 
-                  {/* DROPDOWN OUTSIDE LINK (IMPORTANT FIX) */}
                   <div className="flex justify-end p-3">
                     <DropdownMenu.Root>
                       <DropdownMenu.Trigger asChild>
@@ -525,12 +455,10 @@ export default function TournamentsPage() {
                         align="end"
                         className="bg-white border rounded-lg shadow-lg p-1 z-50 min-w-[140px]"
                       >
-                        {/* EDIT */}
                         <DropdownMenu.Item
                           onSelect={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-
                             handleEdit(tournament);
                           }}
                           className="px-3 py-2 flex items-center gap-2 hover:bg-gray-100 cursor-pointer outline-none"
@@ -539,12 +467,10 @@ export default function TournamentsPage() {
                           Edit
                         </DropdownMenu.Item>
 
-                        {/* DELETE */}
                         <DropdownMenu.Item
                           onSelect={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-
                             handleDelete(tournament.id);
                           }}
                           className="px-3 py-2 flex items-center gap-2 hover:bg-red-50 text-red-600 cursor-pointer outline-none"
@@ -560,71 +486,41 @@ export default function TournamentsPage() {
             )}
           </div>
 
+          {/* Dialog Root */}
           <Dialog
             open={isModalOpen}
             onOpenChange={(open) => {
-              setIsModalOpen(open);
-
               if (!open) {
-                resetForm(); // 👈 IMPORTANT
+                // 🛠️ REFRESH FIX 5: Jab user modal se bahar click karega toh dynamic internal refresh chalega
+                triggerInternalRefresh();
+              } else {
+                setIsModalOpen(true);
               }
             }}
           >
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent
+              className="max-w-2xl max-h-[90vh] overflow-y-auto"
+              onPointerDownOutside={(e) => {
+                if (isMapOpen) e.preventDefault();
+              }}
+            >
               <DialogHeader>
                 <DialogTitle className="text-xl font-semibold">
-                  Initialize New Tournament
+                  {isEditMode
+                    ? "Modify Tournament Details"
+                    : "Initialize New Tournament"}
                 </DialogTitle>
               </DialogHeader>
 
               <div className="space-y-6 py-4">
-                {/* Tournament Banner */}
                 <div>
                   <Label className="text-xs font-medium text-slate-500 uppercase mb-2 block">
                     Tournament Banner
                   </Label>
-                  {/* <div className="relative">
-                    <input
-                      type="file"
-                      id="banner-upload"
-                      accept="image/*"
-                      onChange={handleBannerUpload}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="banner-upload"
-                      className="flex flex-col items-center justify-center h-32 bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
-                    >
-                      {bannerPreview ? (
-                        <Image
-                          src={bannerPreview || "/placeholder.svg"}
-                          alt="Banner preview"
-                          fill
-                          className="object-cover rounded-lg"
-                        />
-                      ) : (
-                        <>
-                          <Image
-                            src="/generic-image-icon.png"
-                            alt="Upload"
-                            width={32}
-                            height={32}
-                            className="mb-2"
-                          />
-                          <p className="text-sm font-medium text-slate-600">
-                            Click to upload banner
-                          </p>
-                          <p className="text-xs text-slate-400 mt-1">
-                            Optimal size: 1200x600px
-                          </p>
-                        </>
-                      )}
-                    </label>
-                  </div> */}
                   <ImageUploader
                     onUploadSuccess={(finalImageUrl) => {
-                      setUploadedImageUrl(finalImageUrl); // save uploaded URL
-                      setBannerPreview(finalImageUrl); // show preview
+                      setUploadedImageUrl(finalImageUrl);
+                      setBannerPreview(finalImageUrl);
                     }}
                   />
                   {bannerPreview && (
@@ -638,14 +534,13 @@ export default function TournamentsPage() {
                     </div>
                   )}
 
-                  <div>
+                  <div className="mt-4">
                     <Label
                       htmlFor="location"
                       className="text-xs font-medium text-slate-500 uppercase mb-2 block"
                     >
                       Tournament Location
                     </Label>
-
                     <div className="relative">
                       <input
                         id="location"
@@ -655,7 +550,6 @@ export default function TournamentsPage() {
                         className="w-full pr-12 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                         value={formData.location}
                       />
-
                       <button
                         type="button"
                         onClick={() => setIsMapOpen(true)}
@@ -666,66 +560,25 @@ export default function TournamentsPage() {
                     </div>
                   </div>
 
-                  <Dialog open={isMapOpen} onOpenChange={setIsMapOpen}>
-                    <DialogContent className="max-w-4xl">
-                      <DialogHeader>
-                        <DialogTitle>Select Tournament Location</DialogTitle>
-                      </DialogHeader>
-
-                      <div className="w-full h-[500px] rounded-lg overflow-hidden border">
-                        {/* <MapContainer
-                          center={[30.3753, 69.3451]} // Pakistan zoom out view
-                          zoom={5}
-                          className="h-full w-full"
-                        >
-                          <TileLayer
-                            attribution="&copy; OpenStreetMap contributors"
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                          />
-
-                          <LocationSelector
+                  {isMapOpen && (
+                    <Dialog open={isMapOpen} onOpenChange={setIsMapOpen}>
+                      <DialogContent className="max-w-4xl">
+                        <DialogHeader>
+                          <DialogTitle>Select Tournament Location</DialogTitle>
+                        </DialogHeader>
+                        <div className="w-full h-[500px] rounded-lg overflow-hidden border">
+                          <MapComponent
                             setFormData={setFormData}
-                            setIsMapOpen={setIsMapOpen}
                             setSelectedPosition={setSelectedPosition}
+                            selectedPosition={selectedPosition}
+                            setIsMapOpen={setIsMapOpen}
                           />
-
-                          {selectedPosition && (
-                            <Marker position={selectedPosition} />
-                          )}
-                        </MapContainer> */}
-                        {/* <MapComponent
-                          setFormData={setFormData}
-                          setSelectedPosition={setSelectedPosition}
-                          selectedPosition={selectedPosition}
-                        /> */}
-                        <MapComponent
-                          setFormData={setFormData}
-                          setSelectedPosition={setSelectedPosition}
-                          selectedPosition={selectedPosition}
-                          setIsMapOpen={setIsMapOpen}
-                        />
-                      </div>
-
-                      {/* Demo Buttons - in buttons par click karne se input fill hoga */}
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* {bannerPreview && (
-                    <div className="mt-2 relative w-full h-40 rounded overflow-hidden border border-gray-200">
-                      <Image
-                        src={bannerPreview}
-                        alt="Tournament Banner"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  )} */}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </div>
 
-                {/* Longitude and Latitude */}
-                {/* Location (Map Link) */}
-
-                {/* Event Title */}
                 <div>
                   <Label
                     htmlFor="event-title"
@@ -742,7 +595,6 @@ export default function TournamentsPage() {
                   />
                 </div>
 
-                {/* Description */}
                 <div>
                   <Label
                     htmlFor="description"
@@ -761,25 +613,7 @@ export default function TournamentsPage() {
                   />
                 </div>
 
-                {/* Marina/Port and Tournament Type */}
                 <div className="grid grid-cols-2 gap-4">
-                  {/* <div>
-                    <Label
-                      htmlFor="marina"
-                      className="text-xs font-medium text-slate-500 uppercase mb-2 block"
-                    >
-                      Marina / Port
-                    </Label>
-                    <input
-                      id="marina"
-                      placeholder="Sunset Marina"
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      // value={formData.marina}
-                      onChange={(e) =>
-                        handleInputChange("marina", e.target.value)
-                      }
-                    />
-                  </div> */}
                   <div>
                     <Label
                       htmlFor="tournament-type"
@@ -787,7 +621,6 @@ export default function TournamentsPage() {
                     >
                       Tournament Type
                     </Label>
-
                     <Select
                       value={formData.tournamentType || undefined}
                       onValueChange={(value) =>
@@ -797,11 +630,10 @@ export default function TournamentsPage() {
                       <SelectTrigger className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary">
                         <SelectValue placeholder="Select Tournament Type" />
                       </SelectTrigger>
-
                       <SelectContent>
                         {tournamentTypes.map((type) => (
                           <SelectItem key={type.id} value={String(type.id)}>
-                            {type.name} {/* 👈 UI pe name show hoga */}
+                            {type.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -809,7 +641,6 @@ export default function TournamentsPage() {
                   </div>
                 </div>
 
-                {/* Start Date and End Date */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label
@@ -847,36 +678,10 @@ export default function TournamentsPage() {
                   </div>
                 </div>
 
-                {/* Allowable Species */}
-                {/* <div>
-                  <Label className="text-xs font-medium text-slate-500 uppercase mb-2 block">
-                    Allowable Species
-                  </Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {allowableSpecies.map((species) => (
-                      <button
-                        key={species.id}
-                        onClick={() => toggleSpecies(species.id)}
-                        className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors flex justify-around ${
-                          selectedSpecies.includes(species.id)
-                            ? "bg-primary/10 text-primary border-primary/10"
-                            : "bg-white text-slate-700 border-slate-200 hover:bg-gray-100"
-                        }`}
-                      >
-                        {species.name}
-                        <span>
-                          {species.points}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div> */}
-
                 <div>
                   <Label className="text-xs font-medium text-slate-500 uppercase mb-2 block">
                     Allowable Species
                   </Label>
-
                   <div className="grid grid-cols-3 gap-2">
                     {allowableSpecies.map((species) => {
                       const isSelected = selectedSpecies.some(
@@ -885,7 +690,6 @@ export default function TournamentsPage() {
 
                       return (
                         <div key={species.id} className="flex flex-col gap-2">
-                          {/* Button */}
                           <button
                             onClick={() => toggleSpecies(species.id)}
                             className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors flex justify-between ${
@@ -897,7 +701,6 @@ export default function TournamentsPage() {
                             {species.name}
                           </button>
 
-                          {/* Input (only show when selected) */}
                           {isSelected && (
                             <input
                               type="number"
@@ -919,7 +722,6 @@ export default function TournamentsPage() {
                   </div>
                 </div>
 
-                {/* Financials & Scoring */}
                 <div>
                   <Label className="text-xs font-medium text-slate-500 uppercase mb-3 block">
                     Financials & Scoring
@@ -943,36 +745,16 @@ export default function TournamentsPage() {
                         }
                       />
                     </div>
-
-                    {/* <div>
-                      <Label
-                        htmlFor="team-cap"
-                        className="text-xs font-medium text-slate-500 uppercase mb-2 block"
-                      >
-                        Team Cap
-                      </Label>
-                      <input
-                        id="team-cap"
-                        type="number"
-                        placeholder="50"
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        value={formData.teamCap}
-                        onChange={(e) =>
-                          handleInputChange("teamCap", e.target.value)
-                        }
-                      />
-                    </div> */}
                   </div>
                 </div>
 
-                {/* Launch Button */}
                 <div className="pt-2">
                   <button
                     onClick={handleLaunchTournament}
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-dark-navy rounded-lg hover:bg-navy transition-colors"
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
                   >
                     <span>⚡</span>
-                    Create Tournament
+                    {isEditMode ? "Save Changes" : "Create Tournament"}
                   </button>
                   <p className="text-xs text-center text-slate-400 mt-3">
                     Drafts are saved automatically. Listing will be visible to

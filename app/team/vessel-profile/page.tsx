@@ -242,7 +242,7 @@ export default function DiscoverEventsPage() {
       </div>
 
       {/* MODAL */}
-      {selectedTournament && (
+      {/* {selectedTournament && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-6">
@@ -278,7 +278,7 @@ export default function DiscoverEventsPage() {
             </button>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* ADD MEMBER MODAL */}
       <Dialog.Root open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>

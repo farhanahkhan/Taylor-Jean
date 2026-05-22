@@ -15,7 +15,8 @@ import {
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { TeamSidebar } from "@/app/Components/team-sidebar";
 import { TeamHeader } from "@/app/Components/team-header";
-import { Label } from "@radix-ui/react-label";
+import * as Label from "@radix-ui/react-label";
+import ImageUploader from "@/app/Components/ImageUploader";
 import {
   Select,
   SelectContent,
@@ -23,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Image from "next/image";
 
 interface ApiTeam {
   id: string;
@@ -31,6 +33,7 @@ interface ApiTeam {
   description: string | null;
   isActive: boolean;
   createdDate: string;
+  imageUrl: string;
 }
 interface VesselProfile {
   id: string;
@@ -39,6 +42,7 @@ interface VesselProfile {
   vesselBio: string;
   isActive: boolean;
   createdAt: string;
+  imageUrl: string;
 }
 interface TournamentApi {
   id: string;
@@ -51,7 +55,7 @@ export default function VesselProfilePage() {
   const [tournamentId, setTournamentId] = useState("");
   const [length, setLength] = useState("");
   const [engines, setEngines] = useState("");
-  const [electronics, setElectronics] = useState([]);
+  const [electronics, setElectronics] = useState<string[]>([]);
   const [newElectronics, setNewElectronics] = useState("");
 
   const [profiles, setProfiles] = useState<VesselProfile[]>([]);
@@ -63,6 +67,8 @@ export default function VesselProfilePage() {
   const [tournaments, setTournaments] = useState<TournamentApi[]>([]);
   const [loadingTournaments, setLoadingTournaments] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTournaments = async () => {
@@ -104,6 +110,7 @@ export default function VesselProfilePage() {
           vesselBio: item.description ?? "",
           isActive: item.isActive,
           createdAt: item.createdDate,
+          imageUrl: item.imageUrl,
         }),
       );
 
@@ -129,6 +136,7 @@ export default function VesselProfilePage() {
       length: parseInt(length, 10),
       engine: engines,
       gadgets: electronics.join(", "),
+      imageUrl: uploadedImageUrl,
       isActive: true,
     };
 
@@ -158,6 +166,7 @@ export default function VesselProfilePage() {
         setEngines("Twin V12");
         setElectronics([]);
         setTournamentId("");
+        setUploadedImageUrl("");
       }
     } catch (error) {
       console.error("Error creating team:", error);
@@ -241,6 +250,7 @@ export default function VesselProfilePage() {
             vesselName: item.displayName,
             vesselBio: item.description ?? "",
             isActive: item.isActive,
+            imageUrl: item.imageUrl,
             createdAt: item.createdDate,
           }),
         );
@@ -440,6 +450,30 @@ export default function VesselProfilePage() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <div className="mb-8">
+                <Label.Root className="block text-sm font-medium text-gray-700 mb-2">
+                  Team Image
+                </Label.Root>
+
+                <ImageUploader
+                  onUploadSuccess={(finalImageUrl) => {
+                    setUploadedImageUrl(finalImageUrl);
+                    setBannerPreview(finalImageUrl);
+                  }}
+                />
+
+                {bannerPreview && (
+                  <div className="mt-4 relative w-32 h-32 rounded-lg overflow-hidden border">
+                    <Image
+                      src={bannerPreview}
+                      alt="Product Preview"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

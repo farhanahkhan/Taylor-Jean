@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     console.error("GET Teams Error:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
       length: Number(body.length) || 0,
       engine: body.engine || "",
       gadgets: body.gadgets || "",
+      imageUrl: body.imageUrl || "",
     };
 
     const res = await fetch(CREATE_TEAM_URL, {
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
     console.error("POST Create Team Error:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

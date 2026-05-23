@@ -16,7 +16,7 @@ type Tournament = {
   location: string;
   description: string;
   startDate: string;
-  image: string;
+  imageUrl: string;
   entryOpen: boolean;
   species: Species[];
 };
@@ -94,7 +94,8 @@ export default function DiscoverEventsPage() {
             location: item.displayName || "",
             description: item.description || "",
             startDate: "",
-            image: "/team.svg", // ✅ SVG instead of API image
+            // imageUrl: "/team.svg", // ✅ SVG instead of API image
+            imageUrl: item.imageUrl || "",
             entryOpen: false,
             species: [],
           }),
@@ -200,7 +201,7 @@ export default function DiscoverEventsPage() {
                 {/* IMAGE */}
                 <div className="relative h-48 w-full">
                   <Image
-                    src={tournament.image || "/placeholder.svg"}
+                    src={tournament.imageUrl || "/placeholder.svg"}
                     alt={tournament.name}
                     fill
                     className="object-cover"

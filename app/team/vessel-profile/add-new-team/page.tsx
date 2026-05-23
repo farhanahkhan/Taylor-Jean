@@ -17,6 +17,7 @@ import { TeamSidebar } from "@/app/Components/team-sidebar";
 import { TeamHeader } from "@/app/Components/team-header";
 import * as Label from "@radix-ui/react-label";
 import ImageUploader from "@/app/Components/ImageUploader";
+
 import {
   Select,
   SelectContent,
@@ -25,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface ApiTeam {
   id: string;
@@ -69,6 +71,7 @@ export default function VesselProfilePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchTournaments = async () => {
@@ -156,6 +159,8 @@ export default function VesselProfilePage() {
         alert(data.message || "Failed to create team");
       } else {
         alert("Team created successfully!");
+        router.push("/team/vessel-profile");
+
         // Optionally refresh team list
         fetchTeams();
         // Reset form

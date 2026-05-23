@@ -70,12 +70,18 @@ export interface Tournament {
   image?: string;
   banner?: string;
   bannerUrl?: string;
+
   tournamentSpecies?: {
     speciesId: string;
     points: number;
   }[];
-}
 
+  speciesList?: {
+    id: string;
+    name: string;
+    points: number;
+  }[];
+}
 interface TournamentAPIResponse {
   data: Omit<Tournament, "title">[];
 }
@@ -336,15 +342,14 @@ export default function TournamentsPage() {
     setUploadedImageUrl(tournament.imageUrl || "");
     setBannerPreview(tournament.imageUrl || "");
 
-    const species = tournament.tournamentSpecies ?? [];
+    const species = tournament.speciesList ?? [];
+
     setSelectedSpecies(
       Array.isArray(species)
-        ? species
-            .filter((s) => s?.speciesId)
-            .map((s) => ({
-              speciesId: String(s.speciesId),
-              points: Number(s.points ?? 0),
-            }))
+        ? species.map((s) => ({
+            speciesId: String(s.id),
+            points: Number(s.points ?? 0),
+          }))
         : [],
     );
     fetchTournaments();

@@ -2,13 +2,23 @@
 import { useEffect, useState } from "react";
 import { TeamHeader } from "@/app/Components/team-header";
 import { TeamSidebar } from "@/app/Components/team-sidebar";
-import { Users, X, Zap } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, Users, X, Zap } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 /* ---------------- TYPES ---------------- */
+
+type CrewMember = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  initials: string;
+};
 
 type Tournament = {
   id: string;
@@ -59,7 +69,16 @@ type UserApi = {
   fullName: string | null;
   email: string;
 };
+type MemberApi = {
+  id: string;
+  fullName: string | null;
+  email: string;
+};
 
+type MemberResponse = {
+  status: boolean;
+  data: MemberApi[];
+};
 /* ---------------- COMPONENT ---------------- */
 
 export default function DiscoverEventsPage() {
@@ -70,12 +89,79 @@ export default function DiscoverEventsPage() {
     useState<Tournament | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<UserApi[]>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editForm, setEditForm] = useState<Tournament | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const params = useParams();
   const teamId = params.teamId as string;
+  const [teamName, setTeamName] = useState("");
+  const [teamMembers, setTeamMembers] = useState<AvailableAngler[]>([]);
+  const [addedMembers, setAddedMembers] = useState<CrewMember[]>([]);
 
   /* ---------------- FETCH TEAMS ---------------- */
 
+  // const handleAddMember = async (angler: AvailableAngler) => {
+  //   if (!selectedTournament) return;
+
+  //   try {
+  //     await fetch("/api/users", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         type: "add-member",
+  //         generalTeamId: selectedTournament.id,
+  //         generalTeamName: angler.name,
+  //         userId: angler.id,
+  //       }),
+  //     });
+
+  //     // Already added check
+  //     const alreadyExist = teamMembers.find(
+  //       (member) => member.id === angler.id,
+  //     );
+
+  //     if (!alreadyExist) {
+  //       setTeamMembers((prev) => [...prev, angler]);
+  //     }
+  //   } catch (err) {
+  //     console.error("Failed to add member", err);
+  //   }
+  // };
+
+  const handleAddMember = async (angler: AvailableAngler) => {
+    if (!selectedTournament) return;
+
+    try {
+      await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "add-member",
+          generalTeamId: selectedTournament.id,
+          generalTeamName: selectedTournament.name,
+          userId: angler.id,
+        }),
+      });
+
+      const newMember: CrewMember = {
+        id: angler.id,
+        name: angler.name,
+        email: angler.email,
+        role: "ANGLER",
+        status: "Active",
+        initials: angler.initials,
+      };
+
+      setAddedMembers((prev) => {
+        const exists = prev.some((m) => m.id === angler.id);
+        if (exists) return prev;
+        return [...prev, newMember];
+      });
+    } catch (err) {
+      console.error("Failed to add member", err);
+    }
+  };
   useEffect(() => {
     const fetchTournaments = async () => {
       try {
@@ -142,25 +228,167 @@ export default function DiscoverEventsPage() {
 
   /* ---------------- ADD MEMBER ---------------- */
 
-  const handleAddMember = async (angler: AvailableAngler) => {
-    if (!selectedTournament) return;
+  const handleDelete = async (id: string) => {
+    const confirmDelete = confirm(
+      "Are you sure you want to delete this tournament?",
+    );
+    if (!confirmDelete) return;
 
     try {
-      await fetch("/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "add-member",
-          teamId: selectedTournament.id,
-          generalTeamName: angler.id,
-          userId: angler.id,
-        }),
+      const res = await fetch(`/api/team/team-profile/${id}`, {
+        method: "DELETE",
       });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Delete failed");
+        return;
+      }
+      alert("Tournament deleted successfully");
+      // fetchTournaments();
     } catch (err) {
-      console.error("Failed to add member", err);
+      console.error(err);
+      alert("Something went wrong");
     }
   };
 
+  const handleEditClick = (team: Tournament) => {
+    setIsEditMode(true);
+    setEditForm(team);
+  };
+
+  const handleEdit = async () => {
+    if (!editForm) return;
+
+    try {
+      const payload = {
+        name: editForm.name,
+        displayName: editForm.location,
+        description: editForm.description,
+        startDate: editForm.startDate,
+        imageUrl: editForm.imageUrl,
+      };
+
+      const res = await fetch(`/api/team/team-profile/${editForm.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Update failed");
+        return;
+      }
+
+      alert("Team updated successfully");
+
+      setIsEditModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    }
+  };
+
+  useEffect(() => {
+    const fetchTeam = async () => {
+      const res = await fetch(`/api/team/team-profile/${teamId}`);
+      const result = await res.json();
+
+      if (result.status) {
+        setTeamName(result.data.name); // ✅ REAL TEAM NAME
+      }
+    };
+
+    if (teamId) fetchTeam();
+  }, [teamId]);
+
+  // const handleRemoveMember = async (id: string) => {
+  //   if (!selectedTournament) return;
+
+  //   try {
+  //     const res = await fetch(
+  //       `/api/general-teams/member?generalTeamId=${selectedTournament.id}&memberUserId=${id}`,
+  //       {
+  //         method: "DELETE",
+  //       },
+  //     );
+
+  //     const data = await res.json();
+  //     console.log(data);
+
+  //     if (data.status === false) {
+  //       alert(data.message);
+  //       return;
+  //     }
+
+  //     setTeamMembers((prev) => prev.filter((member) => member.id !== id));
+  //   } catch (err) {
+  //     console.error("Failed to remove member", err);
+  //   }
+  // };
+
+  const handleDeleteMember = async (memberUserId: string) => {
+    if (!selectedTournament?.id) {
+      console.error("No tournament selected");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `/api/general-teams/member?generalTeamId=${selectedTournament.id}&memberUserId=${memberUserId}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      const result = await res.json();
+
+      if (result.status) {
+        setAddedMembers((prev) =>
+          prev.filter((member) => member.id !== memberUserId),
+        );
+      }
+    } catch (err) {
+      console.error("Failed to delete member", err);
+    }
+  };
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      if (!teamId) return;
+
+      try {
+        const res = await fetch(
+          `/api/general-teams/member?generalTeamId=${teamId}`,
+        );
+
+        const result: MemberResponse = await res.json();
+
+        if (result.status) {
+          const formatted = result.data.map((item) => ({
+            id: item.id,
+            name: item.fullName ?? item.email,
+            email: item.email,
+            role: "ANGLER",
+            status: "Active",
+            initials: item.fullName
+              ? item.fullName.slice(0, 2).toUpperCase()
+              : item.email.slice(0, 2).toUpperCase(),
+          }));
+
+          setAddedMembers(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to load members", err);
+      }
+    };
+
+    fetchMembers();
+  }, [teamId]);
   return (
     <div className="flex min-h-screen bg-background">
       <TeamSidebar />
@@ -217,9 +445,50 @@ export default function DiscoverEventsPage() {
 
                 {/* BODY */}
                 <div className="p-5">
-                  <h3 className="text-lg font-bold text-foreground">
-                    {tournament.name}
-                  </h3>
+                  <div className="">
+                    <h3 className="text-lg font-bold text-foreground">
+                      {tournament.name}
+                    </h3>
+                    <div className="flex justify-end p-3">
+                      <DropdownMenu.Root>
+                        <DropdownMenu.Trigger asChild>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                            className="p-2 hover:bg-gray-100 rounded-lg"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                        </DropdownMenu.Trigger>
+
+                        <DropdownMenu.Content
+                          align="end"
+                          className="bg-white border rounded-lg shadow-lg p-1 z-50 min-w-[140px]"
+                        >
+                          <DropdownMenu.Item
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditClick(tournament);
+                            }}
+                            className="px-3 py-2 flex items-center gap-2 hover:bg-gray-100 cursor-pointer outline-none"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Edit
+                          </DropdownMenu.Item>
+
+                          <DropdownMenu.Item
+                            onClick={() => handleDelete(tournament.id)}
+                            className="px-3 py-2 flex items-center gap-2 hover:bg-red-50 text-red-600 cursor-pointer outline-none"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </DropdownMenu.Item>
+                        </DropdownMenu.Content>
+                      </DropdownMenu.Root>
+                    </div>
+                  </div>
 
                   <div className="text-sm text-primary mb-3">
                     {tournament.location}
@@ -281,7 +550,55 @@ export default function DiscoverEventsPage() {
         </div>
       )} */}
 
-      {/* ADD MEMBER MODAL */}
+      <Dialog.Root open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
+
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-xl w-[500px] z-50">
+            <Dialog.Title className="text-xl font-bold mb-4">
+              Edit Team
+            </Dialog.Title>
+
+            {editForm && (
+              <div className="space-y-3">
+                <input
+                  className="w-full border p-2 rounded"
+                  value={editForm.name}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, name: e.target.value })
+                  }
+                  placeholder="Name"
+                />
+
+                <input
+                  className="w-full border p-2 rounded"
+                  value={editForm.location}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, location: e.target.value })
+                  }
+                  placeholder="Location"
+                />
+
+                <input
+                  className="w-full border p-2 rounded"
+                  value={editForm.description}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, description: e.target.value })
+                  }
+                  placeholder="Description"
+                />
+
+                <button
+                  onClick={handleEdit}
+                  className="bg-green-600 text-white px-4 py-2 rounded w-full"
+                >
+                  Save Changes
+                </button>
+              </div>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
       <Dialog.Root open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
@@ -289,7 +606,7 @@ export default function DiscoverEventsPage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
               <Dialog.Title className="text-xl font-semibold text-gray-900">
-                Search & Add Crew Member
+                {isEditMode ? "Edit Team Profile" : "Search & Add Crew Member"}
               </Dialog.Title>
               <Dialog.Close className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
                 <X className="w-5 h-5 text-gray-500" />
@@ -356,6 +673,97 @@ export default function DiscoverEventsPage() {
                 your vessel.
               </p>
             </div>
+
+            {/* Added Team Members Grid */}
+            {/* {teamMembers.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                  Added Team Members
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {teamMembers.map((member) => (
+                    <div
+                      key={member.id}
+                      className="border border-gray-200 rounded-xl p-4 flex items-center justify-between bg-gray-50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">
+                          {member.initials}
+                        </div>
+
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {member.name}
+                          </p>
+
+                          <p className="text-sm text-gray-500">
+                            {member.email}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm">
+                          Added
+                        </button>
+
+                        <button
+                          // onClick={() => handleRemoveMember(member.id)}
+                          onClick={() => handleDeleteMember(member.id)}
+                          className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )} */}
+
+            {/* Added Members Grid */}
+            {addedMembers.length > 0 && (
+              <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Added Team Members
+                  </h2>
+                </div>
+
+                <div className="divide-y divide-gray-200">
+                  {addedMembers.map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary/10 text-primary font-semibold text-sm">
+                          {member.initials}
+                        </div>
+
+                        <div>
+                          <div className="font-semibold text-gray-900">
+                            {member.name}
+                          </div>
+
+                          <div className="text-sm text-gray-500">
+                            {member.email}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleDeleteMember(member.id)}
+                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>

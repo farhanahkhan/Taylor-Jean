@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       if (!teamId) {
         return NextResponse.json(
           { message: "teamId is required" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
         {
           cache: "no-store",
           headers: { Authorization: `Bearer ${accessToken}` },
-        }
+        },
       );
       const data = await res.json();
       return NextResponse.json(data);
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { message: "POST failed", error },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

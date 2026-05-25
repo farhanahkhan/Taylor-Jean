@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 const BASE_URL = "http://mobileapp.designswebs.com:5431";
 
 export async function DELETE(req: NextRequest) {
+  // .
   try {
     const accessToken = req.cookies.get("accessToken")?.value;
 

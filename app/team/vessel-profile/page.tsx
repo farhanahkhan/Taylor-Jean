@@ -8,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { useRouter } from "next/navigation";
 
 /* ---------------- TYPES ---------------- */
 
@@ -98,6 +99,7 @@ export default function DiscoverEventsPage() {
   const [teamName, setTeamName] = useState("");
   const [teamMembers, setTeamMembers] = useState<AvailableAngler[]>([]);
   const [addedMembers, setAddedMembers] = useState<CrewMember[]>([]);
+  const router = useRouter();
 
   /* ---------------- FETCH TEAMS ---------------- */
 
@@ -228,33 +230,50 @@ export default function DiscoverEventsPage() {
 
   /* ---------------- ADD MEMBER ---------------- */
 
+  // const handleDelete = async (id: string) => {
+  //   const confirmDelete = confirm(
+  //     "Are you sure you want to delete this tournament?",
+  //   );
+  //   if (!confirmDelete) return;
+
+  //   try {
+  //     const res = await fetch(`/api/team/team-profile/${id}`, {
+  //       method: "DELETE",
+  //     });
+  //     const data = await res.json();
+
+  //     if (!res.ok) {
+  //       alert(data.message || "Delete failed");
+  //       return;
+  //     }
+  //     alert("Tournament deleted successfully");
+  //     // fetchTournaments();
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Something went wrong");
+  //   }
+  // };
+
   const handleDelete = async (id: string) => {
-    const confirmDelete = confirm(
-      "Are you sure you want to delete this tournament?",
-    );
-    if (!confirmDelete) return;
+    if (!confirm("Are you sure you want to delete this team?")) return;
 
-    try {
-      const res = await fetch(`/api/team/team-profile/${id}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
+    const res = await fetch(`/api/team/team-profile/${id}`, {
+      method: "DELETE",
+    });
 
-      if (!res.ok) {
-        alert(data.message || "Delete failed");
-        return;
-      }
-      alert("Tournament deleted successfully");
-      // fetchTournaments();
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong");
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      alert(data?.message || "Delete failed");
+      return;
     }
+
+    setTournaments((prev) => prev.filter((item) => item.id !== id));
+    alert("Team deleted successfully");
   };
 
   const handleEditClick = (team: Tournament) => {
-    setIsEditMode(true);
-    setEditForm(team);
+    router.push(`/team/vessel-profile/add-new-team?id=${team.id}`);
   };
 
   const handleEdit = async () => {

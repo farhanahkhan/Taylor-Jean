@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/constants/route";
 
+type ApiTeam = {
+  id: string;
+  name: string;
+  displayName: string;
+  description: string | null;
+  length: number;
+  engine: string;
+  gadgets: string;
+  imageUrl: string | null;
+  isActive: boolean;
+};
+
+type TeamsResponse = {
+  data?: ApiTeam[] | { items?: ApiTeam[]; data?: ApiTeam[] };
+};
+
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
@@ -112,6 +128,62 @@ export async function DELETE(
     );
   } catch (error) {
     console.error("DELETE Merch Category Error:", error);
+
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+}
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
+  try {
+    const accessToken = req.cookies.get("accessToken")?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await context.params;
+
+    const res = await fetch(`${API_BASE_URL}/api/general-teams`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const result: TeamsResponse = await res.json();
+
+    const teams: ApiTeam[] = Array.isArray(result.data)
+      ? result.data
+      : Array.isArray(result.data?.items)
+        ? result.data.items
+        : Array.isArray(result.data?.data)
+          ? result.data.data
+          : [];
+
+    const team = teams.find((item) => item.id === id);
+
+    if (!team) {
+      return NextResponse.json(
+        {
+          message: "Team not found",
+          searchedId: id,
+          availableIds: teams.map((item) => item.id),
+        },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      status: true,
+      data: team,
+    });
+  } catch (error) {
+    console.error("GET Team Profile Error:", error);
 
     return NextResponse.json(
       { message: "Internal Server Error" },

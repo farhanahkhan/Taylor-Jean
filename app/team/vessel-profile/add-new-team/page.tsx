@@ -17,6 +17,7 @@ import { TeamSidebar } from "@/app/Components/team-sidebar";
 import { TeamHeader } from "@/app/Components/team-header";
 import * as Label from "@radix-ui/react-label";
 import ImageUploader from "@/app/Components/ImageUploader";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import {
   Select,
@@ -26,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 
 interface ApiTeam {
   id: string;
@@ -72,6 +73,41 @@ export default function VesselProfilePage() {
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("id");
+
+  useEffect(() => {
+    const fetchEditTeam = async () => {
+      if (!editId) return;
+
+      const res = await fetch(`/api/team/team-profile/${editId}`);
+      const text = await res.text();
+
+      if (!res.ok) {
+        console.log("GET edit error:", res.status, text);
+        return;
+      }
+
+      const result = text ? JSON.parse(text) : null;
+      const data = result?.data;
+
+      setTeamName(data.name || "");
+      setVesselName(data.displayName || "");
+      setVesselBio(data.description || "");
+      setLength(String(data.length || ""));
+      setEngines(data.engine || "");
+      setElectronics(
+        data.gadgets
+          ? data.gadgets.split(",").map((x: string) => x.trim())
+          : [],
+      );
+      setUploadedImageUrl(data.imageUrl || "");
+      setBannerPreview(data.imageUrl || "");
+      setEditingId(data.id);
+    };
+
+    fetchEditTeam();
+  }, [editId]);
 
   useEffect(() => {
     const fetchTournaments = async () => {
@@ -144,13 +180,18 @@ export default function VesselProfilePage() {
     };
 
     try {
-      const res = await fetch("/api/team/team-profile", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await fetch(
+        editingId
+          ? `/api/team/team-profile/${editingId}`
+          : "/api/team/team-profile",
+        {
+          method: editingId ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       const data = await res.json();
 
@@ -158,7 +199,11 @@ export default function VesselProfilePage() {
         console.error("Failed to create team:", data);
         alert(data.message || "Failed to create team");
       } else {
-        alert("Team created successfully!");
+        alert(
+          editingId
+            ? "Team updated successfully!"
+            : "Team created successfully!",
+        );
         router.push("/team/vessel-profile");
 
         // Optionally refresh team list
@@ -496,192 +541,6 @@ export default function VesselProfilePage() {
               </button>
             </div>
           </div>
-
-          {profiles.length > 0 && (
-            <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100">
-              {/* Search and Filters */}
-              <div className="p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border-b border-gray-100">
-                <div className="relative flex-1 max-w-xl w-full">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Search profiles by team or vessel name..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 h-10 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                  />
-                </div>
-                <button className="flex items-center gap-2 px-4 h-10 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Filter className="h-4 w-4" />
-                  Filters
-                </button>
-              </div>
-
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
-                        Team Name
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
-                        Team Display Name
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
-                        Team Bio
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
-                        Status
-                      </th>
-                      <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredProfiles.map((profile) => (
-                      <tr
-                        key={profile.id}
-                        className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
-                      >
-                        {/* Team Name Column */}
-                        <td className="px-6 py-4">
-                          {editingRowId === profile.id ? (
-                            <input
-                              type="text"
-                              value={editForm.teamName || ""}
-                              onChange={(e) =>
-                                setEditForm({
-                                  ...editForm,
-                                  teamName: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-1.5 text-sm font-semibold border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30"
-                            />
-                          ) : (
-                            <p className="font-semibold text-foreground">
-                              {profile.teamName}
-                            </p>
-                          )}
-                        </td>
-
-                        {/* Vessel Display Name Column */}
-                        <td className="px-6 py-4">
-                          {editingRowId === profile.id ? (
-                            <input
-                              type="text"
-                              value={editForm.vesselName || ""}
-                              onChange={(e) =>
-                                setEditForm({
-                                  ...editForm,
-                                  vesselName: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-1.5 text-sm text-primary border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30"
-                            />
-                          ) : (
-                            <p className="text-sm text-primary">
-                              {profile.vesselName}
-                            </p>
-                          )}
-                        </td>
-
-                        {/* Vessel Bio Column */}
-                        <td className="px-6 py-4">
-                          {editingRowId === profile.id ? (
-                            <textarea
-                              value={editForm.vesselBio || ""}
-                              onChange={(e) =>
-                                setEditForm({
-                                  ...editForm,
-                                  vesselBio: e.target.value,
-                                })
-                              }
-                              rows={2}
-                              className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-                            />
-                          ) : (
-                            <p className="text-sm text-muted-foreground line-clamp-2">
-                              {profile.vesselBio}
-                            </p>
-                          )}
-                        </td>
-
-                        {/* Status Column */}
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
-                              profile.isActive
-                                ? "bg-emerald-50 text-emerald-700"
-                                : "bg-gray-100 text-gray-600"
-                            }`}
-                          >
-                            {profile.isActive ? "Active" : "Inactive"}
-                          </span>
-                        </td>
-
-                        {/* Actions Column */}
-                        <td className="px-6 py-4 text-right">
-                          {editingRowId === profile.id ? (
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                onClick={() => handleSaveEdit(profile.id)}
-                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                              >
-                                <Check className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={handleCancelEdit}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <DropdownMenu.Root>
-                              <DropdownMenu.Trigger asChild>
-                                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                  <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                                </button>
-                              </DropdownMenu.Trigger>
-                              <DropdownMenu.Portal>
-                                <DropdownMenu.Content
-                                  align="end"
-                                  className="min-w-[140px] bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50"
-                                >
-                                  <DropdownMenu.Item
-                                    onClick={() => handleEditRow(profile)}
-                                    className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 outline-none"
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                    Edit
-                                  </DropdownMenu.Item>
-                                  <DropdownMenu.Item
-                                    onClick={() => handleDelete(profile.id)}
-                                    className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-red-50 text-red-600 outline-none"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                    Delete
-                                  </DropdownMenu.Item>
-                                </DropdownMenu.Content>
-                              </DropdownMenu.Portal>
-                            </DropdownMenu.Root>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                {filteredProfiles.length === 0 && (
-                  <div className="text-center py-12 text-muted-foreground">
-                    No profiles found
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </main>
       </div>
     </div>

@@ -1,11 +1,12 @@
 import { API_BASE_URL } from "@/lib/constants/route";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const accessToken = req.cookies.get("accessToken")?.value;
     const { id: tournamentId } = await params;
 
     console.log("Tournament ID:", tournamentId);
@@ -13,7 +14,7 @@ export async function GET(
     if (!tournamentId) {
       return NextResponse.json(
         { status: false, message: "Tournament ID missing" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -23,9 +24,10 @@ export async function GET(
         method: "GET",
         headers: {
           Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
         cache: "no-store",
-      }
+      },
     );
 
     if (!res.ok) {
@@ -39,7 +41,7 @@ export async function GET(
     console.error("Route error:", error);
     return NextResponse.json(
       { status: false, message: "Server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

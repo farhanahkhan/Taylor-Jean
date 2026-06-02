@@ -8,8 +8,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
-import "swiper/css/navigation";
+// import "swiper/css";
+// import "swiper/css/navigation";
 import { Navigation } from "swiper/modules";
 
 interface MarketOption {
@@ -110,7 +110,7 @@ export default function TournamentTeamsPage() {
   const handleOptionChange = (
     index: number,
     field: "option" | "odds",
-    value: string
+    value: string,
   ) => {
     const newOptions = [...options];
     if (field === "option") {
@@ -164,7 +164,7 @@ export default function TournamentTeamsPage() {
     const fetchTeams = async () => {
       try {
         const res = await fetch(
-          `/api/team-activities/tournament/${tournamentId}`
+          `/api/team-activities/tournament/${tournamentId}`,
         );
 
         const json = await res.json();
@@ -180,7 +180,7 @@ export default function TournamentTeamsPage() {
             entryDate: item.createdAt,
             image: item.speciesImage,
             status: item.actionStatus as 0 | 1 | 2, // ✅ FIX
-          })
+          }),
         );
         setTeams(mappedTeams);
       } catch (e) {
@@ -216,11 +216,11 @@ export default function TournamentTeamsPage() {
 
       setTeams((prev) =>
         prev.map((team) =>
-          team.id === activityId ? { ...team, status: approve ? 1 : 2 } : team
-        )
+          team.id === activityId ? { ...team, status: approve ? 1 : 2 } : team,
+        ),
       );
       setSelectedTeam((prev) =>
-        prev ? { ...prev, status: approve ? 1 : 2 } : prev
+        prev ? { ...prev, status: approve ? 1 : 2 } : prev,
       );
     } catch (err) {
       console.error(err);
@@ -235,7 +235,7 @@ export default function TournamentTeamsPage() {
       try {
         setBetsLoading(true);
         const res = await fetch(
-          `/api/bets/tournament/${tournamentId}/bets-tournament`
+          `/api/bets/tournament/${tournamentId}/bets-tournament`,
         );
 
         const json = await res.json();
@@ -261,14 +261,14 @@ export default function TournamentTeamsPage() {
     const fetchLeaderboard = async () => {
       try {
         const res = await fetch(
-          `/api/bets/tournament/${tournamentId}/team-points`
+          `/api/bets/tournament/${tournamentId}/team-points`,
         );
 
         const data = await res.json();
 
         if (data?.data) {
           const sorted = [...data.data].sort(
-            (a: TeamPoint, b: TeamPoint) => b.totalPoints - a.totalPoints
+            (a: TeamPoint, b: TeamPoint) => b.totalPoints - a.totalPoints,
           );
 
           setTeamsPoint(sorted);
@@ -659,15 +659,15 @@ export default function TournamentTeamsPage() {
                               team.status === 1
                                 ? "bg-green-100 text-green-800"
                                 : team.status === 2
-                                ? "bg-red-100 text-red-800"
-                                : "bg-blue-100 text-blue-800"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-blue-100 text-blue-800"
                             }`}
                           >
                             {team.status === 1
                               ? "ACCEPTED"
                               : team.status === 2
-                              ? "REJECTED"
-                              : "PENDING"}
+                                ? "REJECTED"
+                                : "PENDING"}
                           </span>
                         </div>
                       </div>
@@ -816,8 +816,8 @@ export default function TournamentTeamsPage() {
                   selectedTeam.status === 1
                     ? "bg-green-50"
                     : selectedTeam.status === 2
-                    ? "bg-red-50"
-                    : "bg-blue-50"
+                      ? "bg-red-50"
+                      : "bg-blue-50"
                 }`}
               >
                 <div
@@ -825,8 +825,8 @@ export default function TournamentTeamsPage() {
                     selectedTeam.status === 1
                       ? "bg-green-500"
                       : selectedTeam.status === 2
-                      ? "bg-red-500"
-                      : "bg-blue-500"
+                        ? "bg-red-500"
+                        : "bg-blue-500"
                   }`}
                 >
                   {selectedTeam.status === 1 ? (
@@ -843,15 +843,15 @@ export default function TournamentTeamsPage() {
                     selectedTeam.status === 1
                       ? "text-green-700"
                       : selectedTeam.status === 2
-                      ? "text-red-700"
-                      : "text-blue-700"
+                        ? "text-red-700"
+                        : "text-blue-700"
                   }`}
                 >
                   {selectedTeam.status === 1
                     ? "ENTRY VERIFIED"
                     : selectedTeam.status === 2
-                    ? "ENTRY INVALIDATED"
-                    : "PENDING VERIFICATION"}
+                      ? "ENTRY INVALIDATED"
+                      : "PENDING VERIFICATION"}
                 </p>
 
                 <p
@@ -859,8 +859,8 @@ export default function TournamentTeamsPage() {
                     selectedTeam.status === 1
                       ? "text-green-600"
                       : selectedTeam.status === 2
-                      ? "text-red-600"
-                      : "text-blue-600"
+                        ? "text-red-600"
+                        : "text-blue-600"
                   }`}
                 >
                   FINAL STATUS RECORDED
@@ -894,7 +894,7 @@ export default function TournamentTeamsPage() {
           <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-slate-900">
-                Launch New Betting Market
+                Launch New Betting
               </h2>
               <button
                 onClick={() => setShowLaunchModal(false)}
@@ -907,7 +907,7 @@ export default function TournamentTeamsPage() {
             <div className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  MARKET TITLE
+                  BET TITLE
                 </label>
                 <input
                   type="text"
@@ -920,7 +920,7 @@ export default function TournamentTeamsPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  MARKET RULES & CONDITIONS
+                  BET RULES & CONDITIONS
                 </label>
                 <textarea
                   value={marketRules}
@@ -933,7 +933,7 @@ export default function TournamentTeamsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Bet OPENS
+                    BET OPENS
                   </label>
                   <input
                     type="datetime-local"
@@ -945,7 +945,7 @@ export default function TournamentTeamsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Bet CLOSES
+                    BET CLOSES
                   </label>
                   <input
                     type="datetime-local"
@@ -1021,7 +1021,7 @@ export default function TournamentTeamsPage() {
                   onClick={handlePublishMarket}
                   className="flex-1 px-4 py-3 bg-dark-navy text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  CONFIRM & PUBLISH MARKET
+                  CONFIRM & PUBLISH
                 </button>
               </div>
             </div>

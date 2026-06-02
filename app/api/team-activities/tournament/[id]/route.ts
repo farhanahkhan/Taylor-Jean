@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: tournamentId } = await params; // ✅ IMPORTANT
@@ -13,7 +13,7 @@ export async function GET(
     if (!tournamentId) {
       return NextResponse.json(
         { status: false, message: "Tournament ID missing" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -25,7 +25,7 @@ export async function GET(
           Accept: "application/json",
         },
         cache: "no-store",
-      }
+      },
     );
 
     if (!res.ok) {
@@ -39,7 +39,7 @@ export async function GET(
     console.error("Route error:", error);
     return NextResponse.json(
       { status: false, message: "Server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

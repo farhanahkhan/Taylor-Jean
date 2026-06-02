@@ -22,11 +22,11 @@ const navItems = [
   { icon: Users2, label: "Team Profile", href: "/team/vessel-profile" },
   { icon: ShoppingBag, label: "Merch", href: "/team/merch" },
   { icon: User, label: "Crew Roster", href: "/team/crew-roster" },
-  { icon: Compass, label: "Discover Events", href: "/team/discover-events" },
+  { icon: Compass, label: "Team Tournament", href: "/team/discover-events" },
   { icon: Calendar, label: "Charter Calendar", href: "/team/charter-calendar" },
   { icon: ShoppingBag, label: "Merch Store", href: "/team/merch-store" },
   { icon: BarChart3, label: "Performance", href: "/team/performance" },
-  { icon: Calendar, label: "Team Tournament", href: "/team/team-tournament" },
+  // { icon: Calendar, label: "Team Tournament", href: "/team/team-tournament" },
 ];
 
 export function TeamSidebar() {

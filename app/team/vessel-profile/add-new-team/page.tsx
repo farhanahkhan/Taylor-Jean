@@ -12,6 +12,7 @@ import {
   Filter,
   Plus,
 } from "lucide-react";
+import { Suspense } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { TeamSidebar } from "@/app/Components/team-sidebar";
 import { TeamHeader } from "@/app/Components/team-header";
@@ -52,7 +53,7 @@ interface TournamentApi {
   id: string;
   name: string;
 }
-export default function VesselProfilePage() {
+function VesselProfileContent() {
   const [teamName, setTeamName] = useState("");
   const [vesselName, setVesselName] = useState("");
   const [vesselBio, setVesselBio] = useState("");
@@ -320,68 +321,69 @@ export default function VesselProfilePage() {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <TeamSidebar />
+    <>
+      <div className="flex min-h-screen bg-background">
+        <TeamSidebar />
 
-      <div className="flex-1 flex flex-col w-full min-w-0">
-        <TeamHeader />
+        <div className="flex-1 flex flex-col w-full min-w-0">
+          <TeamHeader />
 
-        <main className="flex-1 p-3 sm:p-4 lg:p-6">
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  Add new Team
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Configure your team and boat for public discovery.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground uppercase tracking-wider">
-                  VERIFICATION:
-                </span>
-                <span className="px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-md">
-                  PENDING
-                </span>
+          <main className="flex-1 p-3 sm:p-4 lg:p-6">
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">
+                    Add new Team
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    Configure your team and boat for public discovery.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground uppercase tracking-wider">
+                    VERIFICATION:
+                  </span>
+                  <span className="px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-md">
+                    PENDING
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* BASIC INFORMATION - Left Column */}
-              <div>
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-                  BASIC INFORMATION
-                </h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Team Name
-                      </label>
-                      <input
-                        type="text"
-                        value={teamName}
-                        onChange={(e) => setTeamName(e.target.value)}
-                        placeholder="Enter team name"
-                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Team Display Name
-                      </label>
-                      <input
-                        type="text"
-                        value={vesselName}
-                        onChange={(e) => setVesselName(e.target.value)}
-                        placeholder="Enter team display name"
-                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                      />
-                    </div>
-                    {/*
+            <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* BASIC INFORMATION - Left Column */}
+                <div>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                    BASIC INFORMATION
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Team Name
+                        </label>
+                        <input
+                          type="text"
+                          value={teamName}
+                          onChange={(e) => setTeamName(e.target.value)}
+                          placeholder="Enter team name"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Team Display Name
+                        </label>
+                        <input
+                          type="text"
+                          value={vesselName}
+                          onChange={(e) => setVesselName(e.target.value)}
+                          placeholder="Enter team display name"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                        />
+                      </div>
+                      {/*
                     <div>
                       <Label
                         htmlFor="tournament-type"
@@ -413,154 +415,162 @@ export default function VesselProfilePage() {
                         </SelectContent>
                       </Select>
                     </div> */}
-                  </div>
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Team Bio
-                    </label>
-                    <textarea
-                      value={vesselBio}
-                      onChange={(e) => setVesselBio(e.target.value)}
-                      placeholder="Describe your vessel and capabilities"
-                      rows={5}
-                      className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
-                    />
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Team Bio
+                      </label>
+                      <textarea
+                        value={vesselBio}
+                        onChange={(e) => setVesselBio(e.target.value)}
+                        placeholder="Describe your vessel and capabilities"
+                        rows={5}
+                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* TECHNICAL SPECS - Right Column */}
-              <div>
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-                  TECHNICAL SPECS
-                </h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Length (ft)
-                      </label>
-                      <input
-                        type="text"
-                        value={length}
-                        onChange={(e) => setLength(e.target.value)}
-                        placeholder="e.g., 50"
-                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                      />
+                {/* TECHNICAL SPECS - Right Column */}
+                <div>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                    TECHNICAL SPECS
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Length (ft)
+                        </label>
+                        <input
+                          type="text"
+                          value={length}
+                          onChange={(e) => setLength(e.target.value)}
+                          placeholder="e.g., 50"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Engines
+                        </label>
+                        <input
+                          type="text"
+                          value={engines}
+                          onChange={(e) => setEngines(e.target.value)}
+                          placeholder="e.g., Twin V12"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                        />
+                      </div>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">
-                        Engines
+                        Electronics Package
                       </label>
-                      <input
-                        type="text"
-                        value={engines}
-                        onChange={(e) => setEngines(e.target.value)}
-                        placeholder="e.g., Twin V12"
-                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Electronics Package
-                    </label>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {electronics.map((item) => (
-                        <span
-                          key={item}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 text-sm text-foreground rounded-lg"
-                        >
-                          {item}
-                          <button
-                            onClick={() => removeElectronics(item)}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {electronics.map((item) => (
+                          <span
+                            key={item}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 text-sm text-foreground rounded-lg"
                           >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </span>
-                      ))}
+                            {item}
+                            <button
+                              onClick={() => removeElectronics(item)}
+                              className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newElectronics}
+                          onChange={(e) => setNewElectronics(e.target.value)}
+                          onKeyPress={(e) =>
+                            e.key === "Enter" && addElectronics()
+                          }
+                          placeholder="e.g., Garmin Pro, FLIR, Sonar"
+                          className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                        />
+                        <button
+                          onClick={addElectronics}
+                          className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Boat Name
+                      </label>
                       <input
                         type="text"
-                        value={newElectronics}
-                        onChange={(e) => setNewElectronics(e.target.value)}
-                        onKeyPress={(e) =>
-                          e.key === "Enter" && addElectronics()
-                        }
-                        placeholder="e.g., Garmin Pro, FLIR, Sonar"
-                        className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                        value={boatName}
+                        onChange={(e) => setBoatName(e.target.value)}
+                        placeholder="Enter boat name"
+                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                       />
-                      <button
-                        onClick={addElectronics}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add
-                      </button>
                     </div>
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Boat Name
-                    </label>
-                    <input
-                      type="text"
-                      value={boatName}
-                      onChange={(e) => setBoatName(e.target.value)}
-                      placeholder="Enter boat name"
-                      className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                    />
-                  </div>
+                <div className="mb-8">
+                  <Label.Root className="block text-sm font-medium text-gray-700 mb-2">
+                    Team Image
+                  </Label.Root>
+
+                  <ImageUploader
+                    onUploadSuccess={(finalImageUrl) => {
+                      setUploadedImageUrl(finalImageUrl);
+                      setBannerPreview(finalImageUrl);
+                    }}
+                  />
+
+                  {bannerPreview && (
+                    <div className="mt-4 relative w-32 h-32 rounded-lg overflow-hidden border">
+                      <Image
+                        src={bannerPreview}
+                        alt="Product Preview"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="mb-8">
-                <Label.Root className="block text-sm font-medium text-gray-700 mb-2">
-                  Team Image
-                </Label.Root>
-
-                <ImageUploader
-                  onUploadSuccess={(finalImageUrl) => {
-                    setUploadedImageUrl(finalImageUrl);
-                    setBannerPreview(finalImageUrl);
-                  }}
-                />
-
-                {bannerPreview && (
-                  <div className="mt-4 relative w-32 h-32 rounded-lg overflow-hidden border">
-                    <Image
-                      src={bannerPreview}
-                      alt="Product Preview"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                )}
+              {/* Submit Button */}
+              <div className="flex justify-end pt-6 mt-6 border-t border-border">
+                <button
+                  onClick={handleUpdateProfile}
+                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  {isSubmitting
+                    ? "Creating..."
+                    : editingId
+                      ? "Update Profile"
+                      : "Create Team"}
+                </button>
               </div>
             </div>
-
-            {/* Submit Button */}
-            <div className="flex justify-end pt-6 mt-6 border-t border-border">
-              <button
-                onClick={handleUpdateProfile}
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-              >
-                {isSubmitting
-                  ? "Creating..."
-                  : editingId
-                    ? "Update Profile"
-                    : "Create Team"}
-              </button>
-            </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
+    </>
+  );
+}
+export default function VesselProfilePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VesselProfileContent />
+    </Suspense>
   );
 }

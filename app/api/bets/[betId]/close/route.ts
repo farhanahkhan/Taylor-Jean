@@ -3,7 +3,7 @@ import { API_BASE_URL } from "@/lib/constants/route";
 
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ betId: string }> } // params is now a Promise
+  context: { params: Promise<{ betId: string }> },
 ) {
   try {
     const accessToken = req.cookies.get("accessToken")?.value;
@@ -17,7 +17,7 @@ export async function POST(
     if (!betId) {
       return NextResponse.json(
         { message: "betId param is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -27,7 +27,7 @@ export async function POST(
     if (!winningOptionId) {
       return NextResponse.json(
         { message: "winningOptionId is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -53,13 +53,13 @@ export async function POST(
       {
         status: externalRes.status,
         headers: { "Content-Type": contentType ?? "application/json" },
-      }
+      },
     );
   } catch (error) {
     console.error("Close market error:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
       engine: body.engine || "",
       gadgets: body.gadgets || "",
       imageUrl: body.imageUrl || "",
+      boatName: body.boatName || "",
     };
 
     const res = await fetch(CREATE_TEAM_URL, {

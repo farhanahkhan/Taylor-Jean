@@ -37,6 +37,7 @@ interface ApiTeam {
   isActive: boolean;
   createdDate: string;
   imageUrl: string;
+  boatName: string;
 }
 interface VesselProfile {
   id: string;
@@ -60,6 +61,7 @@ export default function VesselProfilePage() {
   const [engines, setEngines] = useState("");
   const [electronics, setElectronics] = useState<string[]>([]);
   const [newElectronics, setNewElectronics] = useState("");
+  const [boatName, setBoatName] = useState("");
 
   const [profiles, setProfiles] = useState<VesselProfile[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -96,6 +98,7 @@ export default function VesselProfilePage() {
       setVesselBio(data.description || "");
       setLength(String(data.length || ""));
       setEngines(data.engine || "");
+      setBoatName(data.boatName || "");
       setElectronics(
         data.gadgets
           ? data.gadgets.split(",").map((x: string) => x.trim())
@@ -175,6 +178,7 @@ export default function VesselProfilePage() {
       length: parseInt(length, 10),
       engine: engines,
       gadgets: electronics.join(", "),
+      boatName: boatName,
       imageUrl: uploadedImageUrl,
       isActive: true,
     };
@@ -215,6 +219,7 @@ export default function VesselProfilePage() {
         setLength("50");
         setEngines("Twin V12");
         setElectronics([]);
+        setBoatName("");
         setTournamentId("");
         setUploadedImageUrl("");
       }
@@ -498,6 +503,19 @@ export default function VesselProfilePage() {
                         Add
                       </button>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Boat Name
+                    </label>
+                    <input
+                      type="text"
+                      value={boatName}
+                      onChange={(e) => setBoatName(e.target.value)}
+                      placeholder="Enter boat name"
+                      className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                    />
                   </div>
                 </div>
               </div>

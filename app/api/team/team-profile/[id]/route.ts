@@ -9,6 +9,7 @@ type ApiTeam = {
   length: number;
   engine: string;
   gadgets: string;
+  boatName: string;
   imageUrl: string | null;
   isActive: boolean;
 };
@@ -44,6 +45,7 @@ export async function PUT(
       length: body.length,
       engine: body.engine,
       gadgets: body.gadgets,
+      boatName: body.boatName,
       imageUrl: body.imageUrl,
       isActive: body.isActive,
     };

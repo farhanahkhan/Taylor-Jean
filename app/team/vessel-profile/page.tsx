@@ -230,48 +230,60 @@ export default function DiscoverEventsPage() {
 
   /* ---------------- ADD MEMBER ---------------- */
 
-  // const handleDelete = async (id: string) => {
-  //   const confirmDelete = confirm(
-  //     "Are you sure you want to delete this tournament?",
-  //   );
-  //   if (!confirmDelete) return;
+  //  const handleDelete = async (id: string) => {
+  //     if (!confirm("Are you sure you want to delete this team?")) return;
 
-  //   try {
-  //     const res = await fetch(`/api/team/team-profile/${id}`, {
-  //       method: "DELETE",
-  //     });
-  //     const data = await res.json();
+  //     try {
+  //       const res = await fetch(`/api/team/team-profile/${id}`, {
+  //         method: "DELETE",
+  //       });
 
-  //     if (!res.ok) {
-  //       alert(data.message || "Delete failed");
-  //       return;
+  //       const data = await res.json();
+
+  //       if (data.message === "Cannot delete. Team used in tournament") {
+  //         alert(data.message);
+  //         return;
+  //       }
+
+  //       if (!res.ok || data.status === false) {
+  //         alert(data.message || "Delete failed");
+  //         return;
+  //       }
+
+  //       setTournaments((prev) => prev.filter((item) => item.id !== id));
+
+  //       alert("Team deleted successfully");
+  //     } catch (error) {
+  //       console.error(error);
+  //       alert("Something went wrong");
   //     }
-  //     alert("Tournament deleted successfully");
-  //     // fetchTournaments();
-  //   } catch (err) {
-  //     console.error(err);
-  //     alert("Something went wrong");
-  //   }
-  // };
+  //   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this team?")) return;
 
-    const res = await fetch(`/api/team/team-profile/${id}`, {
-      method: "DELETE",
-    });
+    try {
+      const res = await fetch(`/api/team/team-profile/${id}`, {
+        method: "DELETE",
+      });
 
-    const data = await res.json().catch(() => null);
+      const data = await res.json();
 
-    if (!res.ok) {
-      alert(data?.message || "Delete failed");
-      return;
+      // Delete fail
+      if (data.data === null) {
+        alert(data.message);
+        return;
+      }
+
+      // Delete success
+      setTournaments((prev) => prev.filter((item) => item.id !== id));
+
+      alert(data.message || "Deleted successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong");
     }
-
-    setTournaments((prev) => prev.filter((item) => item.id !== id));
-    alert("Team deleted successfully");
   };
-
   const handleEditClick = (team: Tournament) => {
     router.push(`/team/vessel-profile/add-new-team?id=${team.id}`);
   };
@@ -441,7 +453,7 @@ export default function DiscoverEventsPage() {
                 key={tournament.id}
                 onClick={() => {
                   setSelectedTournament(tournament);
-                  setIsAddModalOpen(true);
+                  // setIsAddModalOpen(true);
                 }}
                 className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-md transition-shadow"
               >
@@ -520,8 +532,13 @@ export default function DiscoverEventsPage() {
                     </p>
                   </div>
 
-                  <button className="w-full mt-4 bg-dark-navy hover:bg-dark text-white font-semibold py-2.5 rounded-lg transition-colors">
-                    View and Edit Profile
+                  <button
+                    onClick={() => {
+                      setIsAddModalOpen(true);
+                    }}
+                    className="w-full mt-4 bg-dark-navy hover:bg-dark text-white font-semibold py-2.5 rounded-lg transition-colors"
+                  >
+                    Add Member
                   </button>
                 </div>
               </div>
@@ -621,7 +638,7 @@ export default function DiscoverEventsPage() {
       <Dialog.Root open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden z-50">
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto z-50">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
               <Dialog.Title className="text-xl font-semibold text-gray-900">
@@ -743,7 +760,7 @@ export default function DiscoverEventsPage() {
 
             {/* Added Members Grid */}
             {addedMembers.length > 0 && (
-              <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mx-5 mb-2">
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h2 className="text-lg font-semibold text-gray-900">
                     Added Team Members

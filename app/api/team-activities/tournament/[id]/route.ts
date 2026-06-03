@@ -1,11 +1,12 @@
 import { API_BASE_URL } from "@/lib/constants/route";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  request: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const accessToken = req.cookies.get("accessToken")?.value;
     const { id: tournamentId } = await params; // ✅ IMPORTANT
 
     console.log("Tournament ID:", tournamentId);
@@ -22,6 +23,7 @@ export async function GET(
       {
         method: "GET",
         headers: {
+          Authorization: `Bearer ${accessToken}`,
           Accept: "application/json",
         },
         cache: "no-store",

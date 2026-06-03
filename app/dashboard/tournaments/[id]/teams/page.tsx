@@ -95,6 +95,8 @@ export default function TournamentTeamsPage() {
   const [options, setOptions] = useState<MarketOption[]>([
     { option: "", odds: 1 },
   ]);
+
+  const [modalLoading, setModalLoading] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string>
   >({});
@@ -151,6 +153,7 @@ export default function TournamentTeamsPage() {
       }
 
       alert("Market Published Successfully ✅");
+      await fetchBets();
       setShowLaunchModal(false);
     } catch (error) {
       console.error(error);
@@ -228,32 +231,32 @@ export default function TournamentTeamsPage() {
     }
   };
   // GET API
-  useEffect(() => {
-    const fetchBets = async () => {
-      if (!tournamentId) return;
+  const fetchBets = async () => {
+    if (!tournamentId) return;
 
-      try {
-        setBetsLoading(true);
-        const res = await fetch(
-          `/api/bets/tournament/${tournamentId}/bets-tournament`,
-        );
+    try {
+      setBetsLoading(true);
+      const res = await fetch(
+        `/api/bets/tournament/${tournamentId}/bets-tournament`,
+      );
 
-        const json = await res.json();
+      const json = await res.json();
 
-        if (!res.ok) {
-          console.error(json.message);
-          setBets([]);
-          return;
-        }
-
-        setBets(json.data || []);
-      } catch (err) {
-        console.error(err);
+      if (!res.ok) {
+        console.error(json.message);
         setBets([]);
-      } finally {
-        setBetsLoading(false);
+        return;
       }
-    };
+
+      setBets(json.data || []);
+    } catch (err) {
+      console.error(err);
+      setBets([]);
+    } finally {
+      setBetsLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchBets();
   }, [tournamentId]);
 
@@ -287,38 +290,68 @@ export default function TournamentTeamsPage() {
 
   // post bet id
 
-  const handleSettleMarket = async (betId: string) => {
-    debugger;
-    console.log("BET ID RECEIVED:", betId);
-    console.log("SELECTED OPTIONS:", selectedOptions);
-    debugger;
+  // const handleSettleMarket = async (betId: string) => {
+  //   console.log("BET ID RECEIVED:", betId);
+  //   console.log("SELECTED OPTIONS:", selectedOptions);
 
-    if (!betId) {
-      alert("Bet ID missing ❌");
-      return;
-    }
-    debugger;
+  //   if (!betId) {
+  //     alert("Bet ID missing ❌");
+  //     return;
+  //   }
+
+  //   const winningOptionId = selectedOptions[betId];
+
+  //   if (!winningOptionId) {
+  //     alert("Please select a winning option first");
+  //     return;
+  //   }
+
+  //   try {
+  //     const res = await fetch(`/api/bets/${betId}/close`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         betId: betId,
+  //         winningOptionId: winningOptionId,
+  //       }),
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (!res.ok) {
+  //       alert(data.message || "Something went wrong");
+  //       return;
+  //     }
+
+  //     alert("Market settled successfully ✅");
+
+  //     // optional: modal close
+  //     // setIsOpen(false);
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Server error");
+  //   } finally {
+  //     setModalLoading(false);
+  //   }
+  // };
+  const handleSettleMarket = async (betId: string) => {
     const winningOptionId = selectedOptions[betId];
-    debugger;
 
     if (!winningOptionId) {
       alert("Please select a winning option first");
       return;
     }
-    debugger;
 
     try {
-      const res = await fetch(`/api/Bets/${betId}/close`, {
+      const res = await fetch(`/api/bets/${betId}/close`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          betId: betId,
-          winningOptionId: winningOptionId,
-        }),
+        body: JSON.stringify({ winningOptionId }),
       });
-      debugger;
 
       const data = await res.json();
 
@@ -326,18 +359,23 @@ export default function TournamentTeamsPage() {
         alert(data.message || "Something went wrong");
         return;
       }
-      debugger;
 
-      alert("Market settled successfully ✅");
+      // modal refresh loading
+      setModalLoading(true);
 
-      // optional: modal close
-      // setIsOpen(false);
+      const refreshRes = await fetch(
+        `/api/bets/tournament/${tournamentId}/bets-tournament`,
+      );
+
+      const refreshData = await refreshRes.json();
+      setBets(refreshData.data || []);
     } catch (error) {
       console.error(error);
-      // alert("Server error");
+      alert("Server error");
+    } finally {
+      setModalLoading(false);
     }
   };
-
   const handleSelect = (betId: string, optionId: string) => {
     setSelectedOptions((prev) => ({
       ...prev,

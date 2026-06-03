@@ -13,6 +13,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 
 interface MarketOption {
+  id?: string;
   option: string;
   odds: number;
 }
@@ -26,6 +27,9 @@ interface BetOption {
 interface Bet {
   betId: string;
   title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
   options: BetOption[];
 }
 
@@ -49,19 +53,6 @@ interface Team {
   entryDate: string;
   image: string;
   status: 0 | 1 | 2; // ✅ ONLY TYPE
-}
-
-// Bet
-interface BetOption {
-  optionId: string;
-  optionName: string;
-  currentOdds: number;
-}
-
-interface Bet {
-  betId: string;
-  title: string;
-  options: BetOption[];
 }
 
 // team-activities/team-points
@@ -100,6 +91,10 @@ export default function TournamentTeamsPage() {
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string>
   >({});
+  const [editingBet, setEditingBet] = useState<Bet | null>(null);
+  const [betActionLoading, setBetActionLoading] = useState<string | null>(null);
+
+  const [submitLoading, setSubmitLoading] = useState(false);
 
   const addOption = () => {
     setOptions([...options, { option: "", odds: 1 }]);
@@ -123,27 +118,91 @@ export default function TournamentTeamsPage() {
     setOptions(newOptions);
   };
 
+  // const handlePublishMarket = async () => {
+  //   try {
+  //     const payload = {
+  //       tournamentId: tournamentId,
+  //       title: marketTitle,
+  //       description: marketRules,
+  //       startTime: new Date(marketOpens).toISOString(),
+  //       endTime: new Date(marketCloses).toISOString(),
+  //       options: options.map((opt) => ({
+  //         optionName: opt.option,
+  //         initialOdds: Number(opt.odds),
+  //       })),
+  //     };
+
+  //     const res = await fetch("/api/bets", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (!res.ok) {
+  //       alert(data.message || "Something went wrong");
+  //       return;
+  //     }
+
+  //     alert("Market Published Successfully ✅");
+  //     await fetchBets();
+  //     setShowLaunchModal(false);
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Server Error ❌");
+  //   }
+  // };
+
   const handlePublishMarket = async () => {
     try {
-      const payload = {
-        tournamentId: tournamentId,
-        title: marketTitle,
-        description: marketRules,
-        startTime: new Date(marketOpens).toISOString(),
-        endTime: new Date(marketCloses).toISOString(),
-        options: options.map((opt) => ({
-          optionName: opt.option,
-          initialOdds: Number(opt.odds),
-        })),
-      };
+      if (!marketOpens || !marketCloses) {
+        alert("Please select bet opens and closes time");
+        return;
+      }
 
-      const res = await fetch("/api/bets", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      if (new Date(marketCloses) <= new Date(marketOpens)) {
+        alert("Bet closes time must be after bet opens time");
+        return;
+      }
+      setSubmitLoading(true);
+
+      const payload = editingBet
+        ? {
+            title: marketTitle,
+            description: marketRules,
+            startTime: new Date(marketOpens).toISOString(),
+            endTime: new Date(marketCloses).toISOString(),
+            options: options.map((opt) => ({
+              id: opt.id,
+              optionName: opt.option,
+              odds: Number(opt.odds),
+            })),
+          }
+        : {
+            tournamentId: tournamentId,
+            title: marketTitle,
+            description: marketRules,
+            startTime: new Date(marketOpens).toISOString(),
+            endTime: new Date(marketCloses).toISOString(),
+            options: options.map((opt) => ({
+              optionName: opt.option,
+              initialOdds: Number(opt.odds),
+            })),
+          };
+
+      const res = await fetch(
+        editingBet ? `/api/bet/${editingBet.betId}` : "/api/bets",
+        {
+          method: editingBet ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       const data = await res.json();
 
@@ -152,15 +211,29 @@ export default function TournamentTeamsPage() {
         return;
       }
 
-      alert("Market Published Successfully ✅");
+      alert(
+        editingBet
+          ? "Bet updated successfully ✅"
+          : "Market Published Successfully ✅",
+      );
+
       await fetchBets();
+
+      setEditingBet(null);
       setShowLaunchModal(false);
+
+      setMarketTitle("");
+      setMarketRules("");
+      setMarketOpens("");
+      setMarketCloses("");
+      setOptions([{ option: "", odds: 1 }]);
     } catch (error) {
       console.error(error);
       alert("Server Error ❌");
+    } finally {
+      setSubmitLoading(false);
     }
   };
-
   useEffect(() => {
     if (!tournamentId) return;
 
@@ -382,6 +455,75 @@ export default function TournamentTeamsPage() {
       [betId]: optionId,
     }));
   };
+  // const handleEditBet = (bet: Bet) => {
+  //   setEditingBet(bet);
+  //   setMarketTitle(bet.title);
+  //   setMarketRules("");
+  //   setMarketOpens("");
+  //   setMarketCloses("");
+
+  //   setOptions(
+  //     bet.options.map((opt) => ({
+  //       id: opt.optionId,
+  //       option: opt.optionName,
+  //       odds: opt.currentOdds,
+  //     })) as any,
+  //   );
+
+  //   setShowLaunchModal(true);
+  // };
+
+  const handleEditBet = (bet: Bet) => {
+    setEditingBet(bet);
+
+    setMarketTitle(bet.title || "");
+    setMarketRules(bet.description || "");
+
+    setMarketOpens(
+      bet.startTime ? new Date(bet.startTime).toISOString().slice(0, 16) : "",
+    );
+
+    setMarketCloses(
+      bet.endTime ? new Date(bet.endTime).toISOString().slice(0, 16) : "",
+    );
+
+    setOptions(
+      bet.options.map((opt) => ({
+        id: opt.optionId,
+        option: opt.optionName,
+        odds: opt.currentOdds,
+      })),
+    );
+
+    setShowLaunchModal(true);
+  };
+
+  const handleDeleteBet = async (betId: string) => {
+    if (!confirm("Are you sure you want to delete this bet?")) return;
+
+    try {
+      setBetActionLoading(betId);
+
+      const res = await fetch(`/api/bet/${betId}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.status === false) {
+        alert(data.message || "Delete failed");
+        return;
+      }
+
+      await fetchBets();
+      alert(data.message || "Bet deleted successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong");
+    } finally {
+      setBetActionLoading(null);
+    }
+  };
 
   // const handleSettleMarket = async (betId: string) => {
   //   debugger;
@@ -578,7 +720,7 @@ export default function TournamentTeamsPage() {
           <div className="w-[90%]">
             {isOpen && (
               <div className="fixed inset-0 bg-[#000000bd] flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg w-[70%] max-w-xl p-6 relative">
+                <div className="bg-white rounded-lg w-[75%] max-w-4xl p-6 relative">
                   <button
                     onClick={() => setIsOpen(false)}
                     className="absolute top-4 right-4 text-slate-500 font-bold"
@@ -589,27 +731,53 @@ export default function TournamentTeamsPage() {
                     All Betting Markets
                   </h2>
                   <div className="space-y-6 max-h-[80vh] overflow-y-auto">
-                    {bets.map((bet) => (
-                      <div key={bet.betId}>
-                        <h3 className="text-base font-bold text-slate-900 mb-4">
-                          {bet.title}
-                        </h3>
+                    {bets.map((bet, index) => (
+                      <div
+                        key={bet.betId}
+                        className="border border-slate-200 rounded-xl p-4 bg-slate-50 shadow-sm"
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                          <div>
+                            <p className="text-xs font-semibold text-primary uppercase">
+                              Market {index + 1}
+                            </p>
+                            <h3 className="text-base font-bold text-slate-900">
+                              {bet.title}
+                            </h3>
+                          </div>
 
-                        <div className="grid grid-cols-1 gap-4">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleEditBet(bet)}
+                              className="px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100"
+                            >
+                              Edit
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteBet(String(bet.betId))}
+                              className="px-3 py-1.5 text-xs font-medium rounded-md border border-red-200 text-red-500 hover:bg-red-50"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {bet.options.map((opt) => (
                             <div
                               key={opt.optionId}
-                              className={`flex flex-col rounded-md p-3 cursor-pointer ${
-                                selectedOptions[bet.betId] === opt.optionId
-                                  ? "bg-primary/20"
-                                  : "bg-white"
-                              }`}
                               onClick={() =>
                                 handleSelect(bet.betId, opt.optionId)
                               }
+                              className={`border rounded-lg p-3 cursor-pointer transition-all ${
+                                selectedOptions[bet.betId] === opt.optionId
+                                  ? "bg-primary/20 border-primary"
+                                  : "bg-white border-slate-200 hover:border-primary/50"
+                              }`}
                             >
-                              <div className="flex justify-between items-center p-3 border rounded-md">
-                                <p className="text-md font-semibold text-slate-600">
+                              <div className="flex justify-between items-center">
+                                <p className="text-md font-semibold text-slate-700">
                                   {opt.optionName}
                                 </p>
                                 <p className="text-md font-bold text-primary">
@@ -634,7 +802,8 @@ export default function TournamentTeamsPage() {
                           >
                             SETTLE Bet
                           </button>
-                          <button className="inline-flex w-[50%] items-center justify-center gap-2 px-4 py-2.5 text-red-400 font-medium rounded-lg transition-colors border">
+
+                          <button className="inline-flex w-[50%] items-center justify-center gap-2 px-4 py-2.5 text-red-500 font-medium rounded-lg transition-colors border border-red-200 bg-white hover:bg-red-50">
                             STOP Bet
                           </button>
                         </div>
@@ -941,127 +1110,145 @@ export default function TournamentTeamsPage() {
                 <X className="w-5 h-5 text-slate-600" />
               </button>
             </div>
-
-            <div className="p-6 space-y-6">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  BET TITLE
-                </label>
-                <input
-                  type="text"
-                  value={marketTitle}
-                  onChange={(e) => setMarketTitle(e.target.value)}
-                  placeholder="e.g. Winner Prediction"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  BET RULES & CONDITIONS
-                </label>
-                <textarea
-                  value={marketRules}
-                  onChange={(e) => setMarketRules(e.target.value)}
-                  placeholder="Specify winning conditions clearly..."
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary min-h-24"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    BET OPENS
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={marketOpens}
-                    onChange={(e) => setMarketOpens(e.target.value)}
-                    placeholder="14/02/2026, 12:30"
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+            <div className="p-6">
+              {submitLoading ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                  <p className="mt-4 text-slate-600 font-medium">
+                    {editingBet ? "Updating Bet..." : "Publishing Bet..."}
+                  </p>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    BET CLOSES
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={marketCloses}
-                    onChange={(e) => setMarketCloses(e.target.value)}
-                    placeholder="14/02/2026, 12:30"
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-              </div>
+              ) : (
+                <div className="p-6 space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      BET TITLE
+                    </label>
+                    <input
+                      type="text"
+                      value={marketTitle}
+                      onChange={(e) => setMarketTitle(e.target.value)}
+                      placeholder="e.g. Winner Prediction"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-semibold text-slate-700">
-                    OUTCOME OPTIONS & ODDS
-                  </label>
-                  <button
-                    onClick={addOption}
-                    className="text-blue-600 hover:text-blue-700 font-semibold text-sm flex items-center gap-1"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Option
-                  </button>
-                </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      BET RULES & CONDITIONS
+                    </label>
+                    <textarea
+                      value={marketRules}
+                      onChange={(e) => setMarketRules(e.target.value)}
+                      placeholder="Specify winning conditions clearly..."
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary min-h-24"
+                    />
+                  </div>
 
-                <div className="space-y-3">
-                  {options.map((opt, index) => (
-                    <div key={index} className="flex gap-3 items-end">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        BET OPENS
+                      </label>
                       <input
-                        type="text"
-                        value={opt.option}
-                        onChange={(e) =>
-                          handleOptionChange(index, "option", e.target.value)
-                        }
-                        placeholder="e.g. Team Apex"
-                        className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"
+                        type="datetime-local"
+                        value={marketOpens}
+                        onChange={(e) => setMarketOpens(e.target.value)}
+                        placeholder="14/02/2026, 12:30"
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       />
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          value={opt.odds}
-                          onChange={(e) =>
-                            handleOptionChange(index, "odds", e.target.value)
-                          }
-                          placeholder="1"
-                          className="w-20 px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-center"
-                          step="0.1"
-                          min="0"
-                        />
-                        <span className="text-slate-500 text-sm">@pds</span>
-                      </div>
-                      {index > 0 && (
-                        <button
-                          onClick={() => removeOption(index)}
-                          className="p-2.5 text-slate-400 hover:text-red-600 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      )}
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        BET CLOSES
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={marketCloses}
+                        onChange={(e) => setMarketCloses(e.target.value)}
+                        placeholder="14/02/2026, 12:30"
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                  </div>
 
-              <div className="flex gap-3 pt-6 border-t border-slate-200">
-                <button
-                  onClick={() => setShowLaunchModal(false)}
-                  className="flex-1 px-4 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  CANCEL
-                </button>
-                <button
-                  onClick={handlePublishMarket}
-                  className="flex-1 px-4 py-3 bg-dark-navy text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  CONFIRM & PUBLISH
-                </button>
-              </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <label className="block text-sm font-semibold text-slate-700">
+                        OUTCOME OPTIONS & ODDS
+                      </label>
+                      <button
+                        onClick={addOption}
+                        className="text-blue-600 hover:text-blue-700 font-semibold text-sm flex items-center gap-1"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Option
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {options.map((opt, index) => (
+                        <div key={index} className="flex gap-3 items-end">
+                          <input
+                            type="text"
+                            value={opt.option}
+                            onChange={(e) =>
+                              handleOptionChange(
+                                index,
+                                "option",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="e.g. Team Apex"
+                            className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"
+                          />
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={opt.odds}
+                              onChange={(e) =>
+                                handleOptionChange(
+                                  index,
+                                  "odds",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="1"
+                              className="w-20 px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-center"
+                              step="0.1"
+                              min="0"
+                            />
+                            <span className="text-slate-500 text-sm">@pds</span>
+                          </div>
+                          {index > 0 && (
+                            <button
+                              onClick={() => removeOption(index)}
+                              className="p-2.5 text-slate-400 hover:text-red-600 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-6 border-t border-slate-200">
+                    <button
+                      onClick={() => setShowLaunchModal(false)}
+                      className="flex-1 px-4 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
+                    >
+                      CANCEL
+                    </button>
+                    <button
+                      onClick={handlePublishMarket}
+                      className="flex-1 px-4 py-3 bg-dark-navy text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      CONFIRM & PUBLISH
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

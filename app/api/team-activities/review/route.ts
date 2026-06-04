@@ -4,13 +4,19 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
+    const accessToken = req.cookies.get("accessToken")?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
     const { activityId, approve } = body;
 
     if (!activityId || typeof approve !== "boolean") {
       return NextResponse.json(
         { success: false, message: "Invalid payload" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -19,7 +25,7 @@ export async function POST(req: NextRequest) {
     if (!token) {
       return NextResponse.json(
         { success: false, message: "Token missing in env" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -29,13 +35,13 @@ export async function POST(req: NextRequest) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           activityId,
           approve,
         }),
-      }
+      },
     );
 
     const data = await backendRes.json();
@@ -46,7 +52,7 @@ export async function POST(req: NextRequest) {
           success: false,
           message: data?.message || "Backend error",
         },
-        { status: backendRes.status }
+        { status: backendRes.status },
       );
     }
 
@@ -58,7 +64,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { success: false, message: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

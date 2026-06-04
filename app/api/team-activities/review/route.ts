@@ -20,15 +20,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const token = process.env.EXTERNAL_API_TOKEN;
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: "Token missing in env" },
-        { status: 500 },
-      );
-    }
-
     const backendRes = await fetch(
       `${API_BASE_URL}/api/team-activities/review`,
       {

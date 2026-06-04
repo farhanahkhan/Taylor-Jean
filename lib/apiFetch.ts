@@ -1,13 +1,11 @@
-export const apiFetch = async (
-  url: string,
-  options?: RequestInit,
-): Promise<Response> => {
+import { handleSessionExpired } from "./sessionExpired";
+
+export const apiFetch = async (url: string, options?: RequestInit) => {
   const res = await fetch(url, options);
 
   if (res.status === 401) {
-    alert("Session expired. Please login again.");
-
-    window.location.href = "/login";
+    await handleSessionExpired();
+    throw new Error("Session expired");
   }
 
   return res;

@@ -87,6 +87,7 @@ export default function DiscoverEventsPage() {
 
   const router = useRouter();
   const addedMembersRef = useRef<HTMLDivElement | null>(null);
+
   const loadMembersFromStorage = (teamId: string) => {
     const savedMembers = localStorage.getItem(`team-members-${teamId}`);
 
@@ -177,7 +178,7 @@ export default function DiscoverEventsPage() {
 
     try {
       const res = await fetch(
-        `/api/general-teams/member?generalTeamId=${teamId}&memberUserId=${memberUserId}`,
+        `/api/general-teams/members?generalTeamId=${teamId}&memberUserId=${memberUserId}`,
         {
           method: "DELETE",
         },
@@ -185,7 +186,11 @@ export default function DiscoverEventsPage() {
 
       const result = await res.json();
 
-      if (!result.status) {
+      if (
+        !res.ok ||
+        !result.status ||
+        result.message === "Captain cannot be removed"
+      ) {
         alert(result.message || "Failed to delete member");
         return;
       }
@@ -197,8 +202,10 @@ export default function DiscoverEventsPage() {
 
         return updated;
       });
+      alert(result.message || "Member deleted successfully");
     } catch (err) {
       console.error("Failed to delete member", err);
+      alert("Something went wrong");
     }
   };
 
@@ -389,25 +396,12 @@ export default function DiscoverEventsPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+
                       setSelectedTournament(tournament);
                       localStorage.setItem("selectedTeamId", tournament.id);
-                      setIsAddModalOpen(true);
-                      setSelectedTournament(tournament);
 
-                      const savedMembers = localStorage.getItem(
-                        `team-members-${tournament.id}`,
-                      );
+                      loadMembersFromStorage(tournament.id);
 
-                      if (savedMembers) {
-                        const parsedMembers = JSON.parse(
-                          savedMembers,
-                        ) as CrewMember[];
-                        setAddedMembers(parsedMembers);
-                      } else {
-                        setAddedMembers([]);
-                      }
-
-                      localStorage.setItem("selectedTeamId", tournament.id);
                       setIsAddModalOpen(true);
                     }}
                     className="w-full mt-4 bg-dark-navy hover:bg-dark text-white font-semibold py-2.5 rounded-lg transition-colors"
@@ -425,7 +419,7 @@ export default function DiscoverEventsPage() {
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
 
-          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto z-50">
+          <Dialog.Content className="fixed inset-x-4 top-4 bottom-4 mx-auto bg-white rounded-xl shadow-xl w-auto max-w-2xl overflow-y-auto z-50">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
               <Dialog.Title className="text-xl font-semibold text-gray-900">
                 Search & Add Crew Member
@@ -460,7 +454,7 @@ export default function DiscoverEventsPage() {
                   Select a user to add ({searchResults.length} results)
                 </label>
 
-                <div className="border border-gray-200 rounded-lg overflow-hidden max-h-[300px] overflow-y-auto">
+                <div className="border border-gray-200 rounded-lg overflow-hidden max-h-[210px] overflow-y-auto">
                   {searchResults.map((angler) => {
                     const isAdded = addedMembers.some(
                       (member) => member.id === angler.id,

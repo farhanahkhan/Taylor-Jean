@@ -15,24 +15,22 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Label } from "@radix-ui/react-label";
 import { useParams } from "next/navigation";
+import Swal from "sweetalert2";
 
 // rightside
 interface ApiMember {
-  id: string;
   userId: string;
-  designation: number;
-  user: {
-    fullName: string;
-    email: string;
-    imageUrl?: string;
-  };
+  fullName: string | null;
+  email: string;
+  isSelected: boolean;
 }
 
 interface ApiTeam {
   id: string;
   name: string;
   displayName: string;
-  members: ApiMember[]; // ✅ members (plural)
+  imageUrl: string | null;
+  members: ApiMember[];
 }
 
 interface TournamentApi {
@@ -72,13 +70,13 @@ export default function TeamTournamentPage() {
   };
 
   const teamPlayers = (selectedTeam?.members ?? []).map((member) => ({
-    id: member.id,
+    id: member.userId,
     userId: member.userId,
-    name: member.userId,
-    fullname: member.user?.fullName,
-    email: member.user?.email,
-    role: getRoleFromDesignation(member.designation),
-    image: member.user?.imageUrl || "/placeholder.svg",
+    name: member.fullName || member.email,
+    fullname: member.fullName || member.email,
+    email: member.email,
+    isSelected: member.isSelected,
+    image: "/placeholder.svg",
   }));
 
   const selectedTournament = tournaments.find(
@@ -120,21 +118,52 @@ export default function TeamTournamentPage() {
 
   useEffect(() => {
     const fetchTeams = async () => {
-      try {
-        const res = await fetch("/api/team/team-profile");
-        const result = await res.json();
+      if (!tournamentId) return;
 
-        if (result.status && result.data.length > 0) {
-          setTeams(result.data);
-          setSelectedTeam(result.data[0]); // auto select first team
+      try {
+        const res = await fetch(
+          `/api/tournaments/general-teams-selected-members?tournamentId=${tournamentId}`,
+        );
+
+        const result: {
+          status: boolean;
+          message?: string;
+          data: ApiTeam[];
+        } = await res.json();
+
+        if (!res.ok || !result.status) {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: result.message || "Failed to fetch teams",
+          });
+          return;
+        }
+
+        setTeams(result.data || []);
+
+        if (result.data?.length > 0) {
+          setSelectedTeam(result.data[0]);
+
+          const alreadySelected = result.data[0].members
+            .filter((member) => member.isSelected)
+            .map((member) => member.userId);
+
+          setSelectedPlayers(alreadySelected);
         }
       } catch (error) {
         console.error("Failed to fetch teams", error);
+
+        Swal.fire({
+          icon: "error",
+          title: "Server Error",
+          text: error instanceof Error ? error.message : "Something went wrong",
+        });
       }
     };
 
     fetchTeams();
-  }, []);
+  }, [tournamentId]);
 
   // const handleConfirmRoster = async () => {
   //   if (!selectedTeam) return;

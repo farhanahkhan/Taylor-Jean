@@ -106,6 +106,9 @@ export default function TournamentsPage() {
   const [selectedPosition, setSelectedPosition] = useState<
     [number, number] | null
   >(null);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<
+    Record<string, boolean>
+  >({});
 
   const router = useRouter();
 
@@ -411,13 +414,41 @@ export default function TournamentsPage() {
                     </div>
                   </div>
 
-                  <div className="p-5 cursor-pointer">
+                  <div className="p-5 cursor-pointer flex flex-col min-h-[170px]">
                     <h3 className="text-lg font-semibold text-slate-900 mb-2">
                       {tournament.title || tournament.name}
                     </h3>
-                    <p className="text-sm text-slate-600 mb-4">
+                    {/* <p className="text-sm text-slate-600 mb-4">
                       {tournament.description || "No description available."}
-                    </p>
+                    </p> */}
+                    <div className="mb-4">
+                      <p
+                        className={`text-sm text-slate-600 ${
+                          expandedDescriptions[tournament.id]
+                            ? ""
+                            : "line-clamp-3"
+                        }`}
+                      >
+                        {tournament.description || "No description available."}
+                      </p>
+
+                      {(tournament.description?.length ?? 0) > 120 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedDescriptions((prev) => ({
+                              ...prev,
+                              [tournament.id]: !prev[tournament.id],
+                            }))
+                          }
+                          className="mt-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                        >
+                          {expandedDescriptions[tournament.id]
+                            ? "See Less"
+                            : "See More"}
+                        </button>
+                      )}
+                    </div>
                     <div className="flex items-center gap-4 text-sm text-slate-500">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="h-4 w-4" />
@@ -426,10 +457,10 @@ export default function TournamentsPage() {
                           {formatDate(tournament.endDate)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5">
+                      {/* <div className="flex items-center gap-1.5">
                         <Users className="h-4 w-4" />
                         <span>{tournament.points || 0} Points</span>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                   {/* </Link> */}

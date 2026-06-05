@@ -11,6 +11,7 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 import { mutate } from "swr";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface Category {
   id: string;
@@ -50,7 +51,7 @@ export default function CategorySpeciesTypePage() {
   const fetchCategories = async (): Promise<void> => {
     setLoading(true);
     try {
-      const res = await fetch("/api/charter-species-type");
+      const res = await apiFetch("/api/charter-species-type");
       if (!res.ok) throw new Error("Failed to fetch");
       const json = await res.json();
       setCategories(
@@ -85,13 +86,13 @@ export default function CategorySpeciesTypePage() {
       let res;
 
       if (editId) {
-        res = await fetch(`/api/charter-species-type/${editId}`, {
+        res = await apiFetch(`/api/charter-species-type/${editId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
-        res = await fetch("/api/charter-species-type", {
+        res = await apiFetch("/api/charter-species-type", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -141,7 +142,7 @@ export default function CategorySpeciesTypePage() {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`/api/charter-species-type/${id}`, {
+      const res = await apiFetch(`/api/charter-species-type/${id}`, {
         method: "DELETE",
       });
 
@@ -174,30 +175,6 @@ export default function CategorySpeciesTypePage() {
     }
   };
 
-  // const handleDelete = async (id: string) => {
-  //   const confirmDelete = confirm("Are you sure?");
-
-  //   if (!confirmDelete) return;
-  //   try {
-  //     const res = await fetch(`/api/charter-categories/${id}`, {
-  //       method: "DELETE",
-  //     });
-
-  //     const data = await res.json();
-
-  //     if (!res.ok) {
-  //       alert(data.message || "Delete failed");
-  //       return;
-  //     }
-
-  //     alert("Deleted successfully");
-
-  //     // mutate();
-  //   } catch (error) {
-  //     console.error(error);
-  //     alert("Something went wrong");
-  //   }
-  // };
   const filteredCategories = categories.filter(
     (cat) =>
       (cat.name ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||

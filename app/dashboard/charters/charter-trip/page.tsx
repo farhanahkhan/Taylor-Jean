@@ -10,6 +10,7 @@ import { Search, Filter, Plus, MoreVertical } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface Category {
   id: string;
@@ -45,7 +46,7 @@ export default function CharterTripPage() {
   const fetchCategories = async (): Promise<void> => {
     setLoading(true);
     try {
-      const res = await fetch("/api/charter-categories-trip");
+      const res = await apiFetch("/api/charter-categories-trip");
       if (!res.ok) throw new Error("Failed to fetch");
       const json = await res.json();
       setCategories(
@@ -80,13 +81,13 @@ export default function CharterTripPage() {
       let res;
 
       if (editId) {
-        res = await fetch(`/api/charter-categories-trip/${editId}`, {
+        res = await apiFetch(`/api/charter-categories-trip/${editId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
-        res = await fetch("/api/charter-categories-trip", {
+        res = await apiFetch("/api/charter-categories-trip", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -136,7 +137,7 @@ export default function CharterTripPage() {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`/api/charter-categories-trip/${id}`, {
+      const res = await apiFetch(`/api/charter-categories-trip/${id}`, {
         method: "DELETE",
       });
 

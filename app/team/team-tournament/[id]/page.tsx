@@ -2,39 +2,46 @@
 
 import { TeamHeader } from "@/app/Components/team-header";
 import { TeamSidebar } from "@/app/Components/team-sidebar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import { Check } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { Label } from "@radix-ui/react-label";
 import { useParams } from "next/navigation";
+import { apiFetch } from "@/lib/apiFetch";
 
 // rightside
+// interface ApiMember {
+//   id: string;
+//   userId: string;
+//   designation: number;
+//   user: {
+//     fullName: string;
+//     email: string;
+//     imageUrl?: string;
+//   };
+// }
+
+// interface ApiTeam {
+//   id: string;
+//   name: string;
+//   displayName: string;
+//   members: ApiMember[]; // ✅ members (plural)
+// }
+// rightside
 interface ApiMember {
-  id: string;
   userId: string;
-  designation: number;
-  user: {
-    fullName: string;
-    email: string;
-    imageUrl?: string;
-  };
+  fullName: string | null;
+  email: string;
+  isSelected: boolean;
 }
 
 interface ApiTeam {
   id: string;
   name: string;
   displayName: string;
-  members: ApiMember[]; // ✅ members (plural)
+  imageUrl: string | null;
+  members: ApiMember[];
 }
-
 interface TournamentApi {
   id: string;
   name: string;
@@ -72,13 +79,13 @@ export default function TeamTournamentPage() {
   };
 
   const teamPlayers = (selectedTeam?.members ?? []).map((member) => ({
-    id: member.id,
+    id: member.userId,
     userId: member.userId,
-    name: member.userId,
-    fullname: member.user?.fullName,
-    email: member.user?.email,
-    role: getRoleFromDesignation(member.designation),
-    image: member.user?.imageUrl || "/placeholder.svg",
+    name: member.fullName || member.email,
+    fullname: member.fullName || member.email,
+    email: member.email,
+    isSelected: member.isSelected,
+    image: "/placeholder.svg",
   }));
 
   const selectedTournament = tournaments.find(
@@ -98,7 +105,7 @@ export default function TeamTournamentPage() {
       try {
         setLoadingTournaments(true);
 
-        const res = await fetch("/api/tournaments");
+        const res = await apiFetch("/api/tournaments");
 
         const result: {
           status: boolean;
@@ -121,7 +128,9 @@ export default function TeamTournamentPage() {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const res = await fetch("/api/team/team-profile");
+        const res = await apiFetch(
+          `/api/tournaments/general-teams-selected-members?tournamentId=${tournamentId}`,
+        );
         const result = await res.json();
 
         if (result.status && result.data.length > 0) {
@@ -189,7 +198,7 @@ export default function TeamTournamentPage() {
     };
 
     try {
-      const res = await fetch("/api/tournaments/register", {
+      const res = await apiFetch("/api/tournaments/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

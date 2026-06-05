@@ -16,6 +16,7 @@ import * as Select from "@radix-ui/react-select";
 
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
+import { apiFetch } from "@/lib/apiFetch";
 
 // const fetchCharterInquiries = async (): Promise<ServiceInquiry[]> => {
 //   const res = await fetch("/api/charter-inquiries");
@@ -46,7 +47,7 @@ interface APIResponse {
 }
 
 const fetchCharterInquiries = async (): Promise<ServiceInquiry[]> => {
-  const res = await fetch("/api/charter-inquiries");
+  const res = await apiFetch("/api/charter-inquiries");
   const json = (await res.json()) as APIResponse; // ✅ Type assertion
 
   return json.data.map((item) => ({
@@ -108,27 +109,6 @@ export default function ServiceInquiryPage() {
       bookingStatus: inquiry.bookingStatus,
     });
   };
-
-  // const handleSaveEdit = async (id: string) => {
-  //   try {
-  //     await updateServiceInquiry(id, editForm); // PUT request
-  //     setEditingId(null);
-  //     setEditForm({});
-  //     mutate(); // re-fetch data
-  //   } catch (error) {
-  //     console.error("Failed to save edit:", error);
-  //     alert("Failed to save changes. Please try again.");
-  //   }
-  // };
-
-  // Replace only your handleSaveEdit function with this version
-
-  // Replace your handleSaveEdit with this version.
-  // IMPORTANT: Backend may require ALL original values, not only edited ones.
-
-  // Replace your handleSaveEdit with this exact code.
-  // This sends the COMPLETE original object merged with edited values,
-  // which is usually required when API returns 200 but data is not updated.
 
   const handleSaveEdit = async (id: string) => {
     try {

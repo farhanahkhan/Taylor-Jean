@@ -21,6 +21,7 @@ import * as Select from "@radix-ui/react-select";
 // import { getCharters, addCharters, deleteCharters } from "@/lib/charters-store";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
+import { apiFetch } from "@/lib/apiFetch";
 // import { addCharters, deleteCharters } from "@/lib/charters-store";
 type CharterCategory = {
   id: string;
@@ -94,30 +95,6 @@ export default function ServicePage() {
     setIsActive(Boolean(item.isActive));
     setIsFileChanged(false); // 👈 reset
   };
-  // const handleDelete = async (id: string) => {
-  //   const confirmDelete = confirm("Are you sure?");
-
-  //   if (!confirmDelete) return;
-  //   try {
-  //     const res = await fetch(`/api/charter-services/${id}`, {
-  //       method: "DELETE",
-  //     });
-
-  //     const data = await res.json();
-
-  //     if (!res.ok) {
-  //       alert(data.message || "Delete failed");
-  //       return;
-  //     }
-
-  //     alert("Deleted successfully");
-
-  //     mutate();
-  //   } catch (error) {
-  //     console.error(error);
-  //     alert("Something went wrong");
-  //   }
-  // };
 
   const handleDelete = async (id: string) => {
     const confirmDelete = confirm("Are you sure?");
@@ -125,7 +102,7 @@ export default function ServicePage() {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`/api/charter-services/${id}`, {
+      const res = await apiFetch(`/api/charter-services/${id}`, {
         method: "DELETE",
       });
 
@@ -152,7 +129,7 @@ export default function ServicePage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch("/api/charter-categories");
+        const res = await apiFetch("/api/charter-categories");
         const json = await res.json();
         const data = json as { data: CharterCategory[] };
 
@@ -223,9 +200,6 @@ export default function ServicePage() {
         return;
       }
 
-      // 3. Full public URL banao
-      // Example:
-      // https://pub-a282791a5a174e8daa69fcf36a7fd132.r2.dev/my-image.jpg
       const finalImageUrl = `${R2_PUBLIC_BASE_URL}/${safeFileName}`;
 
       // 4. State mein full URL save karo
@@ -239,61 +213,6 @@ export default function ServicePage() {
       setIsUploading(false);
     }
   };
-
-  // const handleSubmit = async () => {
-  //   if (!name || !amount || !description || !charterCategoryId) {
-  //     alert("Please fill all required fields");
-  //     return;
-  //   }
-
-  //   try {
-  //     setIsSubmitting(true); // 🔄 loader ON
-  //     const payload = {
-  //       charterName: name, // API field
-  //       description: description,
-  //       baseAmount: amount,
-  //       categoryId: charterCategoryId,
-  //       imageUrl: uploadedFileName, // file name only
-  //       isActive: isActive,
-  //     };
-  //     let res; // ✅ yahan declare karo
-
-  //     if (editId) {
-  //       res = await fetch(`/api/charter-services/${editId}`, {
-  //         method: "PUT",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify(payload),
-  //       });
-  //     } else {
-  //       res = await fetch("/api/charter-services", {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify(payload),
-  //       });
-  //     }
-
-  //     const data = await res.json();
-
-  //     if (data.status) {
-  //       alert("Charter added successfully!");
-  //       // Reset form
-  //       setName("");
-  //       setAmount(0);
-  //       setDescription("");
-  //       setCharterCategoryId("");
-  //       setUploadedFileName("");
-  //       setIsActive(true);
-  //       setShowForm(false);
-
-  //       mutate();
-  //     } else {
-  //       alert("Failed to add charter: " + data.message);
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     alert("Something went wrong!");
-  //   }
-  // };
 
   const handleSubmit = async () => {
     // debugger;
@@ -322,14 +241,14 @@ export default function ServicePage() {
 
       if (editId) {
         // UPDATE
-        res = await fetch(`/api/charter-services/${editId}`, {
+        res = await apiFetch(`/api/charter-services/${editId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
         // CREATE
-        res = await fetch(`/api/charter-services`, {
+        res = await apiFetch(`/api/charter-services`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

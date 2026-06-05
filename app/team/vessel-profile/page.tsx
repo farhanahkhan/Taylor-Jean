@@ -20,6 +20,36 @@ type CrewMember = {
   initials: string;
 };
 
+// type Tournament = {
+//   id: string;
+//   name: string;
+//   location: string;
+//   description: string;
+//   startDate: string;
+//   imageUrl: string;
+//   entryOpen: boolean;
+//   species: [];
+// };
+type ApiTeamMember = {
+  id: string;
+  userId: string;
+  designation: string | null;
+  user: {
+    id: string;
+    displayName: string | null;
+    email: string;
+    fullName: string | null;
+  };
+};
+type ApiTeam = {
+  id: string;
+  name: string;
+  displayName: string;
+  description: string;
+  imageUrl: string | null;
+  members: ApiTeamMember[];
+};
+
 type Tournament = {
   id: string;
   name: string;
@@ -29,15 +59,16 @@ type Tournament = {
   imageUrl: string;
   entryOpen: boolean;
   species: [];
+  members: ApiTeamMember[];
 };
 
-type ApiTeam = {
-  id: string;
-  name: string;
-  displayName: string;
-  description: string;
-  imageUrl: string | null;
-};
+// type ApiTeam = {
+//   id: string;
+//   name: string;
+//   displayName: string;
+//   description: string;
+//   imageUrl: string | null;
+// };
 
 type ApiResponse = {
   status: boolean;
@@ -224,6 +255,7 @@ export default function DiscoverEventsPage() {
           imageUrl: item.imageUrl || "",
           entryOpen: false,
           species: [],
+          members: item.members || [],
         }));
 
         setTournaments(formattedData);
@@ -394,14 +426,42 @@ export default function DiscoverEventsPage() {
                   </p>
 
                   <button
+                    // onClick={(e) => {
+                    //   e.stopPropagation();
+
+                    //   setSelectedTournament(tournament);
+                    //   localStorage.setItem("selectedTeamId", tournament.id);
+
+                    //   loadMembersFromStorage(tournament.id);
+
+                    //   setIsAddModalOpen(true);
+                    // }}
+
                     onClick={(e) => {
                       e.stopPropagation();
 
                       setSelectedTournament(tournament);
                       localStorage.setItem("selectedTeamId", tournament.id);
 
-                      loadMembersFromStorage(tournament.id);
+                      const apiMembers: CrewMember[] = tournament.members.map(
+                        (member) => {
+                          const name =
+                            member.user.fullName ||
+                            member.user.displayName ||
+                            member.user.email;
 
+                          return {
+                            id: member.userId,
+                            name,
+                            email: member.user.email,
+                            role: member.designation || "ANGLER",
+                            status: "Active",
+                            initials: name.slice(0, 2).toUpperCase(),
+                          };
+                        },
+                      );
+
+                      setAddedMembers(apiMembers);
                       setIsAddModalOpen(true);
                     }}
                     className="w-full mt-4 bg-dark-navy hover:bg-dark text-white font-semibold py-2.5 rounded-lg transition-colors"

@@ -39,6 +39,7 @@ import Link from "next/link";
 import { mutate } from "swr";
 import { TeamSidebar } from "@/app/Components/team-sidebar";
 import { TeamHeader } from "@/app/Components/team-header";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface TournamentType {
   id: string;
@@ -169,7 +170,7 @@ export default function TournamentsPage() {
 
   useEffect(() => {
     const fetchTournamentTypes = async () => {
-      const res = await fetch("/api/tournament-types?type=tournament-types");
+      const res = await apiFetch("/api/tournament-types?type=tournament-types");
       const result: { data: TournamentType[] } = await res.json();
       setTournamentTypes(result.data);
     };
@@ -178,7 +179,7 @@ export default function TournamentsPage() {
 
   useEffect(() => {
     const fetchSpecies = async () => {
-      const res = await fetch("/api/tournament-types?type=species");
+      const res = await apiFetch("/api/tournament-types?type=species");
       const result: { data: Species[] } = await res.json();
       setAllowableSpecies(result.data);
     };
@@ -188,7 +189,7 @@ export default function TournamentsPage() {
   const fetchTournaments = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch("/api/tournaments");
+      const res = await apiFetch("/api/tournaments");
       const data: TournamentAPIResponse = await res.json();
 
       const tournamentsWithTitle: Tournament[] = data.data.map((t) => ({

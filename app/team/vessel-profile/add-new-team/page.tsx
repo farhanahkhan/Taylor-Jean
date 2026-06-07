@@ -75,6 +75,7 @@ function VesselProfileContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [isImageUploading, setIsImageUploading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("id");
@@ -164,6 +165,15 @@ function VesselProfileContent() {
   };
 
   const handleUpdateProfile = async () => {
+    if (isImageUploading) {
+      alert("Please wait, image is still uploading.");
+      return;
+    }
+
+    if (!uploadedImageUrl) {
+      alert("Please upload team image first.");
+      return;
+    }
     if (!teamName || !vesselName) {
       alert("Please fill all required fields!");
       return;
@@ -528,12 +538,23 @@ function VesselProfileContent() {
                   </Label.Root>
 
                   <ImageUploader
+                    onUploadStart={() => {
+                      setIsImageUploading(true);
+                      setUploadedImageUrl("");
+                      setBannerPreview(null);
+                    }}
                     onUploadSuccess={(finalImageUrl) => {
                       setUploadedImageUrl(finalImageUrl);
                       setBannerPreview(finalImageUrl);
+                      setIsImageUploading(false);
+                    }}
+                    onUploadError={() => {
+                      setIsImageUploading(false);
+                      setUploadedImageUrl("");
+                      setBannerPreview(null);
+                      alert("Image upload failed. Please try again.");
                     }}
                   />
-
                   {bannerPreview && (
                     <div className="mt-4 relative w-32 h-32 rounded-lg overflow-hidden border">
                       <Image

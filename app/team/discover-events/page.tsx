@@ -463,7 +463,7 @@ export default function TournamentsPage() {
                   </div>
                   {/* </Link> */}
 
-                  <div className="flex justify-end p-3">
+                  {/* <div className="flex justify-end p-3">
                     <DropdownMenu.Root>
                       <DropdownMenu.Trigger asChild>
                         <button
@@ -506,7 +506,7 @@ export default function TournamentsPage() {
                         </DropdownMenu.Item>
                       </DropdownMenu.Content>
                     </DropdownMenu.Root>
-                  </div>
+                  </div> */}
                   <Link href={`/team/team-tournament/${tournament.id}`}>
                     <button className="w-full bg-dark-navy hover:bg-dark text-white font-semibold py-3 rounded-lg transition-colors">
                       Complete Registration

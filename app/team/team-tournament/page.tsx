@@ -79,7 +79,7 @@ export default function TeamTournamentPage() {
     setSelectedPlayers((prev) =>
       prev.includes(playerId)
         ? prev.filter((id) => id !== playerId)
-        : [...prev, playerId]
+        : [...prev, playerId],
     );
   };
   // team tournament id

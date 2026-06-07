@@ -5,12 +5,18 @@ import React, { useState } from "react";
 
 interface ImageUploaderProps {
   onUploadSuccess?: (url: string) => void;
+  onUploadStart?: () => void;
+  onUploadError?: () => void;
 }
 
 const R2_PUBLIC_BASE_URL =
   "https://pub-a282791a5a174e8daa69fcf36a7fd132.r2.dev";
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ onUploadSuccess }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({
+  onUploadSuccess,
+  onUploadStart,
+  onUploadError,
+}) => {
   const [file, setFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,7 +33,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUploadSuccess }) => {
 
   const handleUpload = async () => {
     if (!file) return alert("Please select an image first");
-
+    onUploadStart?.();
     setLoading(true);
     setUploadStatus("Getting signed URL...");
 

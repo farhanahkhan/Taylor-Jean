@@ -42,7 +42,10 @@ interface TournamentApi {
 export default function TeamTournamentPage() {
   const [teams, setTeams] = useState<ApiTeam[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<ApiTeam | null>(null);
-  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  // const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [selectedPlayersByTeam, setSelectedPlayersByTeam] = useState<
+    Record<string, string[]>
+  >({});
   // const [tournamentId, setTournamentId] = useState("");
   const [loadingTournaments, setLoadingTournaments] = useState(false);
   const [tournaments, setTournaments] = useState<TournamentApi[]>([]);
@@ -51,12 +54,30 @@ export default function TeamTournamentPage() {
   const tournamentId = tournamentIdFromUrl;
   // const teamPlayers = selectedTeam?.members || [];
 
+  // const selectAllPlayers = () => {
+  //   if (selectedPlayers.length === teamPlayers.length) {
+  //     setSelectedPlayers([]);
+  //   } else {
+  //     setSelectedPlayers(teamPlayers.map((p) => p.id));
+  //   }
+  // };
+  const selectedPlayers = selectedTeam
+    ? selectedPlayersByTeam[selectedTeam.id] || []
+    : [];
   const selectAllPlayers = () => {
-    if (selectedPlayers.length === teamPlayers.length) {
-      setSelectedPlayers([]);
-    } else {
-      setSelectedPlayers(teamPlayers.map((p) => p.id));
-    }
+    if (!selectedTeam) return;
+
+    setSelectedPlayersByTeam((prev) => {
+      const current = prev[selectedTeam.id] || [];
+
+      return {
+        ...prev,
+        [selectedTeam.id]:
+          current.length === teamPlayers.length
+            ? []
+            : teamPlayers.map((p) => p.id),
+      };
+    });
   };
   const getRoleFromDesignation = (designation: number) => {
     switch (designation) {
@@ -84,11 +105,18 @@ export default function TeamTournamentPage() {
   );
 
   const togglePlayer = (playerId: string) => {
-    setSelectedPlayers((prev) =>
-      prev.includes(playerId)
-        ? prev.filter((id) => id !== playerId)
-        : [...prev, playerId],
-    );
+    if (!selectedTeam) return;
+
+    setSelectedPlayersByTeam((prev) => {
+      const current = prev[selectedTeam.id] || [];
+
+      return {
+        ...prev,
+        [selectedTeam.id]: current.includes(playerId)
+          ? current.filter((id) => id !== playerId)
+          : [...current, playerId],
+      };
+    });
   };
   // team tournament id
   useEffect(() => {
@@ -149,7 +177,10 @@ export default function TeamTournamentPage() {
             .filter((member) => member.isSelected)
             .map((member) => member.userId);
 
-          setSelectedPlayers(alreadySelected);
+          // setSelectedPlayers(alreadySelected);
+          setSelectedPlayersByTeam({
+            [result.data[0].id]: alreadySelected,
+          });
         }
       } catch (error) {
         console.error("Failed to fetch teams", error);
@@ -212,9 +243,10 @@ export default function TeamTournamentPage() {
     const payload = {
       tournamentId, // ✅ dropdown se selected tournamentId
       generalTeamId: selectedTeam.id,
-      selectedMemberUserIds: teamPlayers
-        .filter((p) => selectedPlayers.includes(p.id))
-        .map((p) => p.userId),
+      // selectedMemberUserIds: teamPlayers
+      //   .filter((p) => selectedPlayers.includes(p.id))
+      //   .map((p) => p.userId),
+      selectedMemberUserIds: selectedPlayersByTeam[selectedTeam.id] || [],
     };
 
     try {
@@ -272,7 +304,20 @@ export default function TeamTournamentPage() {
                     {teams.map((team) => (
                       <button
                         key={team.id}
-                        onClick={() => setSelectedTeam(team)}
+                        onClick={() => {
+                          setSelectedTeam(team);
+
+                          if (!selectedPlayersByTeam[team.id]) {
+                            const teamSelectedPlayers = team.members
+                              .filter((member) => member.isSelected)
+                              .map((member) => member.userId);
+
+                            setSelectedPlayersByTeam((prev) => ({
+                              ...prev,
+                              [team.id]: teamSelectedPlayers,
+                            }));
+                          }
+                        }}
                         className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
                           selectedTeam?.id === team.id
                             ? "border-primary/20 bg-primary/10"
@@ -343,6 +388,7 @@ export default function TeamTournamentPage() {
                         <input
                           type="checkbox"
                           checked={
+                            teamPlayers.length > 0 &&
                             selectedPlayers.length === teamPlayers.length
                           }
                           onChange={selectAllPlayers}

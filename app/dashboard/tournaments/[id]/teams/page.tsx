@@ -31,6 +31,7 @@ interface Bet {
   startTime: string;
   endTime: string;
   options: BetOption[];
+  status: "Active" | "Closed";
 }
 
 interface ApiTeamActivity {
@@ -691,29 +692,31 @@ export default function TournamentTeamsPage() {
               )}
 
               <div className="space-y-6 overflow-auto h-[40vh]">
-                {bets.map((bet) => (
-                  <div key={bet.betId}>
-                    <h3 className="text-base font-bold text-slate-900 mb-4">
-                      {bet.title}
-                    </h3>
+                {bets
+                  .filter((bet) => bet.status === "Active")
+                  .map((bet) => (
+                    <div key={bet.betId}>
+                      <h3 className="text-base font-bold text-slate-900 mb-4">
+                        {bet.title}
+                      </h3>
 
-                    <div className="grid grid-cols-1 gap-4 overflow-y-auto">
-                      {bet.options.map((opt) => (
-                        <div
-                          key={opt.optionId}
-                          className="flex justify-between items-center border rounded-md p-3"
-                        >
-                          <p className="text-md font-semibold text-slate-600">
-                            {opt.optionName}
-                          </p>
-                          <p className="text-md font-bold text-primary">
-                            {opt.currentOdds}x
-                          </p>
-                        </div>
-                      ))}
+                      <div className="grid grid-cols-1 gap-4 overflow-y-auto">
+                        {bet.options.map((opt) => (
+                          <div
+                            key={opt.optionId}
+                            className="flex justify-between items-center border rounded-md p-3"
+                          >
+                            <p className="text-md font-semibold text-slate-600">
+                              {opt.optionName}
+                            </p>
+                            <p className="text-md font-bold text-primary">
+                              {opt.currentOdds}x
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           </div>
@@ -744,6 +747,15 @@ export default function TournamentTeamsPage() {
                             <h3 className="text-base font-bold text-slate-900">
                               {bet.title}
                             </h3>
+                            <span
+                              className={`inline-flex items-center px-2 py-1 mt-2 rounded-full text-xs font-semibold ${
+                                bet.status === "Active"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-red-100 text-red-700"
+                              }`}
+                            >
+                              {bet.status}
+                            </span>
                           </div>
 
                           <div className="flex items-center gap-2">

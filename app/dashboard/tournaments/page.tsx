@@ -452,12 +452,12 @@ export default function TournamentsPage() {
         <DashboardHeader />
         <main className="flex-1 p-4 md:p-6 lg:p-8 bg-gray-50 overflow-auto">
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-2">
+            <div className="sm:flex items-center justify-between mb-2">
               <div>
-                <h1 className="text-3xl font-bold text-slate-900">
+                <h1 className="sm:text-3xl text-[24px] font-bold text-slate-900">
                   My Tournaments
                 </h1>
-                <p className="text-slate-600 mt-1">
+                <p className="text-slate-600 mt-1 sm:text-[16px] text-[13px]">
                   Manage your event lifecycles and payouts.
                 </p>
               </div>
@@ -466,7 +466,7 @@ export default function TournamentsPage() {
                   resetForm();
                   setIsModalOpen(true);
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2.5 sm:text-sm text-[10px] font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors sm:mt-0 mt-2"
               >
                 <Plus className="h-4 w-4" />
                 Create New Event

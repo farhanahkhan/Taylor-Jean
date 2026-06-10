@@ -186,13 +186,23 @@ async function getAddress(lat, lng) {
 
   const data = await res.json();
 
-  return [
-    data.city || data.locality || data.principalSubdivision,
-    data.principalSubdivision,
-    data.countryName,
-  ]
-    .filter(Boolean)
-    .join(", ");
+  const city =
+    data.city ||
+    data.locality ||
+    data.localityInfo?.administrative?.find(
+      (item) => item.adminLevel === 8,
+    )?.name ||
+    data.principalSubdivision;
+
+  const state =
+    data.principalSubdivision ||
+    data.localityInfo?.administrative?.find(
+      (item) => item.adminLevel === 4,
+    )?.name;
+
+  const country = data.countryName || "Pakistan";
+
+  return [city, state, country].filter(Boolean).join(", ");
 }
 
 function LocationSelector({
@@ -279,10 +289,15 @@ export default function MapComponent({
         zoom={selectedPosition ? 15 : 5}
         className="h-[450px] w-full rounded-lg"
       >
-<TileLayer
+        {/* <TileLayer url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png" /> */}
+        {/* <TileLayer
   attribution="&copy; OpenStreetMap contributors"
   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-/>
+/> */}
+ <TileLayer
+    attribution='&copy; OpenStreetMap contributors &copy; CARTO'
+    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+  />
 
         <RecenterMap selectedPosition={selectedPosition} />
 

@@ -279,7 +279,10 @@ export default function MapComponent({
         zoom={selectedPosition ? 15 : 5}
         className="h-[450px] w-full rounded-lg"
       >
-        <TileLayer url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png" />
+<TileLayer
+  attribution="&copy; OpenStreetMap contributors"
+  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+/>
 
         <RecenterMap selectedPosition={selectedPosition} />
 

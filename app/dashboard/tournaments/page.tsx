@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { useRouter } from "next/navigation";
+
 import dynamic from "next/dynamic";
 
 import {
@@ -36,7 +36,7 @@ import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 import ImageUploader from "@/app/Components/ImageUploader";
 import Link from "next/link";
-import { mutate } from "swr";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface TournamentType {
   id: string;
@@ -87,7 +87,6 @@ interface TournamentAPIResponse {
 }
 
 export default function TournamentsPage() {
-  // 🛠️ REFRESH FIX 1: Internal Component Refresh Key
   const [pageRefreshKey, setPageRefreshKey] = useState(0);
 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -104,8 +103,9 @@ export default function TournamentsPage() {
   const [selectedPosition, setSelectedPosition] = useState<
     [number, number] | null
   >(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const router = useRouter();
+  // const router = useRouter();
 
   const MapComponent = dynamic(() => import("../../Components/MapComponent"), {
     ssr: false,
@@ -164,7 +164,8 @@ export default function TournamentsPage() {
 
   useEffect(() => {
     const fetchTournamentTypes = async () => {
-      const res = await fetch("/api/tournament-types?type=tournament-types");
+      const res = await apiFetch("/api/tournament-types?type=tournament-types");
+
       const result: { data: TournamentType[] } = await res.json();
       setTournamentTypes(result.data);
     };
@@ -173,17 +174,37 @@ export default function TournamentsPage() {
 
   useEffect(() => {
     const fetchSpecies = async () => {
-      const res = await fetch("/api/tournament-types?type=species");
+      const res = await apiFetch("/api/tournament-types?type=species");
       const result: { data: Species[] } = await res.json();
       setAllowableSpecies(result.data);
     };
     fetchSpecies();
   }, [pageRefreshKey]);
 
+  const safeJson = async (res: Response) => {
+    const text = await res.text();
+
+    try {
+      return text ? JSON.parse(text) : {};
+    } catch {
+      return {
+        message:
+          res.status === 401
+            ? "Session expired. Please login again."
+            : "Invalid response from server",
+      };
+    }
+  };
+
+  const handleUnauthorized = () => {
+    alert("Session expired. Please login again.");
+    window.location.href = "/login";
+  };
+
   const fetchTournaments = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch("/api/tournaments");
+      const res = await apiFetch("/api/tournaments");
       const data: TournamentAPIResponse = await res.json();
 
       const tournamentsWithTitle: Tournament[] = data.data.map((t) => ({
@@ -207,9 +228,61 @@ export default function TournamentsPage() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [field]: "",
+    }));
   };
 
   const handleLaunchTournament = async () => {
+    const validationErrors: Record<string, string> = {};
+
+    if (!formData.title.trim())
+      validationErrors.title = "This field is required";
+
+    // if (!formData.description.trim())
+    //   validationErrors.description = "This field is required";
+
+    if (!formData.location.trim())
+      validationErrors.location = "This field is required";
+
+    if (!formData.tournamentType)
+      validationErrors.tournamentType = "This field is required";
+
+    if (!formData.startDate)
+      validationErrors.startDate = "This field is required";
+
+    if (!formData.endDate) validationErrors.endDate = "This field is required";
+
+    // if (!formData.entryFee)
+    //   validationErrors.entryFee = "This field is required";
+
+    const isBannerMissing = !uploadedImageUrl && !formData.imageUrl;
+
+    if (isBannerMissing) {
+      validationErrors.imageUrl = "This field is required";
+    }
+
+    // if (!uploadedImageUrl && !formData.imageUrl)
+    //   validationErrors.imageUrl = "This field is required";
+
+    // if (selectedSpecies.length === 0)
+    //   validationErrors.species = "This field is required";
+
+    // const hasEmptyPoints = selectedSpecies.some(
+    //   (s) => s.points === "" || Number(s.points) <= 0,
+    // );
+
+    // if (hasEmptyPoints)
+    //   validationErrors.speciesPoints = "Species points are required";
+
+    setErrors(validationErrors);
+
+    if (isBannerMissing) {
+      alert("Please upload a tournament banner first!");
+    }
+    if (Object.keys(validationErrors).length > 0) return;
     const finalImage = uploadedImageUrl || formData.imageUrl;
 
     if (!finalImage) {
@@ -298,11 +371,26 @@ export default function TournamentsPage() {
     });
   };
 
+  // const handlePointChange = (speciesId: string, value: string) => {
+  //   setSelectedSpecies((prev) =>
+  //     prev.map((item) =>
+  //       item.speciesId === speciesId
+  //         ? { ...item, points: Number(value) }
+  //         : item,
+  //     ),
+  //   );
+  // };
+
   const handlePointChange = (speciesId: string, value: string) => {
+    setErrors((prev) => ({
+      ...prev,
+      speciesPoints: "",
+    }));
+
     setSelectedSpecies((prev) =>
       prev.map((item) =>
-        item.speciesId === speciesId
-          ? { ...item, points: Number(value) }
+        String(item.speciesId) === String(speciesId)
+          ? { ...item, points: value }
           : item,
       ),
     );
@@ -562,6 +650,11 @@ export default function TournamentsPage() {
                       >
                         <MapPin className="w-5 h-5" />
                       </button>
+                      {errors.location && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.location}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -583,7 +676,6 @@ export default function TournamentsPage() {
                     </Dialog>
                   )}
                 </div>
-
                 <div>
                   <Label
                     htmlFor="event-title"
@@ -598,8 +690,10 @@ export default function TournamentsPage() {
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
                   />
+                  {errors.title && (
+                    <p className="text-red-500 text-xs mt-1">{errors.title}</p>
+                  )}
                 </div>
-
                 <div>
                   <Label
                     htmlFor="description"
@@ -616,8 +710,12 @@ export default function TournamentsPage() {
                       handleInputChange("description", e.target.value)
                     }
                   />
+                  {errors.description && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.description}
+                    </p>
+                  )}
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label
@@ -643,9 +741,13 @@ export default function TournamentsPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {errors.tournamentType && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.tournamentType}
+                      </p>
+                    )}
                   </div>
-                </div>
-
+                </div>{" "}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label
@@ -663,6 +765,11 @@ export default function TournamentsPage() {
                         handleInputChange("startDate", e.target.value)
                       }
                     />
+                    {errors.startDate && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.startDate}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label
@@ -680,9 +787,13 @@ export default function TournamentsPage() {
                         handleInputChange("endDate", e.target.value)
                       }
                     />
+                    {errors.endDate && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.endDate}
+                      </p>
+                    )}
                   </div>
                 </div>
-
                 <div>
                   <Label className="text-xs font-medium text-slate-500 uppercase mb-2 block">
                     Allowable Species
@@ -710,9 +821,15 @@ export default function TournamentsPage() {
                             <input
                               type="number"
                               placeholder="Enter points"
+                              // value={
+                              //   selectedSpecies.find(
+                              //     (s) => s.speciesId === species.id,
+                              //   )?.points ?? ""
+                              // }
                               value={
                                 selectedSpecies.find(
-                                  (s) => s.speciesId === species.id,
+                                  (s) =>
+                                    String(s.speciesId) === String(species.id),
                                 )?.points ?? ""
                               }
                               onChange={(e) =>
@@ -725,8 +842,18 @@ export default function TournamentsPage() {
                       );
                     })}
                   </div>
-                </div>
+                  {errors.species && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.species}
+                    </p>
+                  )}
 
+                  {errors.speciesPoints && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.speciesPoints}
+                    </p>
+                  )}
+                </div>
                 <div>
                   <Label className="text-xs font-medium text-slate-500 uppercase mb-3 block">
                     Financials & Scoring
@@ -749,10 +876,14 @@ export default function TournamentsPage() {
                           handleInputChange("entryFee", e.target.value)
                         }
                       />
+                      {errors.entryFee && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.entryFee}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
-
                 <div className="pt-2">
                   <button
                     onClick={handleLaunchTournament}

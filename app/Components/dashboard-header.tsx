@@ -46,7 +46,11 @@ const navItems = [
   { icon: LayoutGrid, label: "Dashboard", href: "/dashboard", active: true },
 
   { icon: Anchor, label: "Charter", href: "/dashboard/charter" },
-  { icon: Users, label: "User Management", href: "/dashboard/user_management" },
+  {
+    icon: Users,
+    label: "User Management",
+    href: "/dashboard/user_management",
+  },
   { icon: Users2, label: "Team Management", href: "#" },
   { icon: Trophy, label: "Tournaments", href: "/dashboard/tournaments" },
   {
@@ -250,7 +254,7 @@ export function DashboardHeader() {
                         className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
                           isActive
                             ? "bg-primary/10 text-primary"
-                            : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                            : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
                         }`}
                       >
                         <item.icon className="h-5 w-5" />

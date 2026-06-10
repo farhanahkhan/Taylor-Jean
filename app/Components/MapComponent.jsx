@@ -1,11 +1,181 @@
+// "use client";
+
+// import { MapContainer, TileLayer, useMapEvents, Marker } from "react-leaflet";
+// import "leaflet/dist/leaflet.css";
+
+// /* -----------------------------
+//    Click Handler
+// ------------------------------*/
+// function LocationSelector({
+//   setFormData,
+//   setSelectedPosition,
+//   setIsMapOpen,
+// }) {
+//   useMapEvents({
+//     click: async (e) => {
+//       const { lat, lng } = e.latlng;
+
+//       setSelectedPosition([lat, lng]);
+
+//       try {
+//         const res = await fetch(
+//           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`
+//         );
+
+//         const data = await res.json();
+//         const addr = data.address || {};
+
+//         const address = [
+//           addr.city || addr.town || addr.village || addr.suburb || addr.county,
+//           addr.state,
+//           addr.country,
+//         ]
+//           .filter(Boolean)
+//           .join(", ");
+
+//         setFormData((prev) => ({
+//           ...prev,
+//           location: address,
+//           latitude: lat,
+//           longitude: lng,
+//         }));
+
+//         // ✅ CLOSE MAP AFTER SELECT
+//         if (setIsMapOpen) setIsMapOpen(false);
+//       } catch (err) {
+//         console.log("Reverse geocode error", err);
+//       }
+//     },
+//   });
+
+//   return null;
+// }
+
+// /* -----------------------------
+//    MAIN COMPONENT
+// ------------------------------*/
+// export default function MapComponent({
+//   setFormData,
+//   setSelectedPosition,
+//   selectedPosition,
+//   setIsMapOpen,
+// }) {
+//   const getCurrentLocation = () => {
+//     if (!navigator.geolocation) {
+//       alert("Geolocation not supported");
+//       return;
+//     }
+
+//     navigator.geolocation.getCurrentPosition(async (position) => {
+//       const lat = position.coords.latitude;
+//       const lng = position.coords.longitude;
+
+//       setSelectedPosition([lat, lng]);
+
+//       const res = await fetch(
+//         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`
+//       );
+
+//       const data = await res.json();
+//       const addr = data.address || {};
+
+//       const address = [
+//         addr.city || addr.town || addr.village || addr.suburb || addr.county,
+//         addr.state,
+//         addr.country,
+//       ]
+//         .filter(Boolean)
+//         .join(", ");
+
+//       setFormData((prev) => ({
+//         ...prev,
+//         location: address,
+//         latitude: lat,
+//         longitude: lng,
+//       }));
+//     });
+//   };
+
+//   return (
+//     <div className="h-full w-full">
+//       <button
+//         type="button"
+//         onClick={getCurrentLocation}
+//         className="mb-3 px-3 py-2 bg-green-600 text-white rounded"
+//       >
+//         📍 Use Current Location
+//       </button>
+
+//       <MapContainer
+//         center={selectedPosition || [30.3753, 69.3451]}
+//         zoom={5}
+//         className="h-[450px] w-full rounded-lg"
+//       >
+//         <TileLayer url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png" />
+
+//         <LocationSelector
+//           setFormData={setFormData}
+//           setSelectedPosition={setSelectedPosition}
+//           setIsMapOpen={setIsMapOpen}
+//         />
+
+//         {selectedPosition && <Marker position={selectedPosition} />}
+//       </MapContainer>
+//     </div>
+//   );
+// }
+
 "use client";
 
-import { MapContainer, TileLayer, useMapEvents, Marker } from "react-leaflet";
+import { useEffect } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  useMapEvents,
+  Marker,
+  useMap,
+} from "react-leaflet";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-/* -----------------------------
-   Click Handler
-------------------------------*/
+const redIcon = new L.Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+  shadowUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+function RecenterMap({ selectedPosition }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (selectedPosition) {
+      map.setView(selectedPosition, 15);
+    }
+  }, [selectedPosition, map]);
+
+  return null;
+}
+
+async function getAddress(lat, lng) {
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`,
+  );
+
+  const data = await res.json();
+  const addr = data.address || {};
+
+  return [
+    addr.city || addr.town || addr.village || addr.suburb || addr.county,
+    addr.state,
+    addr.country,
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
 function LocationSelector({
   setFormData,
   setSelectedPosition,
@@ -18,20 +188,7 @@ function LocationSelector({
       setSelectedPosition([lat, lng]);
 
       try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`
-        );
-
-        const data = await res.json();
-        const addr = data.address || {};
-
-        const address = [
-          addr.city || addr.town || addr.village || addr.suburb || addr.county,
-          addr.state,
-          addr.country,
-        ]
-          .filter(Boolean)
-          .join(", ");
+        const address = await getAddress(lat, lng);
 
         setFormData((prev) => ({
           ...prev,
@@ -40,7 +197,6 @@ function LocationSelector({
           longitude: lng,
         }));
 
-        // ✅ CLOSE MAP AFTER SELECT
         if (setIsMapOpen) setIsMapOpen(false);
       } catch (err) {
         console.log("Reverse geocode error", err);
@@ -51,9 +207,6 @@ function LocationSelector({
   return null;
 }
 
-/* -----------------------------
-   MAIN COMPONENT
-------------------------------*/
 export default function MapComponent({
   setFormData,
   setSelectedPosition,
@@ -66,34 +219,30 @@ export default function MapComponent({
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
 
-      setSelectedPosition([lat, lng]);
+        setSelectedPosition([lat, lng]);
 
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`
-      );
+        try {
+          const address = await getAddress(lat, lng);
 
-      const data = await res.json();
-      const addr = data.address || {};
-
-      const address = [
-        addr.city || addr.town || addr.village || addr.suburb || addr.county,
-        addr.state,
-        addr.country,
-      ]
-        .filter(Boolean)
-        .join(", ");
-
-      setFormData((prev) => ({
-        ...prev,
-        location: address,
-        latitude: lat,
-        longitude: lng,
-      }));
-    });
+          setFormData((prev) => ({
+            ...prev,
+            location: address,
+            latitude: lat,
+            longitude: lng,
+          }));
+        } catch (err) {
+          console.log("Current location error", err);
+        }
+      },
+      () => {
+        alert("Please allow location permission");
+      },
+    );
   };
 
   return (
@@ -108,10 +257,12 @@ export default function MapComponent({
 
       <MapContainer
         center={selectedPosition || [30.3753, 69.3451]}
-        zoom={5}
+        zoom={selectedPosition ? 15 : 5}
         className="h-[450px] w-full rounded-lg"
       >
         <TileLayer url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png" />
+
+        <RecenterMap selectedPosition={selectedPosition} />
 
         <LocationSelector
           setFormData={setFormData}
@@ -119,7 +270,9 @@ export default function MapComponent({
           setIsMapOpen={setIsMapOpen}
         />
 
-        {selectedPosition && <Marker position={selectedPosition} />}
+        {selectedPosition && (
+          <Marker position={selectedPosition} icon={redIcon} />
+        )}
       </MapContainer>
     </div>
   );

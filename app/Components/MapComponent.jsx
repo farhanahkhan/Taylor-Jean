@@ -159,18 +159,37 @@ function RecenterMap({ selectedPosition }) {
   return null;
 }
 
+// async function getAddress(lat, lng) {
+//   const res = await fetch(
+//     `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`,
+//   );
+
+//   const data = await res.json();
+//   const addr = data.address || {};
+
+//   return [
+//     addr.city || addr.town || addr.village || addr.suburb || addr.county,
+//     addr.state,
+//     addr.country,
+//   ]
+//     .filter(Boolean)
+//     .join(", ");
+// }
 async function getAddress(lat, lng) {
   const res = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`,
+    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`,
   );
 
+  if (!res.ok) {
+    throw new Error("Failed to fetch address");
+  }
+
   const data = await res.json();
-  const addr = data.address || {};
 
   return [
-    addr.city || addr.town || addr.village || addr.suburb || addr.county,
-    addr.state,
-    addr.country,
+    data.city || data.locality || data.principalSubdivision,
+    data.principalSubdivision,
+    data.countryName,
   ]
     .filter(Boolean)
     .join(", ");

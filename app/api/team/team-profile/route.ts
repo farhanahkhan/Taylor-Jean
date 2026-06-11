@@ -165,6 +165,12 @@ export async function POST(req: NextRequest) {
       gadgets: body.gadgets || "",
       imageUrl: body.imageUrl || "",
       boatName: body.boatName || "",
+      affiliation: body.affiliation || "",
+      homePort: body.homePort || "",
+      publicEmail: body.publicEmail || "",
+      teamWebsite: body.teamWebsite || "",
+      instagramHandle: body.instagramHandle || "",
+      vesselImageUrl: body.vesselImageUrl || "",
     };
 
     const res = await fetch(CREATE_TEAM_URL, {

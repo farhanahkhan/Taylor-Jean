@@ -5,12 +5,19 @@ import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { ArrowLeft, Plus, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
 import { Navigation } from "swiper/modules";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MarketOption {
   id?: string;
@@ -103,6 +110,27 @@ export default function TournamentTeamsPage() {
 
   const removeOption = (index: number) => {
     setOptions(options.filter((_, i) => i !== index));
+  };
+  const [statusFilter, setStatusFilter] = useState("All");
+
+  const searchParams = useSearchParams();
+
+  const tournamentDetail = {
+    name: searchParams.get("name"),
+    displayName: searchParams.get("displayName"),
+    description: searchParams.get("description"),
+    place: searchParams.get("place"),
+    startDate: searchParams.get("startDate"),
+    endDate: searchParams.get("endDate"),
+  };
+
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return "";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   const handleOptionChange = (
@@ -562,6 +590,14 @@ export default function TournamentTeamsPage() {
   //   }
   // };
 
+  const statuses = [
+    "All",
+    ...Array.from(new Set(bets.map((bet) => bet.status))),
+  ];
+  const filteredBets =
+    statusFilter === "All"
+      ? bets
+      : bets.filter((bet) => bet.status === statusFilter);
   return (
     <div className="flex min-h-screen bg-slate-50">
       <DashboardSidebar />
@@ -575,14 +611,21 @@ export default function TournamentTeamsPage() {
                   href="/dashboard"
                   className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-slate-200 transition-colors"
                 >
-                  <ArrowLeft className="w-5 h-5 text-slate-600" />
+                  <ArrowLeft className="w-5 h-5 text-slate-600 " />
                 </Link>
                 <div>
                   <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
-                    Everglades Challenge
+                    {tournamentDetail?.name || "Tournament Detail"}
                   </h1>
+                  {tournamentDetail.description && (
+                    <p className="mt-2 text-sm text-slate-500 max-w-2xl">
+                      {tournamentDetail.description}
+                    </p>
+                  )}
                   <p className="text-sm text-slate-600">
-                    Control Dashboard • Florida Keys
+                    {tournamentDetail?.displayName || ""} •{" "}
+                    {formatDate(tournamentDetail?.startDate)} -{" "}
+                    {formatDate(tournamentDetail?.endDate)}
                   </p>
                 </div>
               </div>
@@ -730,11 +773,29 @@ export default function TournamentTeamsPage() {
                   >
                     ✕
                   </button>
-                  <h2 className="text-lg font-bold mb-4">
-                    All Betting Markets
-                  </h2>
-                  <div className="space-y-6 max-h-[80vh] overflow-y-auto">
-                    {bets.map((bet, index) => (
+                  <div className="flex items-center justify-between mb-4 pr-8">
+                    <h2 className="text-lg font-bold">All Betting Markets</h2>
+
+                    <Select
+                      value={statusFilter}
+                      onValueChange={setStatusFilter}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select Status" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        {statuses.map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-6 h-[70vh] overflow-y-auto pr-2">
+                    {/* {bets.map((bet, index) => ( */}
+                    {filteredBets.map((bet, index) => (
                       <div
                         key={bet.betId}
                         className="border border-slate-200 rounded-xl p-4 bg-slate-50 shadow-sm"
@@ -779,13 +840,16 @@ export default function TournamentTeamsPage() {
                           {bet.options.map((opt) => (
                             <div
                               key={opt.optionId}
-                              onClick={() =>
-                                handleSelect(bet.betId, opt.optionId)
-                              }
-                              className={`border rounded-lg p-3 cursor-pointer transition-all ${
-                                selectedOptions[bet.betId] === opt.optionId
-                                  ? "bg-primary/20 border-primary"
-                                  : "bg-white border-slate-200 hover:border-primary/50"
+                              onClick={() => {
+                                if (bet.status !== "Active") return;
+                                handleSelect(bet.betId, opt.optionId);
+                              }}
+                              className={`border rounded-lg p-3 transition-all ${
+                                bet.status !== "Active"
+                                  ? "bg-gray-100 border-gray-200 opacity-60 cursor-not-allowed"
+                                  : selectedOptions[bet.betId] === opt.optionId
+                                    ? "bg-primary/20 border-primary cursor-pointer"
+                                    : "bg-white border-slate-200 hover:border-primary/50 cursor-pointer"
                               }`}
                             >
                               <div className="flex justify-between items-center">
@@ -806,7 +870,8 @@ export default function TournamentTeamsPage() {
                               handleSettleMarket(String(bet.betId))
                             }
                             disabled={!selectedOptions[bet.betId]}
-                            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 w-[50%] font-medium rounded-lg transition-colors ${
+                            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 w-full font-medium rounded-lg transition-colors ${
+                              bet.status === "Active" &&
                               selectedOptions[bet.betId]
                                 ? "bg-foreground text-white"
                                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -815,9 +880,9 @@ export default function TournamentTeamsPage() {
                             SETTLE Bet
                           </button>
 
-                          <button className="inline-flex w-[50%] items-center justify-center gap-2 px-4 py-2.5 text-red-500 font-medium rounded-lg transition-colors border border-red-200 bg-white hover:bg-red-50">
+                          {/* <button className="inline-flex w-[50%] items-center justify-center gap-2 px-4 py-2.5 text-red-500 font-medium rounded-lg transition-colors border border-red-200 bg-white hover:bg-red-50">
                             STOP Bet
-                          </button>
+                          </button> */}
                         </div>
                       </div>
                     ))}

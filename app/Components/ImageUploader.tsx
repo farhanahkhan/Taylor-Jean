@@ -3,16 +3,26 @@
 import Image from "next/image";
 import React, { useState } from "react";
 
+// interface ImageUploaderProps {
+//   onUploadSuccess?: (url: string) => void;
+//   onUploadStart?: () => void;
+//   onUploadError?: () => void;
+// }
 interface ImageUploaderProps {
+  inputId?: string;
+  buttonText?: string;
+  labelText?: string;
   onUploadSuccess?: (url: string) => void;
   onUploadStart?: () => void;
   onUploadError?: () => void;
 }
-
 const R2_PUBLIC_BASE_URL =
   "https://pub-a282791a5a174e8daa69fcf36a7fd132.r2.dev";
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({
+  inputId = "image-upload",
+  buttonText = "Upload Image",
+  labelText = "Click to upload image",
   onUploadSuccess,
   onUploadStart,
   onUploadError,
@@ -86,13 +96,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       <div className="relative">
         <input
           type="file"
-          id="banner-upload"
+          id={inputId}
           accept="image/*"
           onChange={handleBannerSelect}
           className="hidden"
         />
         <label
-          htmlFor="banner-upload"
+          htmlFor={inputId}
           className="relative flex flex-col items-center justify-center h-32 bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors overflow-hidden"
         >
           {bannerPreview ? (
@@ -111,9 +121,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 height={32}
                 className="mb-2"
               />
-              <p className="text-sm font-medium text-slate-600">
-                Click to upload banner
-              </p>
+              <p className="text-sm font-medium text-slate-600">{labelText}</p>
               <p className="text-xs text-slate-400 mt-1">
                 Optimal size: 1200×600px
               </p>
@@ -127,7 +135,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         disabled={loading}
         className="px-4 py-2 bg-dark-navy text-white rounded disabled:opacity-60"
       >
-        {loading ? "Uploading..." : "Upload Banner"}
+        {loading ? "Uploading..." : buttonText}
       </button>
 
       {uploadStatus && <p className="text-sm text-slate-600">{uploadStatus}</p>}

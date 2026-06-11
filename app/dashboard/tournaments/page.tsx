@@ -492,7 +492,19 @@ export default function TournamentsPage() {
                   key={tournament.id}
                   className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 hover:shadow-md transition-shadow"
                 >
-                  <Link href={`/dashboard/tournaments/${tournament.id}/teams`}>
+                  {/* <Link href={`/dashboard/tournaments/${tournament.id}/teams`}> */}
+                  <Link
+                    href={{
+                      pathname: `/dashboard/tournaments/${tournament.id}/teams`,
+                      query: {
+                        name: tournament.name || tournament.title,
+                        place: tournament.place || "",
+                        description: tournament.description || "",
+                        startDate: tournament.startDate,
+                        endDate: tournament.endDate,
+                      },
+                    }}
+                  >
                     <div className="relative h-48 cursor-pointer">
                       <Image
                         src={tournament.imageUrl || "/placeholder.svg"}

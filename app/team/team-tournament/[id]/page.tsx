@@ -94,7 +94,7 @@ export default function TeamTournamentPage() {
     id: member.userId,
     userId: member.userId,
     name: member.fullName || member.email,
-    fullname: member.fullName || member.email,
+    fullname: member.fullName,
     email: member.email,
     isSelected: member.isSelected,
     image: "/placeholder.svg",
@@ -428,13 +428,12 @@ export default function TeamTournamentPage() {
                                 className="object-cover"
                               />
                             </div>
-                            <div>
-                              <p className="font-bold text-foreground">
+                            <div className="min-w-0">
+                              <p className="font-bold text-foreground truncate">
                                 {player.fullname}
                               </p>
-                              <p className="text-sm text-muted-foreground">
-                                {/* {player.role} */}
-                                {/* {player.email} */}
+                              <p className="text-sm text-muted-foreground truncate">
+                                {player.email}
                               </p>
                             </div>
                           </div>

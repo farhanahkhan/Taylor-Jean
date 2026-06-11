@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from "next/image";
+import { apiFetch } from "@/lib/apiFetch";
 // import { useRouter } from "next/navigation";
 
 interface ApiTeam {
@@ -39,6 +40,12 @@ interface ApiTeam {
   createdDate: string;
   imageUrl: string;
   boatName: string;
+  affiliation: string;
+  homePort: string;
+  publicEmail: string;
+  vesselImageUrl: string;
+  teamWebsite: string;
+  instagramHandle: string;
 }
 interface VesselProfile {
   id: string;
@@ -63,6 +70,11 @@ function VesselProfileContent() {
   const [electronics, setElectronics] = useState<string[]>([]);
   const [newElectronics, setNewElectronics] = useState("");
   const [boatName, setBoatName] = useState("");
+  const [affiliation, setAffiliation] = useState("");
+  const [homePort, setHomePort] = useState("");
+  const [publicEmail, setPublicEmail] = useState("");
+  const [teamWebsite, setTeamWebsite] = useState("");
+  const [instagramHandle, setInstagramHandle] = useState("");
 
   const [profiles, setProfiles] = useState<VesselProfile[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -75,10 +87,16 @@ function VesselProfileContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [vesselImageUrl, setVesselImageUrl] = useState("");
+  const [vesselPreview, setVesselPreview] = useState<string | null>(null);
   const [isImageUploading, setIsImageUploading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("id");
+  const [errors, setErrors] = useState({
+    teamName: "",
+    vesselName: "",
+  });
 
   useEffect(() => {
     const fetchEditTeam = async () => {
@@ -101,6 +119,11 @@ function VesselProfileContent() {
       setLength(String(data.length || ""));
       setEngines(data.engine || "");
       setBoatName(data.boatName || "");
+      setAffiliation(data.affiliation || "");
+      setHomePort(data.homePort || "");
+      setPublicEmail(data.publicEmail || "");
+      setTeamWebsite(data.teamWebsite || "");
+      setInstagramHandle(data.instagramHandle || "");
       setElectronics(
         data.gadgets
           ? data.gadgets.split(",").map((x: string) => x.trim())
@@ -108,6 +131,8 @@ function VesselProfileContent() {
       );
       setUploadedImageUrl(data.imageUrl || "");
       setBannerPreview(data.imageUrl || "");
+      setVesselImageUrl(data.vesselImageUrl || "");
+      setVesselPreview(data.vesselImageUrl || "");
       setEditingId(data.id);
     };
 
@@ -119,7 +144,7 @@ function VesselProfileContent() {
       try {
         setLoadingTournaments(true);
 
-        const res = await fetch("/api/tournaments");
+        const res = await apiFetch("/api/tournaments");
 
         const result: {
           status: boolean;
@@ -141,7 +166,7 @@ function VesselProfileContent() {
 
   const fetchTeams = async () => {
     try {
-      const res = await fetch("/api/team/team-profile");
+      const res = await apiFetch("/api/team/team-profile");
       const result: { data: ApiTeam | ApiTeam[] } = await res.json();
 
       const apiData = Array.isArray(result.data) ? result.data : [result.data];
@@ -165,15 +190,30 @@ function VesselProfileContent() {
   };
 
   const handleUpdateProfile = async () => {
+    const newErrors = {
+      teamName: "",
+      vesselName: "",
+    };
+
+    if (!teamName.trim()) {
+      newErrors.teamName = "This field is required";
+    }
+
+    if (!vesselName.trim()) {
+      newErrors.vesselName = "This field is required";
+    }
+
+    setErrors(newErrors);
+
+    if (newErrors.teamName || newErrors.vesselName) {
+      return;
+    }
+
     if (isImageUploading) {
       alert("Please wait, image is still uploading.");
       return;
     }
 
-    if (!uploadedImageUrl) {
-      alert("Please upload team image first.");
-      return;
-    }
     if (!teamName || !vesselName) {
       alert("Please fill all required fields!");
       return;
@@ -190,12 +230,18 @@ function VesselProfileContent() {
       engine: engines,
       gadgets: electronics.join(", "),
       boatName: boatName,
+      affiliation: affiliation,
+      homePort: homePort,
+      publicEmail: publicEmail,
+      vesselImageUrl: vesselImageUrl,
+      teamWebsite: teamWebsite,
+      instagramHandle: instagramHandle,
       imageUrl: uploadedImageUrl,
       isActive: true,
     };
 
     try {
-      const res = await fetch(
+      const res = await apiFetch(
         editingId
           ? `/api/team/team-profile/${editingId}`
           : "/api/team/team-profile",
@@ -233,6 +279,11 @@ function VesselProfileContent() {
         setBoatName("");
         setTournamentId("");
         setUploadedImageUrl("");
+        setAffiliation("");
+        setHomePort("");
+        setPublicEmail("");
+        setTeamWebsite("");
+        setInstagramHandle("");
       }
     } catch (error) {
       console.error("Error creating team:", error);
@@ -302,7 +353,7 @@ function VesselProfileContent() {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const res = await fetch("/api/team/team-profile");
+        const res = await apiFetch("/api/team/team-profile");
         const result: { data: ApiTeam | ApiTeam[] } = await res.json();
 
         const apiData = Array.isArray(result.data)
@@ -349,14 +400,6 @@ function VesselProfileContent() {
                     Configure your team and boat for public discovery.
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground uppercase tracking-wider">
-                    VERIFICATION:
-                  </span>
-                  <span className="px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-md">
-                    PENDING
-                  </span>
-                </div>
               </div>
             </div>
 
@@ -376,10 +419,24 @@ function VesselProfileContent() {
                         <input
                           type="text"
                           value={teamName}
-                          onChange={(e) => setTeamName(e.target.value)}
+                          onChange={(e) => {
+                            setTeamName(e.target.value);
+
+                            if (e.target.value.trim()) {
+                              setErrors((prev) => ({
+                                ...prev,
+                                teamName: "",
+                              }));
+                            }
+                          }}
                           placeholder="Enter team name"
                           className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                         />
+                        {errors.teamName && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.teamName}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">
@@ -388,10 +445,24 @@ function VesselProfileContent() {
                         <input
                           type="text"
                           value={vesselName}
-                          onChange={(e) => setVesselName(e.target.value)}
+                          onChange={(e) => {
+                            setVesselName(e.target.value);
+
+                            if (e.target.value.trim()) {
+                              setErrors((prev) => ({
+                                ...prev,
+                                vesselName: "",
+                              }));
+                            }
+                          }}
                           placeholder="Enter team display name"
                           className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                         />
+                        {errors.vesselName && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.vesselName}
+                          </p>
+                        )}
                       </div>
                       {/*
                     <div>
@@ -440,6 +511,44 @@ function VesselProfileContent() {
                       />
                     </div>
                   </div>
+
+                  <div className="mb-8">
+                    <Label.Root className="block text-sm font-medium text-gray-700 mb-2">
+                      Team Image
+                    </Label.Root>
+
+                    <ImageUploader
+                      inputId="team-image-upload"
+                      labelText="Click to upload team image"
+                      buttonText="Upload Team Image"
+                      onUploadStart={() => {
+                        setIsImageUploading(true);
+                        setUploadedImageUrl("");
+                        setBannerPreview(null);
+                      }}
+                      onUploadSuccess={(finalImageUrl) => {
+                        setUploadedImageUrl(finalImageUrl);
+                        setBannerPreview(finalImageUrl);
+                        setIsImageUploading(false);
+                      }}
+                      onUploadError={() => {
+                        setIsImageUploading(false);
+                        setUploadedImageUrl("");
+                        setBannerPreview(null);
+                        alert("Image upload failed. Please try again.");
+                      }}
+                    />
+                    {bannerPreview && (
+                      <div className="mt-4 relative w-32 h-32 rounded-lg overflow-hidden border">
+                        <Image
+                          src={bannerPreview}
+                          alt="Product Preview"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* TECHNICAL SPECS - Right Column */}
@@ -447,6 +556,35 @@ function VesselProfileContent() {
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
                     TECHNICAL SPECS
                   </h3>
+
+                  <div className="mt-4 flex items-start gap-4">
+                    <div className="sm:w-[40%] w-[52%]">
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Vessel Image
+                      </label>
+
+                      <ImageUploader
+                        inputId="vessel-image-upload"
+                        labelText="Click to upload vessel image"
+                        buttonText="Upload Vessel Image"
+                        onUploadSuccess={(url) => {
+                          setVesselImageUrl(url);
+                          setVesselPreview(url);
+                        }}
+                      />
+                    </div>
+
+                    {vesselPreview && (
+                      <div className="relative w-32 h-32 rounded-lg overflow-hidden border  top-8">
+                        <Image
+                          src={vesselPreview}
+                          alt="Vessel Preview"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -516,55 +654,85 @@ function VesselProfileContent() {
                         </button>
                       </div>
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Boat Name
-                      </label>
-                      <input
-                        type="text"
-                        value={boatName}
-                        onChange={(e) => setBoatName(e.target.value)}
-                        placeholder="Enter boat name"
-                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Boat Name
+                        </label>
+                        <input
+                          type="text"
+                          value={boatName}
+                          onChange={(e) => setBoatName(e.target.value)}
+                          placeholder="Enter boat name"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Affiliation
+                        </label>
+                        <input
+                          type="text"
+                          value={affiliation}
+                          onChange={(e) => setAffiliation(e.target.value)}
+                          placeholder="Enter affiliation"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Home Port
+                        </label>
+                        <input
+                          type="text"
+                          value={homePort}
+                          onChange={(e) => setHomePort(e.target.value)}
+                          placeholder="Enter home port"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Public Email
+                        </label>
+                        <input
+                          type="email"
+                          value={publicEmail}
+                          onChange={(e) => setPublicEmail(e.target.value)}
+                          placeholder="Enter public email"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Team Website
+                        </label>
+                        <input
+                          type="text"
+                          value={teamWebsite}
+                          onChange={(e) => setTeamWebsite(e.target.value)}
+                          placeholder="https://example.com"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Instagram Handle
+                        </label>
+                        <input
+                          type="text"
+                          value={instagramHandle}
+                          onChange={(e) => setInstagramHandle(e.target.value)}
+                          placeholder="Enter Instagram Handle"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="mb-8">
-                  <Label.Root className="block text-sm font-medium text-gray-700 mb-2">
-                    Team Image
-                  </Label.Root>
-
-                  <ImageUploader
-                    onUploadStart={() => {
-                      setIsImageUploading(true);
-                      setUploadedImageUrl("");
-                      setBannerPreview(null);
-                    }}
-                    onUploadSuccess={(finalImageUrl) => {
-                      setUploadedImageUrl(finalImageUrl);
-                      setBannerPreview(finalImageUrl);
-                      setIsImageUploading(false);
-                    }}
-                    onUploadError={() => {
-                      setIsImageUploading(false);
-                      setUploadedImageUrl("");
-                      setBannerPreview(null);
-                      alert("Image upload failed. Please try again.");
-                    }}
-                  />
-                  {bannerPreview && (
-                    <div className="mt-4 relative w-32 h-32 rounded-lg overflow-hidden border">
-                      <Image
-                        src={bannerPreview}
-                        alt="Product Preview"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  )}
                 </div>
               </div>
 

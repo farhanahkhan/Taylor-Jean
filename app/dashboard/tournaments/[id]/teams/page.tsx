@@ -911,7 +911,7 @@ export default function TournamentTeamsPage() {
               modules={[Navigation]}
               navigation
               spaceBetween={16}
-              slidesPerView={3}
+              slidesPerView={1}
               breakpoints={{
                 640: { slidesPerView: 1 },
                 768: { slidesPerView: 2 },
@@ -958,7 +958,7 @@ export default function TournamentTeamsPage() {
 
                       <div className="p-4">
                         <div className="flex items-center gap-3 mb-3 pb-3 border-b border-slate-200">
-                          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+                          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold">
                             {team.memberName?.[0] ?? "?"}
                           </div>
                           <span className="font-semibold text-slate-900">

@@ -21,6 +21,7 @@ import * as Select from "@radix-ui/react-select";
 // import { getCharters, addCharters, deleteCharters } from "@/lib/charters-store";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
+import { apiFetch } from "@/lib/apiFetch";
 // import { addCharters, deleteCharters } from "@/lib/charters-store";
 type CharterCategory = {
   id: string;
@@ -125,7 +126,7 @@ export default function ServicePage() {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`/api/charter-services/${id}`, {
+      const res = await apiFetch(`/api/charter-services/${id}`, {
         method: "DELETE",
       });
 
@@ -152,7 +153,7 @@ export default function ServicePage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch("/api/charter-categories");
+        const res = await apiFetch("/api/charter-categories");
         const json = await res.json();
         const data = json as { data: CharterCategory[] };
 
@@ -169,7 +170,7 @@ export default function ServicePage() {
           })),
         );
       } catch (err) {
-        alert("Failed to load charter categories");
+        console.log("Failed to load charter categories");
       }
     };
 
@@ -322,14 +323,14 @@ export default function ServicePage() {
 
       if (editId) {
         // UPDATE
-        res = await fetch(`/api/charter-services/${editId}`, {
+        res = await apiFetch(`/api/charter-services/${editId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
         // CREATE
-        res = await fetch(`/api/charter-services`, {
+        res = await apiFetch(`/api/charter-services`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

@@ -75,12 +75,40 @@ export interface Tournament {
     speciesId: string;
     points: number;
   }[];
+  tournamentPrizes?: {
+    prizeName: string;
+    prizeType: string;
+    value: number;
+    placement: string;
+  }[];
+  prizesList?: {
+    prizeName: string;
+    prizeType: string;
+    value: number;
+    placement: string;
+  }[];
+  tournamentCalcuttas?: {
+    calcuttaName: string;
+    entryFee: number;
+    payoutStructure: string;
+    minTeamLimit: number;
+    maxTeamLimit: number;
+    speciesIds: string[];
+  }[];
 
   speciesList?: {
     id: string;
     name: string;
     points: number;
   }[];
+}
+interface Calcutta {
+  calcuttaName: string;
+  entryFee: string;
+  payoutStructure: string;
+  targetSpecies: string[];
+  minTeams: string;
+  maxTeams: string;
 }
 interface TournamentAPIResponse {
   data: Omit<Tournament, "title">[];
@@ -104,6 +132,9 @@ export default function TournamentsPage() {
     [number, number] | null
   >(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [expandedDescriptions, setExpandedDescriptions] = useState<
+    Record<string, boolean>
+  >({});
 
   // const router = useRouter();
 
@@ -118,6 +149,26 @@ export default function TournamentsPage() {
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  const [prizeCategories, setPrizeCategories] = useState([
+    {
+      prizeName: "",
+      prizeType: "",
+      value: "",
+      placement: "",
+    },
+  ]);
+
+  const [calcuttas, setCalcuttas] = useState<Calcutta[]>([
+    {
+      calcuttaName: "",
+      entryFee: "",
+      payoutStructure: "",
+      targetSpecies: [],
+      minTeams: "",
+      maxTeams: "",
+    },
+  ]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -180,26 +231,6 @@ export default function TournamentsPage() {
     };
     fetchSpecies();
   }, [pageRefreshKey]);
-
-  const safeJson = async (res: Response) => {
-    const text = await res.text();
-
-    try {
-      return text ? JSON.parse(text) : {};
-    } catch {
-      return {
-        message:
-          res.status === 401
-            ? "Session expired. Please login again."
-            : "Invalid response from server",
-      };
-    }
-  };
-
-  const handleUnauthorized = () => {
-    alert("Session expired. Please login again.");
-    window.location.href = "/login";
-  };
 
   const fetchTournaments = async () => {
     try {
@@ -305,6 +336,23 @@ export default function TournamentsPage() {
       tournamentSpecies: selectedSpecies.map((s) => ({
         speciesId: s.speciesId,
         points: Number(s.points),
+      })),
+      tournamentPrizes: prizeCategories.map((prize) => ({
+        prizeName: prize.prizeName,
+        prizeType: prize.prizeType,
+        value: Number(prize.value) || 0,
+        placement: prize.placement,
+      })),
+
+      tournamentCalcuttas: calcuttas.map((calcutta) => ({
+        calcuttaName: calcutta.calcuttaName,
+        entryFee: Number(calcutta.entryFee) || 0,
+        payoutStructure: calcutta.payoutStructure,
+        minTeamLimit: Number(calcutta.minTeams) || 0,
+        maxTeamLimit: Number(calcutta.maxTeams) || 0,
+        speciesIds: allowableSpecies
+          .filter((species) => calcutta.targetSpecies.includes(species.name))
+          .map((species) => species.id),
       })),
     };
 
@@ -440,10 +488,111 @@ export default function TournamentsPage() {
           }))
         : [],
     );
+    const prizes = tournament.tournamentPrizes ?? tournament.prizesList ?? [];
+
+    setPrizeCategories(
+      Array.isArray(prizes) && prizes.length > 0
+        ? prizes.map((prize) => ({
+            prizeName: prize.prizeName || "",
+            prizeType: prize.prizeType || "Cash",
+            value: String(prize.value || ""),
+            placement: prize.placement || "",
+          }))
+        : [
+            {
+              prizeName: "",
+              prizeType: "Cash",
+              value: "",
+              placement: "",
+            },
+          ],
+    );
+
+    if (tournament.tournamentCalcuttas?.length) {
+      setCalcuttas(
+        tournament.tournamentCalcuttas.map((item) => ({
+          calcuttaName: item.calcuttaName,
+          entryFee: String(item.entryFee),
+          payoutStructure: item.payoutStructure,
+          minTeams: String(item.minTeamLimit),
+          maxTeams: String(item.maxTeamLimit),
+
+          targetSpecies: allowableSpecies
+            .filter((species) => item.speciesIds.includes(species.id))
+            .map((species) => species.name),
+        })),
+      );
+    }
     fetchTournaments();
     setIsModalOpen(true);
   };
 
+  const addPrizeCategory = () => {
+    setPrizeCategories((prev) => [
+      ...prev,
+      {
+        prizeName: "",
+        prizeType: "Cash",
+        value: "",
+        placement: "",
+      },
+    ]);
+  };
+
+  const removePrizeCategory = (index: number) => {
+    setPrizeCategories((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handlePrizeChange = (index: number, field: string, value: string) => {
+    setPrizeCategories((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
+    );
+  };
+
+  const addCalcutta = () => {
+    setCalcuttas((prev) => [
+      ...prev,
+      {
+        calcuttaName: "",
+        entryFee: "",
+        payoutStructure: "Winner Takes All — 100%",
+        targetSpecies: [],
+        minTeams: "",
+        maxTeams: "",
+      },
+    ]);
+  };
+
+  const removeCalcutta = (index: number) => {
+    setCalcuttas((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCalcuttaChange = (
+    index: number,
+    field: keyof Omit<Calcutta, "targetSpecies">,
+    value: string,
+  ) => {
+    setCalcuttas((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
+    );
+  };
+
+  const toggleTargetSpecies = (calcuttaIndex: number, speciesName: string) => {
+    setCalcuttas((prev) =>
+      prev.map((item, i) => {
+        if (i !== calcuttaIndex) return item;
+
+        const exists = item.targetSpecies.includes(speciesName);
+
+        return {
+          ...item,
+          targetSpecies: exists
+            ? item.targetSpecies.filter((species) => species !== speciesName)
+            : [...item.targetSpecies, speciesName],
+        };
+      }),
+    );
+  };
   return (
     // 🛠️ REFRESH FIX 4: Pure layout container ko dynamic key assign kar di taake dom cleanup instant ho
     <div key={pageRefreshKey} className="flex min-h-screen bg-slate-900">
@@ -457,6 +606,7 @@ export default function TournamentsPage() {
                 <h1 className="sm:text-3xl text-[24px] font-bold text-slate-900">
                   My Tournaments
                 </h1>
+
                 <p className="text-slate-600 mt-1 sm:text-[16px] text-[13px]">
                   Manage your event lifecycles and payouts.
                 </p>
@@ -523,9 +673,34 @@ export default function TournamentsPage() {
                       <h3 className="text-lg font-semibold text-slate-900 mb-2">
                         {tournament.title || tournament.name}
                       </h3>
-                      <p className="text-sm text-slate-600 mb-4">
-                        {tournament.description || "No description available."}
+                      <p className="text-sm text-slate-600 mb-2">
+                        {expandedDescriptions[tournament.id]
+                          ? tournament.description
+                          : (tournament.description || "").length > 180
+                            ? `${tournament.description?.slice(0, 190)}...`
+                            : tournament.description ||
+                              "No description available."}
                       </p>
+
+                      {(tournament.description || "").length > 150 && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            setExpandedDescriptions((prev) => ({
+                              ...prev,
+                              [tournament.id]: !prev[tournament.id],
+                            }));
+                          }}
+                          className="text-blue-600 text-sm font-medium hover:underline mb-4"
+                        >
+                          {expandedDescriptions[tournament.id]
+                            ? "See Less"
+                            : "See More"}
+                        </button>
+                      )}
                       <div className="flex items-center gap-4 text-sm text-slate-500">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="h-4 w-4" />
@@ -604,7 +779,7 @@ export default function TournamentsPage() {
             }}
           >
             <DialogContent
-              className="max-w-2xl max-h-[90vh] overflow-y-auto"
+              className="max-w-4xl max-h-[90vh] overflow-y-auto"
               onPointerDownOutside={(e) => {
                 if (isMapOpen) e.preventDefault();
               }}
@@ -811,7 +986,7 @@ export default function TournamentsPage() {
                     Allowable Species
                   </Label>
                   <div className="grid grid-cols-3 gap-2">
-                    {allowableSpecies.map((species) => {
+                    {/* {allowableSpecies.map((species) => {
                       const isSelected = selectedSpecies.some(
                         (s) => String(s.speciesId) === String(species.id),
                       );
@@ -852,6 +1027,45 @@ export default function TournamentsPage() {
                           )}
                         </div>
                       );
+                    })} */}
+
+                    {allowableSpecies.map((species) => {
+                      const isSelected = selectedSpecies.some(
+                        (s) => String(s.speciesId) === String(species.id),
+                      );
+
+                      return (
+                        <div key={species.id} className="flex flex-col gap-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleSpecies(species.id)}
+                            className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                              isSelected
+                                ? "bg-primary/10 text-primary border-primary"
+                                : "bg-white text-slate-700 border-slate-200 hover:bg-gray-100"
+                            }`}
+                          >
+                            {species.name}
+                          </button>
+
+                          {isSelected && (
+                            <input
+                              type="number"
+                              placeholder="Enter points"
+                              value={
+                                selectedSpecies.find(
+                                  (s) =>
+                                    String(s.speciesId) === String(species.id),
+                                )?.points ?? ""
+                              }
+                              onChange={(e) =>
+                                handlePointChange(species.id, e.target.value)
+                              }
+                              className="px-3 py-2 border rounded-md text-sm outline-none focus:border-primary"
+                            />
+                          )}
+                        </div>
+                      );
                     })}
                   </div>
                   {errors.species && (
@@ -865,6 +1079,263 @@ export default function TournamentsPage() {
                       {errors.speciesPoints}
                     </p>
                   )}
+                </div>
+                <div className="border border-slate-200 rounded-2xl p-5 bg-white">
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-base font-semibold text-slate-800">
+                      2. Prize Categories
+                    </h3>
+
+                    <button
+                      type="button"
+                      onClick={addPrizeCategory}
+                      className="px-4 py-2 text-xs font-semibold text-orange-600 bg-orange-50 rounded-lg hover:bg-orange-100"
+                    >
+                      + ADD PRIZE
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {prizeCategories.map((prize, index) => (
+                      <div
+                        key={index}
+                        className="grid grid-cols-12 gap-3 items-end bg-slate-50 border border-slate-100 rounded-xl p-4"
+                      >
+                        <div className="col-span-4">
+                          <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
+                            Prize Name
+                          </Label>
+                          <input
+                            value={prize.prizeName}
+                            onChange={(e) =>
+                              handlePrizeChange(
+                                index,
+                                "prizeName",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="e.g. Heaviest Blue Marlin"
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
+                          />
+                        </div>
+
+                        <div className="col-span-3">
+                          <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
+                            Prize Type
+                          </Label>
+                          <Select
+                            value={prize.prizeType}
+                            onValueChange={(value) =>
+                              handlePrizeChange(index, "prizeType", value)
+                            }
+                          >
+                            <SelectTrigger className="w-full bg-white border border-gray-200 rounded-lg text-sm">
+                              <SelectValue placeholder="Select Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Cash">Cash</SelectItem>
+                              <SelectItem value="Trophy">Trophy</SelectItem>
+                              <SelectItem value="Product">Gear</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="col-span-2">
+                          <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
+                            Value / Payout
+                          </Label>
+                          <input
+                            type="number"
+                            value={prize.value}
+                            onChange={(e) =>
+                              handlePrizeChange(index, "value", e.target.value)
+                            }
+                            placeholder="50000"
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
+                          />
+                        </div>
+
+                        <div className="col-span-2">
+                          <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
+                            Placement
+                          </Label>
+                          <input
+                            value={prize.placement}
+                            onChange={(e) =>
+                              handlePrizeChange(
+                                index,
+                                "placement",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="1st"
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
+                          />
+                        </div>
+
+                        <div className="col-span-1 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => removePrizeCategory(index)}
+                            className="text-red-400 hover:text-red-600 text-xl"
+                          >
+                            🗑
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="border border-slate-200 rounded-2xl p-5 bg-white">
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-base font-semibold text-slate-800">
+                      3. Flexible Calcuttas / Side Pools
+                    </h3>
+
+                    <button
+                      type="button"
+                      onClick={addCalcutta}
+                      className="px-4 py-2 text-xs font-semibold text-orange-600 bg-orange-50 rounded-lg"
+                    >
+                      + ADD CALCUTTA
+                    </button>
+                  </div>
+
+                  {calcuttas.map((calcutta, index) => (
+                    <div
+                      key={index}
+                      className="border rounded-xl p-4 bg-slate-50 mb-4"
+                    >
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
+                            Calcutta Name
+                          </Label>
+                          <input
+                            placeholder="The Big Boy Marlin Pool"
+                            value={calcutta.calcuttaName}
+                            onChange={(e) =>
+                              handleCalcuttaChange(
+                                index,
+                                "calcuttaName",
+                                e.target.value,
+                              )
+                            }
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
+                            Entry Fee (USD)
+                          </Label>
+                          <input
+                            type="number"
+                            placeholder="1000"
+                            value={calcutta.entryFee}
+                            onChange={(e) =>
+                              handleCalcuttaChange(
+                                index,
+                                "entryFee",
+                                e.target.value,
+                              )
+                            }
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
+                            Payout Structure
+                          </Label>
+                          <input
+                            placeholder="Winner Takes All — 100%"
+                            value={calcutta.payoutStructure}
+                            onChange={(e) =>
+                              handleCalcuttaChange(
+                                index,
+                                "payoutStructure",
+                                e.target.value,
+                              )
+                            }
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        <p className="text-xs font-semibold mb-2">
+                          Target Species Allowed
+                        </p>
+
+                        <div className="flex flex-wrap gap-2">
+                          {allowableSpecies
+                            .filter((species) =>
+                              selectedSpecies.some(
+                                (selected) =>
+                                  String(selected.speciesId) ===
+                                  String(species.id),
+                              ),
+                            )
+                            .map((species) => (
+                              <button
+                                key={species.id}
+                                type="button"
+                                onClick={() =>
+                                  toggleTargetSpecies(index, species.name)
+                                }
+                                className={`px-3 py-1 rounded-full border text-sm ${
+                                  calcutta.targetSpecies.includes(species.name)
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-white"
+                                }`}
+                              >
+                                {species.name}
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4 mt-4">
+                        <div className="mt-4">
+                          <p className="text-xs font-semibold mb-2">
+                            MIN TEAMS (OPTIONAL)
+                          </p>
+                          <input
+                            type="number"
+                            placeholder="Min Teams"
+                            value={calcutta.minTeams}
+                            onChange={(e) =>
+                              handleCalcuttaChange(
+                                index,
+                                "minTeams",
+                                e.target.value,
+                              )
+                            }
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
+                          />
+                        </div>
+                        <div className="mt-4">
+                          <p className="text-xs font-semibold mb-2">
+                            MAX TEAMS (OPTIONAL)
+                          </p>
+                          <input
+                            type="number"
+                            placeholder="Max Teams"
+                            value={calcutta.maxTeams}
+                            onChange={(e) =>
+                              handleCalcuttaChange(
+                                index,
+                                "maxTeams",
+                                e.target.value,
+                              )
+                            }
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-slate-500 uppercase mb-3 block">

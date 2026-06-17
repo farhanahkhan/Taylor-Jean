@@ -159,6 +159,19 @@ function RecenterMap({ selectedPosition }) {
   return null;
 }
 
+function isValidCoordinates(lat, lng) {
+  return (
+    typeof lat === "number" &&
+    typeof lng === "number" &&
+    !Number.isNaN(lat) &&
+    !Number.isNaN(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
+}
+
 // async function getAddress(lat, lng) {
 //   const res = await fetch(
 //     `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`,
@@ -176,8 +189,15 @@ function RecenterMap({ selectedPosition }) {
 //     .join(", ");
 // }
 async function getAddress(lat, lng) {
+  lat = Number(lat);
+  lng = Number(lng);
+
+  if (!isValidCoordinates(lat, lng)) {
+    throw new Error(`Invalid coordinates: lat=${lat}, lng=${lng}`);
+  }
+
   const res = await fetch(
-    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`,
+    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
   );
 
   if (!res.ok) {
@@ -190,16 +210,11 @@ async function getAddress(lat, lng) {
     data.city ||
     data.locality ||
     data.localityInfo?.administrative?.find(
-      (item) => item.adminLevel === 8,
+      (item) => item.adminLevel === 8
     )?.name ||
     data.principalSubdivision;
 
-  const state =
-    data.principalSubdivision ||
-    data.localityInfo?.administrative?.find(
-      (item) => item.adminLevel === 4,
-    )?.name;
-
+  const state = data.principalSubdivision;
   const country = data.countryName || "Pakistan";
 
   return [city, state, country].filter(Boolean).join(", ");

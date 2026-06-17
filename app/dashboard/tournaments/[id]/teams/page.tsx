@@ -2,7 +2,7 @@
 
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
-import { ArrowLeft, Plus, X } from "lucide-react";
+import { ArrowLeft, Megaphone, Plus, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
@@ -18,11 +18,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface MarketOption {
   id?: string;
   option: string;
-  odds: number;
+  odds: string;
+}
+
+interface TeamMemberPoint {
+  tournamentTeamMemberId: string;
+  userId: string;
+  userName: string;
+  avatarUrl: string | null;
+  totalPoints: number;
 }
 
 interface BetOption {
@@ -91,8 +100,11 @@ export default function TournamentTeamsPage() {
   const [marketRules, setMarketRules] = useState("");
   const [marketOpens, setMarketOpens] = useState("");
   const [marketCloses, setMarketCloses] = useState("");
-  const [options, setOptions] = useState<MarketOption[]>([
-    { option: "", odds: 1 },
+  const [marketOptions, setMarketOptions] = useState<MarketOption[]>([
+    {
+      option: "",
+      odds: "100",
+    },
   ]);
 
   const [modalLoading, setModalLoading] = useState(false);
@@ -105,15 +117,37 @@ export default function TournamentTeamsPage() {
   const [submitLoading, setSubmitLoading] = useState(false);
 
   const addOption = () => {
-    setOptions([...options, { option: "", odds: 1 }]);
+    setMarketOptions([
+      ...marketOptions,
+      {
+        option: "",
+        odds: "100",
+      },
+    ]);
   };
+  const [isMemberPointModalOpen, setIsMemberPointModalOpen] = useState(false);
+  const [memberPoints, setMemberPoints] = useState<TeamMemberPoint[]>([]);
+  const [memberPointLoading, setMemberPointLoading] = useState(false);
+  const [selectedLeaderboardTeam, setSelectedLeaderboardTeam] =
+    useState<TeamPoint | null>(null);
 
   const removeOption = (index: number) => {
-    setOptions(options.filter((_, i) => i !== index));
+    setMarketOptions(marketOptions.filter((_, i) => i !== index));
   };
   const [statusFilter, setStatusFilter] = useState("All");
 
   const searchParams = useSearchParams();
+  const BullhornIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="#9CA3AF"
+    >
+      <path d="M3 10v4h3l4 3V7l-4 3H3zm8-2v8l8 2V6l-8 2zm9 3h1v2h-1v-2z" />
+    </svg>
+  );
 
   const tournamentDetail = {
     name: searchParams.get("name"),
@@ -138,13 +172,15 @@ export default function TournamentTeamsPage() {
     field: "option" | "odds",
     value: string,
   ) => {
-    const newOptions = [...options];
+    const newOptions = [...marketOptions];
+
     if (field === "option") {
       newOptions[index].option = value;
     } else {
-      newOptions[index].odds = parseFloat(value) || 1;
+      newOptions[index].odds = value;
     }
-    setOptions(newOptions);
+
+    setMarketOptions(newOptions);
   };
 
   // const handlePublishMarket = async () => {
@@ -204,7 +240,7 @@ export default function TournamentTeamsPage() {
             description: marketRules,
             startTime: new Date(marketOpens).toISOString(),
             endTime: new Date(marketCloses).toISOString(),
-            options: options.map((opt) => ({
+            options: marketOptions.map((opt) => ({
               id: opt.id,
               optionName: opt.option,
               odds: Number(opt.odds),
@@ -216,13 +252,13 @@ export default function TournamentTeamsPage() {
             description: marketRules,
             startTime: new Date(marketOpens).toISOString(),
             endTime: new Date(marketCloses).toISOString(),
-            options: options.map((opt) => ({
+            options: marketOptions.map((opt) => ({
               optionName: opt.option,
               initialOdds: Number(opt.odds),
             })),
           };
 
-      const res = await fetch(
+      const res = await apiFetch(
         editingBet ? `/api/bet/${editingBet.betId}` : "/api/bets",
         {
           method: editingBet ? "PUT" : "POST",
@@ -255,7 +291,8 @@ export default function TournamentTeamsPage() {
       setMarketRules("");
       setMarketOpens("");
       setMarketCloses("");
-      setOptions([{ option: "", odds: 1 }]);
+      // setOptions([{ option: "", odds: 1 }]);
+      setMarketOptions([{ option: "", odds: "100" }]);
     } catch (error) {
       console.error(error);
       alert("Server Error ❌");
@@ -268,7 +305,7 @@ export default function TournamentTeamsPage() {
 
     const fetchTeams = async () => {
       try {
-        const res = await fetch(
+        const res = await apiFetch(
           `/api/team-activities/tournament/${tournamentId}`,
         );
 
@@ -302,7 +339,7 @@ export default function TournamentTeamsPage() {
   const reviewEntry = async (activityId: string, approve: boolean) => {
     try {
       setActionLoading(true); // 🔄 start loading
-      const res = await fetch("/api/team-activities/review", {
+      const res = await apiFetch("/api/team-activities/review", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -338,7 +375,7 @@ export default function TournamentTeamsPage() {
 
     try {
       setBetsLoading(true);
-      const res = await fetch(
+      const res = await apiFetch(
         `/api/bets/tournament/${tournamentId}/bets-tournament`,
       );
 
@@ -365,7 +402,7 @@ export default function TournamentTeamsPage() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const res = await fetch(
+        const res = await apiFetch(
           `/api/bets/tournament/${tournamentId}/team-points`,
         );
 
@@ -516,15 +553,43 @@ export default function TournamentTeamsPage() {
       bet.endTime ? new Date(bet.endTime).toISOString().slice(0, 16) : "",
     );
 
-    setOptions(
+    setMarketOptions(
       bet.options.map((opt) => ({
         id: opt.optionId,
         option: opt.optionName,
-        odds: opt.currentOdds,
+        odds: String(opt.currentOdds),
       })),
     );
 
     setShowLaunchModal(true);
+  };
+
+  const handleLeaderboardClick = async (team: TeamPoint) => {
+    try {
+      setSelectedLeaderboardTeam(team);
+      setIsMemberPointModalOpen(true);
+      setMemberPointLoading(true);
+
+      const res = await apiFetch(
+        `/api/team-activities/team-member-wise-points/${team.tournamentTeamId}`,
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || data.status === false) {
+        alert(data.message || "Failed to fetch member points");
+        setMemberPoints([]);
+        return;
+      }
+
+      setMemberPoints(data.data || []);
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong");
+      setMemberPoints([]);
+    } finally {
+      setMemberPointLoading(false);
+    }
   };
 
   const handleDeleteBet = async (betId: string) => {
@@ -690,7 +755,8 @@ export default function TournamentTeamsPage() {
                   {teamsPoint.map((team, index) => (
                     <div
                       key={team.tournamentTeamId}
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                      onClick={() => handleLeaderboardClick(team)}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition"
                     >
                       <div className="flex items-center gap-3">
                         <span className="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">
@@ -977,9 +1043,22 @@ export default function TournamentTeamsPage() {
                           </div>
                           <div>
                             <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
-                              Entry Date
+                              Released Time
                             </p>
-                            <p className="text-slate-900">{team.entryDate}</p>
+                            <p className="text-slate-900">
+                              {new Date(team.entryDate).toLocaleString(
+                                "en-GB",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                  timeZone: "UTC",
+                                },
+                              )}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -1036,9 +1115,20 @@ export default function TournamentTeamsPage() {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
-                    Entry Date
+                    Released Time
                   </p>
-                  <p className="text-slate-900">{selectedTeam.entryDate}</p>
+
+                  <p className="text-slate-900">
+                    {new Date(selectedTeam.entryDate).toLocaleString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                      timeZone: "UTC",
+                    })}
+                  </p>
                 </div>
               </div>
 
@@ -1172,7 +1262,64 @@ export default function TournamentTeamsPage() {
           </div>
         </div>
       )}
+      {isMemberPointModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 relative">
+            <button
+              onClick={() => setIsMemberPointModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-500 font-bold"
+            >
+              ✕
+            </button>
 
+            <h2 className="text-lg font-bold text-slate-900 mb-1">
+              {selectedLeaderboardTeam?.teamName}
+            </h2>
+            <p className="text-sm text-slate-500 mb-5">Team Member</p>
+
+            {memberPointLoading ? (
+              <p className="text-sm text-slate-500">Loading...</p>
+            ) : memberPoints.length === 0 ? (
+              <p className="text-sm text-slate-500">No member points found</p>
+            ) : (
+              <div className="space-y-3">
+                {memberPoints.map((member) => (
+                  <div
+                    key={member.tournamentTeamMemberId}
+                    className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border"
+                  >
+                    <div className="flex items-center gap-3">
+                      {member.avatarUrl ? (
+                        <Image
+                          src={member.avatarUrl || "/placeholder.svg"}
+                          alt={member.userName}
+                          width={40}
+                          height={40}
+                          className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                          onError={(e) => {
+                            e.currentTarget.src = "/placeholder.svg";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
+                          {member.userName?.charAt(0).toUpperCase() || "?"}
+                        </div>
+                      )}
+                      <p className="font-semibold text-slate-900">
+                        {member.userName}
+                      </p>
+                    </div>
+
+                    <p className="font-bold text-primary">
+                      {member.totalPoints} Points
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {showLaunchModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -1206,7 +1353,7 @@ export default function TournamentTeamsPage() {
                       value={marketTitle}
                       onChange={(e) => setMarketTitle(e.target.value)}
                       placeholder="e.g. Winner Prediction"
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
                     />
                   </div>
 
@@ -1218,7 +1365,7 @@ export default function TournamentTeamsPage() {
                       value={marketRules}
                       onChange={(e) => setMarketRules(e.target.value)}
                       placeholder="Specify winning conditions clearly..."
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary min-h-24"
+                      className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
                     />
                   </div>
 
@@ -1232,7 +1379,7 @@ export default function TournamentTeamsPage() {
                         value={marketOpens}
                         onChange={(e) => setMarketOpens(e.target.value)}
                         placeholder="14/02/2026, 12:30"
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
                       />
                     </div>
                     <div>
@@ -1244,7 +1391,7 @@ export default function TournamentTeamsPage() {
                         value={marketCloses}
                         onChange={(e) => setMarketCloses(e.target.value)}
                         placeholder="14/02/2026, 12:30"
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
                       />
                     </div>
                   </div>
@@ -1264,7 +1411,7 @@ export default function TournamentTeamsPage() {
                     </div>
 
                     <div className="space-y-3">
-                      {options.map((opt, index) => (
+                      {marketOptions.map((opt, index) => (
                         <div key={index} className="flex gap-3 items-end">
                           <input
                             type="text"
@@ -1277,28 +1424,34 @@ export default function TournamentTeamsPage() {
                               )
                             }
                             placeholder="e.g. Team Apex"
-                            className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
                           />
+
                           <div className="flex items-center gap-2">
                             <input
                               type="number"
                               value={opt.odds}
-                              onChange={(e) =>
-                                handleOptionChange(
-                                  index,
-                                  "odds",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="1"
+                              onChange={(e) => {
+                                const value = e.target.value;
+
+                                if (
+                                  value === "" ||
+                                  value === "-" ||
+                                  /^-?\d+$/.test(value)
+                                ) {
+                                  handleOptionChange(index, "odds", value);
+                                }
+                              }}
+                              placeholder="100"
                               className="w-20 px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-center"
-                              step="0.1"
-                              min="0"
                             />
+
                             <span className="text-slate-500 text-sm">@pds</span>
                           </div>
+
                           {index > 0 && (
                             <button
+                              type="button"
                               onClick={() => removeOption(index)}
                               className="p-2.5 text-slate-400 hover:text-red-600 transition-colors"
                             >
@@ -1307,6 +1460,55 @@ export default function TournamentTeamsPage() {
                           )}
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                    {/* Header */}
+                    <div className="flex items-center gap-2 pb-2 mb-3 border-b border-amber-200">
+                      <Megaphone className="w-4 h-4 text-gray-500 fill-gray-500 flex-shrink-0" />
+                      <h4 className="text-[13px] font-semibold text-slate-900">
+                        Understanding American Odds (Moneyline)
+                      </h4>
+                    </div>
+
+                    {/* Content */}
+                    <div className="space-y-3 text-[13px] leading-5 text-slate-900">
+                      <p>
+                        <span className="font-semibold">
+                          Negative Odds (-) Favorite:
+                        </span>{" "}
+                        The number tells how much a user must bet to win{" "}
+                        <span className="font-semibold">$100 profit</span>. E.g.{" "}
+                        <span className="font-semibold">-200</span> means bet{" "}
+                        <span className="font-semibold">$200</span> to win{" "}
+                        <span className="font-semibold">$100</span> profit
+                        (Total payout{" "}
+                        <span className="font-semibold">$300</span>).
+                      </p>
+
+                      <p>
+                        <span className="font-semibold">
+                          Positive Odds (+) Underdog:
+                        </span>{" "}
+                        The number tells how much profit a user wins on a{" "}
+                        <span className="font-semibold">$100 bet</span>. E.g.{" "}
+                        <span className="font-semibold">+200</span> means bet{" "}
+                        <span className="font-semibold">$100</span> to win{" "}
+                        <span className="font-semibold">$200</span> profit
+                        (Total payout{" "}
+                        <span className="font-semibold">$300</span>).
+                      </p>
+
+                      <p>
+                        <span className="font-semibold">
+                          Even Money (+100 / -100):
+                        </span>{" "}
+                        A <span className="font-semibold">$100</span> bet wins{" "}
+                        <span className="font-semibold">$100</span> profit
+                        (Total payout{" "}
+                        <span className="font-semibold">$200</span>).
+                      </p>
                     </div>
                   </div>
 

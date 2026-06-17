@@ -318,7 +318,7 @@ export default function DiscoverEventsPage() {
     if (!confirm("Are you sure you want to delete this team?")) return;
 
     try {
-      const res = await fetch(`/api/team/team-profile/${id}`, {
+      const res = await apiFetch(`/api/team/team-profile/${id}`, {
         method: "DELETE",
       });
 

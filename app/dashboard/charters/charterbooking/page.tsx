@@ -140,6 +140,7 @@ import * as Select from "@radix-ui/react-select";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 import { CharterBookingForm } from "@/app/Components/charterbooking-form";
+import { apiFetch } from "@/lib/apiFetch";
 
 // --------- Interfaces ---------
 export interface Charter {
@@ -169,7 +170,7 @@ const charterTypes = [
 ];
 
 const fetcher = (url: string) =>
-  fetch(url)
+  apiFetch(url)
     .then((res) => res.json())
     .then((json) => json.data);
 
@@ -233,7 +234,7 @@ export default function CharterPage() {
         Amount: editForm.amount,
       };
 
-      await fetch(`/api/charter-bookingList/${id}`, {
+      await apiFetch(`/api/charter-bookingList/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

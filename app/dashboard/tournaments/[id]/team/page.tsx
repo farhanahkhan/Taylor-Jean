@@ -47,7 +47,7 @@ export default function TournamentTeamsPage() {
     const fetchTeams = async () => {
       try {
         const res = await fetch(
-          `/api/team-activities/tournament/${tournamentId}`
+          `/api/team-activities/tournament/${tournamentId}`,
         );
 
         const json = await res.json();
@@ -78,7 +78,7 @@ export default function TournamentTeamsPage() {
             entryDate: item.createdAt,
             image: item.speciesImage,
             status: item.actionStatus as 0 | 1 | 2, // ✅ FIX
-          })
+          }),
         );
         setTeams(mappedTeams);
       } catch (e) {
@@ -113,11 +113,11 @@ export default function TournamentTeamsPage() {
 
       setTeams((prev) =>
         prev.map((team) =>
-          team.id === activityId ? { ...team, status: approve ? 1 : 2 } : team
-        )
+          team.id === activityId ? { ...team, status: approve ? 1 : 2 } : team,
+        ),
       );
       setSelectedTeam((prev) =>
-        prev ? { ...prev, status: approve ? 1 : 2 } : prev
+        prev ? { ...prev, status: approve ? 1 : 2 } : prev,
       );
     } catch (err) {
       console.error(err);
@@ -171,15 +171,15 @@ export default function TournamentTeamsPage() {
                         team.status === 1
                           ? "bg-green-100 text-green-800"
                           : team.status === 2
-                          ? "bg-red-100 text-red-800"
-                          : "bg-blue-100 text-blue-800"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-blue-100 text-blue-800"
                       }`}
                     >
                       {team.status === 1
                         ? "ACCEPTED"
                         : team.status === 2
-                        ? "REJECTED"
-                        : "PENDING"}
+                          ? "REJECTED"
+                          : "PENDING"}
                     </span>
                   </div>
                 </div>
@@ -271,8 +271,8 @@ export default function TournamentTeamsPage() {
                   selectedTeam.status === 1
                     ? "bg-green-50"
                     : selectedTeam.status === 2
-                    ? "bg-red-50"
-                    : "bg-blue-50"
+                      ? "bg-red-50"
+                      : "bg-blue-50"
                 }`}
               >
                 <div
@@ -280,8 +280,8 @@ export default function TournamentTeamsPage() {
                     selectedTeam.status === 1
                       ? "bg-green-500"
                       : selectedTeam.status === 2
-                      ? "bg-red-500"
-                      : "bg-blue-500"
+                        ? "bg-red-500"
+                        : "bg-blue-500"
                   }`}
                 >
                   {selectedTeam.status === 1 ? (
@@ -298,15 +298,15 @@ export default function TournamentTeamsPage() {
                     selectedTeam.status === 1
                       ? "text-green-700"
                       : selectedTeam.status === 2
-                      ? "text-red-700"
-                      : "text-blue-700"
+                        ? "text-red-700"
+                        : "text-blue-700"
                   }`}
                 >
                   {selectedTeam.status === 1
                     ? "ENTRY VERIFIED"
                     : selectedTeam.status === 2
-                    ? "ENTRY INVALIDATED"
-                    : "PENDING VERIFICATION"}
+                      ? "ENTRY INVALIDATED"
+                      : "PENDING VERIFICATION"}
                 </p>
 
                 <p
@@ -314,8 +314,8 @@ export default function TournamentTeamsPage() {
                     selectedTeam.status === 1
                       ? "text-green-600"
                       : selectedTeam.status === 2
-                      ? "text-red-600"
-                      : "text-blue-600"
+                        ? "text-red-600"
+                        : "text-blue-600"
                   }`}
                 >
                   FINAL STATUS RECORDED

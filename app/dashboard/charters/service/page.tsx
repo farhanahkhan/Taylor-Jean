@@ -15,6 +15,7 @@ import {
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
+import { apiFetch } from "@/lib/apiFetch";
 
 export interface Service {
   id: string;
@@ -26,7 +27,7 @@ export interface Service {
 }
 
 export default function ServicePage() {
-  const fetcher = (url: string) => fetch(url).then((res) => res.json());
+  const fetcher = (url: string) => apiFetch(url).then((res) => res.json());
   const { data, mutate } = useSWR("/api/CharterServiceItems", fetcher);
 
   const services: Service[] = data?.data || [];
@@ -101,7 +102,7 @@ export default function ServicePage() {
     if (!ok) return;
 
     try {
-      const res = await fetch(`/api/CharterServiceItems/${id}`, {
+      const res = await apiFetch(`/api/CharterServiceItems/${id}`, {
         method: "DELETE",
       });
 
@@ -149,13 +150,13 @@ export default function ServicePage() {
       let res;
 
       if (editId) {
-        res = await fetch(`/api/CharterServiceItems/${editId}`, {
+        res = await apiFetch(`/api/CharterServiceItems/${editId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
-        res = await fetch(`/api/CharterServiceItems`, {
+        res = await apiFetch(`/api/CharterServiceItems`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

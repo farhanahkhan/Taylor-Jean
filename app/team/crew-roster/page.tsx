@@ -6,6 +6,7 @@ import { X, Settings, Users } from "lucide-react";
 import { TeamSidebar } from "@/app/Components/team-sidebar";
 import { TeamHeader } from "@/app/Components/team-header";
 import { useParams } from "next/navigation";
+import { apiFetch } from "@/lib/apiFetch";
 
 type CrewMemberApi = {
   id: string;
@@ -57,7 +58,7 @@ export default function CrewRosterPage() {
         setLoadingCrew(true);
 
         // const res = await fetch(`/api/general-teams/${teamId}/members`);
-        const res = await fetch(`/api/users?type=members&teamId=${teamId}`);
+        const res = await apiFetch(`/api/users?type=members&teamId=${teamId}`);
         const result: { status: boolean; data: CrewMemberApi[] } =
           await res.json();
 
@@ -89,7 +90,7 @@ export default function CrewRosterPage() {
   useEffect(() => {
     const fetchAllUsers = async () => {
       try {
-        const res = await fetch(`/api/users?type=users`);
+        const res = await apiFetch(`/api/users?type=users`);
         const result: { status: boolean; data: UserApi[] } = await res.json();
         if (result.status) {
           setAllUsers(result.data);
@@ -136,7 +137,7 @@ export default function CrewRosterPage() {
   // Add member
   const handleAddMember = async (angler: AvailableAngler) => {
     try {
-      const res = await fetch("/api/users", {
+      const res = await apiFetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -152,7 +153,7 @@ export default function CrewRosterPage() {
         setSearchQuery("");
 
         // Refresh crew members
-        const res2 = await fetch(`/api/general-teams/${teamId}/members`);
+        const res2 = await apiFetch(`/api/general-teams/${teamId}/members`);
         const refreshed: { status: boolean; data: CrewMemberApi[] } =
           await res2.json();
 

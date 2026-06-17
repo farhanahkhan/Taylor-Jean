@@ -4,7 +4,20 @@ type TournamentSpeciesPayload = {
   speciesId: string;
   points: number;
 };
-
+type TournamentPrizePayload = {
+  prizeName: string;
+  prizeType: string;
+  value: number;
+  placement: string;
+};
+type TournamentCalcuttaPayload = {
+  calcuttaName: string;
+  entryFee: number;
+  payoutStructure: string;
+  minTeamLimit: number;
+  maxTeamLimit: number;
+  speciesIds: string[];
+};
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
@@ -45,6 +58,22 @@ export async function PUT(
         body.tournamentSpecies?.map((item: TournamentSpeciesPayload) => ({
           speciesId: item.speciesId,
           points: Number(item.points) || 0,
+        })) || [],
+      tournamentPrizes:
+        body.tournamentPrizes?.map((item: TournamentPrizePayload) => ({
+          prizeName: item.prizeName,
+          prizeType: item.prizeType,
+          value: Number(item.value) || 0,
+          placement: item.placement,
+        })) || [],
+      tournamentCalcuttas:
+        body.tournamentCalcuttas?.map((item: TournamentCalcuttaPayload) => ({
+          calcuttaName: item.calcuttaName,
+          entryFee: Number(item.entryFee) || 0,
+          payoutStructure: item.payoutStructure || "",
+          minTeamLimit: Number(item.minTeamLimit) || 0,
+          maxTeamLimit: Number(item.maxTeamLimit) || 0,
+          speciesIds: item.speciesIds || [],
         })) || [],
     };
     const res = await fetch(`${API_BASE_URL}/api/tournaments/${id}`, {

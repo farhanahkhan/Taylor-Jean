@@ -15,6 +15,7 @@ import { MerchProductCard } from "@/app/Components/merch-product-card";
 import { Product, Category } from "@/lib/product-store";
 import { TeamHeader } from "@/app/Components/team-header";
 import { TeamSidebar } from "@/app/Components/team-sidebar";
+import { apiFetch } from "@/lib/apiFetch";
 
 const sortOptions = [
   "Newest First",
@@ -49,7 +50,7 @@ interface ApiResponse<T> {
   data: T;
 }
 const fetchProducts = async (): Promise<Product[]> => {
-  const res = await fetch("/api/merch?type=products");
+  const res = await apiFetch("/api/merch?type=products");
   const json: ApiResponse<ApiProduct[]> = await res.json();
 
   if (!json.status || !Array.isArray(json.data)) return [];
@@ -91,7 +92,7 @@ export default function MerchPage() {
   useEffect(() => {
     async function loadCategories() {
       try {
-        const res = await fetch("/api/merch?type=categories");
+        const res = await apiFetch("/api/merch?type=categories");
         const json = await res.json();
 
         if (!json.status || !Array.isArray(json.data)) {

@@ -14,6 +14,7 @@ import { Check } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Label } from "@radix-ui/react-label";
+import { apiFetch } from "@/lib/apiFetch";
 
 // rightside
 interface ApiMember {
@@ -88,7 +89,7 @@ export default function TeamTournamentPage() {
       try {
         setLoadingTournaments(true);
 
-        const res = await fetch("/api/tournaments");
+        const res = await apiFetch("/api/tournaments");
 
         const result: {
           status: boolean;
@@ -111,7 +112,7 @@ export default function TeamTournamentPage() {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const res = await fetch("/api/team/team-profile");
+        const res = await apiFetch("/api/team/team-profile");
         const result = await res.json();
 
         if (result.status && result.data.length > 0) {
@@ -179,7 +180,7 @@ export default function TeamTournamentPage() {
     };
 
     try {
-      const res = await fetch("/api/tournaments/register", {
+      const res = await apiFetch("/api/tournaments/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

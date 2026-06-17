@@ -1046,9 +1046,8 @@ export default function TournamentTeamsPage() {
                               Released Time
                             </p>
                             <p className="text-slate-900">
-                              {new Date(team.entryDate).toLocaleString(
-                                "en-GB",
-                                {
+                              {new Date(team.entryDate)
+                                .toLocaleString("en-GB", {
                                   day: "2-digit",
                                   month: "short",
                                   year: "numeric",
@@ -1056,8 +1055,9 @@ export default function TournamentTeamsPage() {
                                   minute: "2-digit",
                                   hour12: true,
                                   timeZone: "UTC",
-                                },
-                              )}
+                                })
+                                .replace("am", "AM")
+                                .replace("pm", "PM")}
                             </p>
                           </div>
                         </div>
@@ -1119,15 +1119,18 @@ export default function TournamentTeamsPage() {
                   </p>
 
                   <p className="text-slate-900">
-                    {new Date(selectedTeam.entryDate).toLocaleString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                      timeZone: "UTC",
-                    })}
+                    {new Date(selectedTeam.entryDate)
+                      .toLocaleString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                        timeZone: "UTC",
+                      })
+                      .replace("am", "AM")
+                      .replace("pm", "PM")}
                   </p>
                 </div>
               </div>

@@ -694,16 +694,25 @@ export default function TournamentTeamsPage() {
                   </p>
                 </div>
               </div>
+              {/* <button
+                onClick={() => setShowLaunchModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-foreground text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Launch New Bet
+              </button> */}
+              {/* <div className="flex items-center gap-3"> */}
               <button
                 onClick={() => setShowLaunchModal(true)}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-foreground text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Launch New Bet
               </button>
+
+              {/* </div> */}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
               <div className="flex items-start justify-between mb-3">
                 <p className="text-sm font-medium text-slate-600">
@@ -738,7 +747,14 @@ export default function TournamentTeamsPage() {
               <p className="text-2xl font-bold text-slate-900">$8.4K</p>
             </div>
           </div>
-
+          <div className="flex justify-end pb-3">
+            <Link
+              href={`/dashboard/betting&compliance?tournamentId=${tournamentId}`}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-foreground text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Bet Detail
+            </Link>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-slate-200 p-6">
               <div className="flex items-center gap-2 mb-6">

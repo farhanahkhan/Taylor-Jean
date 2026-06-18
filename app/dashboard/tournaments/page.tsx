@@ -267,8 +267,30 @@ export default function TournamentsPage() {
     fetchTournaments();
   }, [pageRefreshKey]);
 
+  // const handleInputChange = (field: string, value: string) => {
+  //   setFormData((prev) => ({ ...prev, [field]: value }));
+
+  //   setErrors((prev) => ({
+  //     ...prev,
+  //     [field]: "",
+  //   }));
+  // };
+
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      if (field === "startDate") {
+        return {
+          ...prev,
+          startDate: value,
+          endDate: prev.endDate && prev.endDate < value ? "" : prev.endDate,
+        };
+      }
+
+      return {
+        ...prev,
+        [field]: value,
+      };
+    });
 
     setErrors((prev) => ({
       ...prev,
@@ -1009,6 +1031,7 @@ export default function TournamentsPage() {
                     <input
                       id="end-date"
                       type="date"
+                      min={formData.startDate}
                       className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       value={formData.endDate}
                       onChange={(e) =>
@@ -1120,6 +1143,36 @@ export default function TournamentsPage() {
                       {errors.speciesPoints}
                     </p>
                   )}
+                </div>
+                <div>
+                  <Label className="text-xs font-medium text-slate-500 uppercase mb-3 block">
+                    Financials & Scoring
+                  </Label>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label
+                        htmlFor="entry-fee"
+                        className="text-xs font-medium text-slate-500 uppercase mb-2 block"
+                      >
+                        Entry Fee ($)
+                      </Label>
+                      <input
+                        id="entry-fee"
+                        type="number"
+                        placeholder="500"
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        value={formData.entryFee}
+                        onChange={(e) =>
+                          handleInputChange("entryFee", e.target.value)
+                        }
+                      />
+                      {errors.entryFee && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.entryFee}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="border border-slate-200 rounded-2xl p-5 bg-white">
                   <div className="flex items-center justify-between mb-5">
@@ -1390,36 +1443,6 @@ export default function TournamentsPage() {
                       </div>
                     </div>
                   ))}
-                </div>
-                <div>
-                  <Label className="text-xs font-medium text-slate-500 uppercase mb-3 block">
-                    Financials & Scoring
-                  </Label>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label
-                        htmlFor="entry-fee"
-                        className="text-xs font-medium text-slate-500 uppercase mb-2 block"
-                      >
-                        Entry Fee ($)
-                      </Label>
-                      <input
-                        id="entry-fee"
-                        type="number"
-                        placeholder="500"
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        value={formData.entryFee}
-                        onChange={(e) =>
-                          handleInputChange("entryFee", e.target.value)
-                        }
-                      />
-                      {errors.entryFee && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.entryFee}
-                        </p>
-                      )}
-                    </div>
-                  </div>
                 </div>
                 <div className="pt-2">
                   <button

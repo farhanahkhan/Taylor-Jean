@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Search, Filter, Clock, CheckCircle, XCircle, X } from "lucide-react";
@@ -9,66 +9,54 @@ import { ChevronDown } from "lucide-react";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 import * as Dialog from "@radix-ui/react-dialog";
+import { apiFetch } from "@/lib/apiFetch";
+import { useParams, useSearchParams } from "next/navigation";
 
 // Sample betting data
-const initialBets = [
-  {
-    id: "#1",
-    user: "John Smith",
-    tournament: "Summer Championship 2024",
-    betType: "Team Win",
-    amount: 150,
-    odds: 2.5,
-    potentialPayout: 375,
-    date: "2024-06-15 14:30",
-    status: "pending" as const,
-  },
-  {
-    id: "#2",
-    user: "Sarah Johnson",
-    tournament: "Spring Soccer League",
-    betType: "Over/Under",
-    amount: 220,
-    odds: 1.9,
-    potentialPayout: 418,
-    date: "2024-06-14 10:15",
-    status: "won" as const,
-  },
-  {
-    id: "#3",
-    user: "Mike Davis",
-    tournament: "Summer Championship 2024",
-    betType: "Player Performance",
-    amount: 100,
-    odds: 3.0,
-    potentialPayout: 300,
-    date: "2024-06-13 18:45",
-    status: "review" as const,
-  },
-  {
-    id: "#4",
-    user: "Emma Wilson",
-    tournament: "Regional Baseball Tournament",
-    betType: "Team Win",
-    amount: 75,
-    odds: 1.75,
-    potentialPayout: 131.25,
-    date: "2024-06-12 16:20",
-    status: "lost" as const,
-  },
-  {
-    id: "#5",
-    user: "Chris Brown",
-    tournament: "Summer Championship 2024",
-    betType: "Score Prediction",
-    amount: 200,
-    odds: 5.0,
-    potentialPayout: 1000,
-    date: "2024-06-15 09:30",
-    status: "pending" as const,
-  },
-];
 
+type BetStatus = "pending" | "won" | "review" | "lost";
+
+type BetRow = {
+  id: string;
+  fullName: string;
+  email: string;
+  totalStake: number;
+  betTitle: string;
+  stake: number;
+  oddsAtTime: number;
+  potentialWin: number;
+  status: BetStatus;
+  placedAt: string;
+};
+
+type ApiUserBet = {
+  userBetId: string;
+  betId: string;
+  betTitle: string;
+  optionId: string;
+  optionName: string;
+  stake: number;
+  oddsAtTime: number;
+  potentialWin: number;
+  status: string;
+  placedAt: string;
+};
+
+type ApiUserWiseBet = {
+  userId: string;
+  fullName: string;
+  displayName: string | null;
+  email: string;
+  totalStake: number;
+  bets: ApiUserBet[];
+};
+
+type UserWiseBetResponse = {
+  message: string;
+  statusCode: number;
+  status: boolean;
+  data: ApiUserWiseBet[];
+};
 const statusStyles = {
   pending: "bg-blue-50 text-blue-700 border border-blue-200",
   won: "bg-green-50 text-green-700 border border-green-200",
@@ -84,11 +72,12 @@ const statusIcons = {
 };
 
 export default function BettingPage() {
-  const [betsData, setBetsData] = useState(initialBets);
+  const [betsData, setBetsData] = useState<BetRow[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedBet, setSelectedBet] = useState<(typeof betsData)[0] | null>(
-    null
+    null,
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [adjustedPayout, setAdjustedPayout] = useState("");
@@ -96,13 +85,15 @@ export default function BettingPage() {
     "pending" | "won" | "review" | "lost"
   >("pending");
 
-  const handleViewBet = (bet: (typeof betsData)[0]) => {
+  const searchParams = useSearchParams();
+  const tournamentId = searchParams.get("tournamentId");
+
+  const handleViewBet = (bet: BetRow) => {
     setSelectedBet(bet);
-    setAdjustedPayout(bet.potentialPayout.toString());
+    setAdjustedPayout(bet.potentialWin.toString());
     setModalStatus(bet.status);
     setIsModalOpen(true);
   };
-
   const handleApproveBet = () => {
     if (selectedBet) {
       setModalStatus("won");
@@ -122,36 +113,88 @@ export default function BettingPage() {
           bet.id === selectedBet.id
             ? {
                 ...bet,
-                potentialPayout:
-                  Number.parseFloat(adjustedPayout) || bet.potentialPayout,
+                potentialWin:
+                  Number.parseFloat(adjustedPayout) || bet.potentialWin,
                 status: modalStatus,
               }
-            : bet
-        )
+            : bet,
+        ),
       );
+
       setIsModalOpen(false);
     }
   };
 
+  useEffect(() => {
+    if (!tournamentId) return;
+
+    const fetchUserWiseBets = async () => {
+      try {
+        setLoading(true);
+
+        const res = await apiFetch(
+          `/api/bets/user-wise-bet?tournamentId=${tournamentId}`,
+        );
+
+        const result: UserWiseBetResponse = await res.json();
+
+        if (!res.ok || !result.status) {
+          alert(result.message || "Failed to fetch bets");
+          return;
+        }
+
+        const rows: BetRow[] = result.data.flatMap((user) =>
+          user.bets.map((bet) => ({
+            id: bet.userBetId,
+            fullName: user.fullName,
+            email: user.email,
+            totalStake: user.totalStake,
+            betTitle: bet.betTitle,
+            stake: bet.stake,
+            oddsAtTime: bet.oddsAtTime,
+            potentialWin: bet.potentialWin,
+            status: bet.status.toLowerCase() as BetStatus,
+            placedAt: bet.placedAt,
+          })),
+        );
+
+        setBetsData(rows);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserWiseBets();
+  }, [tournamentId]);
   const filteredBets = useMemo(() => {
     return betsData.filter((bet) => {
       const matchesStatus =
         statusFilter === "all" || bet.status === statusFilter;
+
       const matchesSearch =
         searchQuery === "" ||
-        bet.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        bet.tournament.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        bet.betType.toLowerCase().includes(searchQuery.toLowerCase());
+        bet.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        bet.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        bet.betTitle.toLowerCase().includes(searchQuery.toLowerCase());
+
       return matchesStatus && matchesSearch;
     });
   }, [searchQuery, statusFilter, betsData]);
   const totalBets = filteredBets.length;
-  const totalAmount = filteredBets.reduce((sum, bet) => sum + bet.amount, 0);
-  const pendingPayouts = filteredBets
-    .filter((bet) => bet.status === "pending")
-    .reduce((sum, bet) => sum + bet.potentialPayout, 0);
+
+  const totalAmount = filteredBets.reduce((sum, bet) => sum + bet.stake, 0);
+  const pendingCount = filteredBets.filter(
+    (bet) => bet.status === "pending",
+  ).length;
+
+  const completedCount = filteredBets.filter(
+    (bet) => bet.status === "won",
+  ).length;
+  //   const completedCount = filteredBets.filter(
+  //   (bet) => bet.status === "complete"
+  // ).length;
   const needsReview = filteredBets.filter(
-    (bet) => bet.status === "review"
+    (bet) => bet.status === "review",
   ).length;
 
   return (
@@ -253,18 +296,21 @@ export default function BettingPage() {
 
               <div className="bg-white rounded-lg border border-slate-200 p-6">
                 <p className="text-sm font-medium text-slate-600 mb-1">
-                  Pending Payouts
+                  Pending Bets
                 </p>
                 <p className="text-3xl font-bold text-slate-900">
-                  ${pendingPayouts.toLocaleString()}
+                  {pendingCount}
                 </p>
               </div>
 
               <div className="bg-white rounded-lg border border-slate-200 p-6">
                 <p className="text-sm font-medium text-slate-600 mb-1">
-                  Needs Review
+                  Completed Bets
                 </p>
-                <p className="text-3xl font-bold text-primary">{needsReview}</p>
+                <p className="text-3xl font-bold text-primary">
+                  {" "}
+                  {completedCount}
+                </p>
               </div>
             </div>
 
@@ -275,25 +321,25 @@ export default function BettingPage() {
                 <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Bet ID
+                      Full Name
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      User
+                      Email
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Tournament
+                      Total Stake
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Bet Type
+                      Bet Title
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Amount
+                      Stake
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Odds
+                      Odds At Time
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Potential Payout
+                      Potential Win
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Date
@@ -301,66 +347,63 @@ export default function BettingPage() {
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    {/* <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Actions
-                    </th>
+                    </th> */}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {filteredBets.map((bet) => {
-                    const StatusIcon = statusIcons[bet.status];
-                    return (
-                      <tr
-                        key={bet.id}
-                        className="hover:bg-accent-foreground cursor-pointer"
+                  {loading ? (
+                    <tr>
+                      <td
+                        colSpan={9}
+                        className="px-6 py-6 text-center text-slate-500"
                       >
-                        <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                          {bet.id}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-900">
-                          {bet.user}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-600">
-                          {bet.tournament}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-600">
-                          {bet.betType}
-                        </td>
-                        <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                          ${bet.amount}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-600">
-                          {bet.odds}
-                        </td>
-                        <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                          ${bet.potentialPayout.toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-600">
-                          {bet.date}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-                              statusStyles[bet.status]
-                            }`}
-                          >
-                            <StatusIcon className="h-3.5 w-3.5" />
-                            {bet.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <Button
-                            onClick={() => handleViewBet(bet)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-slate-600 hover:text-slate-900 hover:bg-primary/20"
-                          >
-                            View
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : filteredBets.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={9}
+                        className="px-6 py-6 text-center text-slate-500"
+                      >
+                        No bets found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredBets.map((bet) => {
+                      const StatusIcon = statusIcons[bet.status];
+
+                      return (
+                        <tr
+                          key={bet.id}
+                          className="hover:bg-accent-foreground cursor-pointer"
+                        >
+                          <td className="px-6 py-4">{bet.fullName}</td>
+                          <td className="px-6 py-4">{bet.email}</td>
+                          <td className="px-6 py-4">{bet.totalStake}</td>
+                          <td className="px-6 py-4">{bet.betTitle}</td>
+                          <td className="px-6 py-4">{bet.stake}</td>
+                          <td className="px-6 py-4">{bet.oddsAtTime}</td>
+                          <td className="px-6 py-4">{bet.potentialWin}</td>
+                          <td className="px-6 py-4">
+                            {new Date(bet.placedAt).toLocaleString()}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                                statusStyles[bet.status]
+                              }`}
+                            >
+                              <StatusIcon className="h-3.5 w-3.5" />
+                              {bet.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -397,7 +440,7 @@ export default function BettingPage() {
                       User
                     </p>
                     <p className="text-base text-slate-900">
-                      {selectedBet.user}
+                      {selectedBet.fullName}
                     </p>
                   </div>
                   <div>
@@ -405,7 +448,7 @@ export default function BettingPage() {
                       Tournament
                     </p>
                     <p className="text-base text-slate-900">
-                      {selectedBet.tournament}
+                      {selectedBet.email}
                     </p>
                   </div>
                 </div>
@@ -417,7 +460,7 @@ export default function BettingPage() {
                       Bet Type
                     </p>
                     <p className="text-base text-slate-900">
-                      {selectedBet.betType}
+                      {selectedBet.betTitle}
                     </p>
                   </div>
                   <div>
@@ -425,7 +468,7 @@ export default function BettingPage() {
                       Placed Date
                     </p>
                     <p className="text-base text-slate-900">
-                      {selectedBet.date}
+                      {new Date(selectedBet.placedAt).toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -437,7 +480,7 @@ export default function BettingPage() {
                       Bet Amount
                     </p>
                     <p className="text-base font-semibold text-slate-900">
-                      ${selectedBet.amount}
+                      ${selectedBet.stake}
                     </p>
                   </div>
                   <div>
@@ -445,7 +488,7 @@ export default function BettingPage() {
                       Odds
                     </p>
                     <p className="text-base text-slate-900">
-                      {selectedBet.odds}
+                      {selectedBet.oddsAtTime}
                     </p>
                   </div>
                 </div>
@@ -456,7 +499,7 @@ export default function BettingPage() {
                       Potential Payout
                     </p>
                     <p className="text-base font-semibold text-slate-900">
-                      ${selectedBet.potentialPayout}
+                      ${selectedBet.potentialWin}
                     </p>
                   </div>
                   <div>

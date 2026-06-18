@@ -10,6 +10,8 @@ import {
   Trash2,
   Pencil,
   MapPin,
+  DeleteIcon,
+  Delete,
 } from "lucide-react";
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -76,12 +78,14 @@ export interface Tournament {
     points: number;
   }[];
   tournamentPrizes?: {
+    id?: string;
     prizeName: string;
     prizeType: string;
     value: number;
     placement: string;
   }[];
   prizesList?: {
+    id?: string;
     prizeName: string;
     prizeType: string;
     value: number;
@@ -107,6 +111,7 @@ export interface Tournament {
   }[];
 }
 interface Calcutta {
+  id?: string;
   calcuttaName: string;
   entryFee: string;
   payoutStructure: string;
@@ -156,6 +161,7 @@ export default function TournamentsPage() {
 
   const [prizeCategories, setPrizeCategories] = useState([
     {
+      id: "",
       prizeName: "",
       prizeType: "",
       value: "",
@@ -497,6 +503,7 @@ export default function TournamentsPage() {
     setPrizeCategories(
       Array.isArray(prizes) && prizes.length > 0
         ? prizes.map((prize) => ({
+            id: prize.id || "",
             prizeName: prize.prizeName || "",
             prizeType: prize.prizeType || "Cash",
             value: String(prize.value || ""),
@@ -504,6 +511,7 @@ export default function TournamentsPage() {
           }))
         : [
             {
+              id: "",
               prizeName: "",
               prizeType: "Cash",
               value: "",
@@ -515,12 +523,13 @@ export default function TournamentsPage() {
     if (tournament.calcuttas?.length) {
       setCalcuttas(
         tournament.calcuttas.map((item) => ({
-          calcuttaName: item.calcuttaName,
-          entryFee: String(item.entryFee),
-          payoutStructure: item.payoutStructure,
-          minTeams: String(item.minTeamLimit),
-          maxTeams: String(item.maxTeamLimit),
-          targetSpecies: item.species.map((s) => s.name),
+          id: item.id || "",
+          calcuttaName: item.calcuttaName || "",
+          entryFee: String(item.entryFee || ""),
+          payoutStructure: item.payoutStructure || "",
+          minTeams: String(item.minTeamLimit || ""),
+          maxTeams: String(item.maxTeamLimit || ""),
+          targetSpecies: item.species?.map((s) => s.name) || [],
         })),
       );
     }
@@ -532,6 +541,7 @@ export default function TournamentsPage() {
     setPrizeCategories((prev) => [
       ...prev,
       {
+        id: "",
         prizeName: "",
         prizeType: "Cash",
         value: "",
@@ -540,7 +550,22 @@ export default function TournamentsPage() {
     ]);
   };
 
-  const removePrizeCategory = (index: number) => {
+  const removePrizeCategory = async (index: number) => {
+    const prize = prizeCategories[index];
+
+    if (prize?.id) {
+      const res = await fetch(`/api/tournaments/prize/${prize.id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Prize delete failed");
+        return;
+      }
+    }
+
     setPrizeCategories((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -564,7 +589,22 @@ export default function TournamentsPage() {
     ]);
   };
 
-  const removeCalcutta = (index: number) => {
+  const removeCalcutta = async (index: number) => {
+    const calcutta = calcuttas[index];
+
+    if (calcutta?.id) {
+      const res = await fetch(`/api/tournaments/calcutta/${calcutta.id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Calcutta delete failed");
+        return;
+      }
+    }
+
     setCalcuttas((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -1174,13 +1214,13 @@ export default function TournamentsPage() {
                           />
                         </div>
 
-                        <div className="col-span-1 flex justify-end">
+                        <div className="col-span-1 flex justify-center items-center">
                           <button
                             type="button"
                             onClick={() => removePrizeCategory(index)}
                             className="text-red-400 hover:text-red-600 text-xl"
                           >
-                            🗑
+                            <Trash2 className="w-5 h-5 m-3" />
                           </button>
                         </div>
                       </div>
@@ -1207,6 +1247,19 @@ export default function TournamentsPage() {
                       key={index}
                       className="border rounded-xl p-4 bg-slate-50 mb-4"
                     >
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-sm font-semibold text-slate-700">
+                          Calcutta {index + 1}
+                        </h4>
+
+                        <button
+                          type="button"
+                          onClick={() => removeCalcutta(index)}
+                          className="text-red-400 hover:text-red-600 text-xl"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
                       <div className="grid grid-cols-3 gap-4">
                         <div>
                           <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">

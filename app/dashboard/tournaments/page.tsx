@@ -87,13 +87,17 @@ export interface Tournament {
     value: number;
     placement: string;
   }[];
-  tournamentCalcuttas?: {
+  calcuttas?: {
+    id: string;
     calcuttaName: string;
     entryFee: number;
     payoutStructure: string;
     minTeamLimit: number;
     maxTeamLimit: number;
-    speciesIds: string[];
+    species: {
+      id: string;
+      name: string;
+    }[];
   }[];
 
   speciesList?: {
@@ -508,18 +512,15 @@ export default function TournamentsPage() {
           ],
     );
 
-    if (tournament.tournamentCalcuttas?.length) {
+    if (tournament.calcuttas?.length) {
       setCalcuttas(
-        tournament.tournamentCalcuttas.map((item) => ({
+        tournament.calcuttas.map((item) => ({
           calcuttaName: item.calcuttaName,
           entryFee: String(item.entryFee),
           payoutStructure: item.payoutStructure,
           minTeams: String(item.minTeamLimit),
           maxTeams: String(item.maxTeamLimit),
-
-          targetSpecies: allowableSpecies
-            .filter((species) => item.speciesIds.includes(species.id))
-            .map((species) => species.name),
+          targetSpecies: item.species.map((s) => s.name),
         })),
       );
     }

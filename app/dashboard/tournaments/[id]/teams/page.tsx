@@ -20,6 +20,28 @@ import {
 } from "@/components/ui/select";
 import { apiFetch } from "@/lib/apiFetch";
 
+interface PrizeList {
+  id: string;
+  prizeName: string;
+  prizeType: string;
+  value: number;
+  placement: string;
+}
+
+interface CalcuttaList {
+  id: string;
+  calcuttaName: string;
+  entryFee: number;
+  payoutStructure: string;
+  minTeamLimit: number;
+  maxTeamLimit: number;
+}
+
+interface TournamentDetailData {
+  prizesList: PrizeList[];
+  calcuttas: CalcuttaList[];
+}
+
 interface MarketOption {
   id?: string;
   option: string;
@@ -106,7 +128,8 @@ export default function TournamentTeamsPage() {
       odds: "100",
     },
   ]);
-
+  const [tournamentData, setTournamentData] =
+    useState<TournamentDetailData | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string>
@@ -663,6 +686,29 @@ export default function TournamentTeamsPage() {
     statusFilter === "All"
       ? bets
       : bets.filter((bet) => bet.status === statusFilter);
+
+  useEffect(() => {
+    if (!tournamentId) return;
+
+    const fetchTournamentDetail = async () => {
+      try {
+        const res = await apiFetch(`/api/tournaments/${tournamentId}`);
+        const json = await res.json();
+
+        if (!res.ok || json.status === false) {
+          alert(json.message || "Tournament detail failed");
+          return;
+        }
+
+        const detail = Array.isArray(json.data) ? json.data[0] : json.data;
+        setTournamentData(detail || null);
+      } catch (error) {
+        console.error("Tournament detail error:", error);
+      }
+    };
+
+    fetchTournamentDetail();
+  }, [tournamentId]);
   return (
     <div className="flex min-h-screen bg-slate-50">
       <DashboardSidebar />
@@ -712,49 +758,6 @@ export default function TournamentTeamsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <div className="flex items-start justify-between mb-3">
-                <p className="text-sm font-medium text-slate-600">
-                  Active Teams
-                </p>
-                <div className="w-5 h-5 text-slate-400">⚡</div>
-              </div>
-              <p className="text-2xl font-bold text-slate-900">42</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <div className="flex items-start justify-between mb-3">
-                <p className="text-sm font-medium text-slate-600">Prize Pool</p>
-                <div className="w-5 h-5 text-slate-400">⊙</div>
-              </div>
-              <p className="text-2xl font-bold text-slate-900">$25,000</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <div className="flex items-start justify-between mb-3">
-                <p className="text-sm font-medium text-slate-600">Markets</p>
-                <div className="w-5 h-5 text-slate-400">⊕</div>
-              </div>
-              <p className="text-2xl font-bold text-slate-900">1</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <div className="flex items-start justify-between mb-3">
-                <p className="text-sm font-medium text-slate-600">Volume</p>
-                <div className="w-5 h-5 text-slate-400">📊</div>
-              </div>
-              <p className="text-2xl font-bold text-slate-900">$8.4K</p>
-            </div>
-          </div>
-          <div className="flex justify-end pb-3">
-            <Link
-              href={`/dashboard/betting&compliance?tournamentId=${tournamentId}`}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-foreground text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Bet Detail
-            </Link>
-          </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-slate-200 p-6">
               <div className="flex items-center gap-2 mb-6">
@@ -974,6 +977,142 @@ export default function TournamentTeamsPage() {
             )}
           </div>
 
+          <div className="flex justify-end pb-3">
+            <Link
+              href={`/dashboard/betting&compliance?tournamentId=${tournamentId}`}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-foreground text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Bet Detail
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-6">
+            {/* Prize Categories */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-slate-900">
+                  🏆 Prize Categories
+                </h2>
+                <span className="text-xs bg-orange-50 text-orange-600 px-3 py-1 rounded-full font-semibold">
+                  {tournamentData?.prizesList?.length || 0} Prizes
+                </span>
+              </div>
+
+              {tournamentData?.prizesList?.length ? (
+                <div className="space-y-3">
+                  {tournamentData.prizesList.map((prize) => (
+                    <div
+                      key={prize.id}
+                      className="rounded-xl border border-slate-200 bg-slate-50 p-4 hover:bg-white transition"
+                    >
+                      <p className="font-bold text-slate-900 mb-3">
+                        {prize.prizeName || "Unnamed Prize"}
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="bg-white rounded-lg p-3 border border-slate-100">
+                          <p className="text-[11px] uppercase text-slate-400 font-semibold">
+                            Type
+                          </p>
+                          <p className="text-sm font-bold text-slate-800">
+                            {prize.prizeType || "-"}
+                          </p>
+                        </div>
+
+                        <div className="bg-white rounded-lg p-3 border border-slate-100">
+                          <p className="text-[11px] uppercase text-slate-400 font-semibold">
+                            Value
+                          </p>
+                          <p className="text-sm font-bold text-primary">
+                            ${prize.value || 0}
+                          </p>
+                        </div>
+
+                        <div className="bg-white rounded-lg p-3 border border-slate-100">
+                          <p className="text-[11px] uppercase text-slate-400 font-semibold">
+                            Placement
+                          </p>
+                          <p className="text-sm font-bold text-slate-800">
+                            {prize.placement || "-"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">
+                  No Prize Categories Found
+                </p>
+              )}
+            </div>
+
+            {/* Flexible Calcuttas */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-slate-900">
+                  🎣 Flexible Calcuttas
+                </h2>
+                <span className="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-semibold">
+                  {tournamentData?.calcuttas?.length || 0} Pools
+                </span>
+              </div>
+
+              {tournamentData?.calcuttas?.length ? (
+                <div className="space-y-3">
+                  {tournamentData.calcuttas.map((calcutta) => (
+                    <div
+                      key={calcutta.id}
+                      className="rounded-xl border border-slate-200 bg-slate-50 p-4 hover:bg-white transition"
+                    >
+                      <p className="font-bold text-slate-900 mb-3">
+                        {calcutta.calcuttaName || "Unnamed Calcutta"}
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="bg-white rounded-lg p-3 border border-slate-100">
+                          <p className="text-[11px] uppercase text-slate-400 font-semibold">
+                            Entry Fee
+                          </p>
+                          <p className="text-sm font-bold text-primary">
+                            ${calcutta.entryFee || 0}
+                          </p>
+                        </div>
+
+                        <div className="bg-white rounded-lg p-3 border border-slate-100">
+                          <p className="text-[11px] uppercase text-slate-400 font-semibold">
+                            Payout Structure
+                          </p>
+                          <p className="text-sm font-bold text-slate-800">
+                            {calcutta.payoutStructure || "-"}
+                          </p>
+                        </div>
+
+                        <div className="bg-white rounded-lg p-3 border border-slate-100">
+                          <p className="text-[11px] uppercase text-slate-400 font-semibold">
+                            Min Teams
+                          </p>
+                          <p className="text-sm font-bold text-slate-800">
+                            {calcutta.minTeamLimit || 0}
+                          </p>
+                        </div>
+
+                        <div className="bg-white rounded-lg p-3 border border-slate-100">
+                          <p className="text-[11px] uppercase text-slate-400 font-semibold">
+                            Max Teams
+                          </p>
+                          <p className="text-sm font-bold text-slate-800">
+                            {calcutta.maxTeamLimit || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">No Calcuttas Found</p>
+              )}
+            </div>
+          </div>
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">

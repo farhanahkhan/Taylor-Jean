@@ -615,7 +615,7 @@ export default function TournamentsPage() {
     const calcutta = calcuttas[index];
 
     if (calcutta?.id) {
-      const res = await fetch(`/api/tournaments/calcutta/${calcutta.id}`, {
+      const res = await apiFetch(`/api/tournaments/calcutta/${calcutta.id}`, {
         method: "DELETE",
       });
 

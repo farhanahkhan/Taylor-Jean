@@ -123,7 +123,7 @@ type ApiResponse = BackendError | string;
 
 export async function PUT(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await context.params;
@@ -131,7 +131,10 @@ export async function PUT(
     const accessToken = req.cookies.get("accessToken")?.value;
 
     if (!accessToken) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { message: "Unauthorized", status: false },
+        { status: 401 },
+      );
     }
 
     const body: { isApproved: boolean; notes?: string } = await req.json();
@@ -158,30 +161,23 @@ export async function PUT(
       responseBody = await res.text();
     }
 
-    // ❌ Error case
-    if (!res.ok) {
-      return NextResponse.json(
-        {
-          message:
-            typeof responseBody === "string"
-              ? responseBody
-              : responseBody.message || "Something went wrong",
-        },
-        { status: res.status }
-      );
-    }
-
-    // ✅ Success
-    return NextResponse.json(responseBody, { status: res.status });
+    return NextResponse.json(
+      typeof responseBody === "string"
+        ? {
+            message: responseBody,
+            status: res.ok,
+          }
+        : responseBody,
+      { status: res.status },
+    );
   } catch (error: unknown) {
-    console.error("Server Error:", error);
-
     return NextResponse.json(
       {
         message:
           error instanceof Error ? error.message : "Internal Server Error",
+        status: false,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

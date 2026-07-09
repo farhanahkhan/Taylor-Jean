@@ -740,16 +740,11 @@ export default function TournamentTeamsPage() {
                   </p>
                 </div>
               </div>
-              {/* <button
-                onClick={() => setShowLaunchModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-foreground text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Launch New Bet
-              </button> */}
+
               {/* <div className="flex items-center gap-3"> */}
               <button
                 onClick={() => setShowLaunchModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-foreground text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-foreground text-white font-medium rounded-lg hover:bg-foreground transition-colors"
               >
                 Launch New Bet
               </button>
@@ -980,7 +975,7 @@ export default function TournamentTeamsPage() {
           <div className="flex justify-end pb-3">
             <Link
               href={`/dashboard/betting&compliance?tournamentId=${tournamentId}`}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-foreground text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-foreground text-white font-medium rounded-lg hover:bg-foreground transition-colors"
             >
               Bet Detail
             </Link>

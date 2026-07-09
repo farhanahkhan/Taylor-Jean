@@ -287,7 +287,7 @@ export default function BettingPage() {
 
               <div className="bg-white rounded-lg border border-slate-200 p-6">
                 <p className="text-sm font-medium text-slate-600 mb-1">
-                  Total Amount
+                  Total Stake
                 </p>
                 <p className="text-3xl font-bold text-slate-900">
                   ${totalAmount}

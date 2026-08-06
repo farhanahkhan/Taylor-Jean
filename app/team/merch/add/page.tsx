@@ -85,28 +85,53 @@ export default function AddProductPage({ editId }: { editId?: string }) {
   const [selectedMemberId, setSelectedMemberId] = useState("");
 
   // --- Variant Handlers ---
-  const toggleSizeVariant = (variantIndex: number, sizeId: string) => {
-    const updated = [...variants];
-    const sizes = updated[variantIndex].sizes;
-    if (sizes.includes(sizeId)) {
-      updated[variantIndex].sizes = sizes.filter((s) => s !== sizeId);
-    } else {
-      updated[variantIndex].sizes = [...sizes, sizeId];
-    }
-    setVariants(updated);
+  // const toggleSizeVariant = (variantIndex: number, sizeId: string) => {
+  //   const updated = [...variants];
+  //   const sizes = updated[variantIndex].sizes;
+  //   if (sizes.includes(sizeId)) {
+  //     updated[variantIndex].sizes = sizes.filter((s) => s !== sizeId);
+  //   } else {
+  //     updated[variantIndex].sizes = [...sizes, sizeId];
+  //   }
+  //   setVariants(updated);
+  // };
+
+  // const toggleColorVariant = (variantIndex: number, colorId: string) => {
+  //   const updated = [...variants];
+  //   const colors = updated[variantIndex].colors;
+  //   if (colors.includes(colorId)) {
+  //     updated[variantIndex].colors = colors.filter((c) => c !== colorId);
+  //   } else {
+  //     updated[variantIndex].colors = [...colors, colorId];
+  //   }
+  //   setVariants(updated);
+  // };
+
+  const selectSizeVariant = (variantIndex: number, sizeId: string) => {
+    setVariants((currentVariants) =>
+      currentVariants.map((variant, index) => {
+        if (index !== variantIndex) return variant;
+
+        return {
+          ...variant,
+          sizes: variant.sizes.includes(sizeId) ? [] : [sizeId],
+        };
+      }),
+    );
   };
 
-  const toggleColorVariant = (variantIndex: number, colorId: string) => {
-    const updated = [...variants];
-    const colors = updated[variantIndex].colors;
-    if (colors.includes(colorId)) {
-      updated[variantIndex].colors = colors.filter((c) => c !== colorId);
-    } else {
-      updated[variantIndex].colors = [...colors, colorId];
-    }
-    setVariants(updated);
-  };
+  const selectColorVariant = (variantIndex: number, colorId: string) => {
+    setVariants((currentVariants) =>
+      currentVariants.map((variant, index) => {
+        if (index !== variantIndex) return variant;
 
+        return {
+          ...variant,
+          colors: variant.colors.includes(colorId) ? [] : [colorId],
+        };
+      }),
+    );
+  };
   const updateQuantity = (index: number, value: string) => {
     const updated = [...variants];
     updated[index].quantity = value;
@@ -505,14 +530,14 @@ export default function AddProductPage({ editId }: { editId?: string }) {
 
                   <div className="mb-6 w-60">
                     <Label.Root className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Team Member
+                      Team
                     </Label.Root>
                     <Select.Root
                       value={selectedMemberId}
                       onValueChange={setSelectedMemberId}
                     >
                       <Select.Trigger className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                        <Select.Value placeholder="Select team member" />
+                        <Select.Value placeholder="Select team " />
                         <Select.Icon>
                           <ChevronDown className="h-4 w-4 text-gray-500" />
                         </Select.Icon>
@@ -569,7 +594,7 @@ export default function AddProductPage({ editId }: { editId?: string }) {
                             <button
                               key={sizeObj.id}
                               onClick={() =>
-                                toggleSizeVariant(index, sizeObj.id)
+                                selectSizeVariant(index, sizeObj.id)
                               }
                               className={`px-4 py-2 text-sm font-medium border rounded-lg transition-colors ${
                                 variant.sizes.includes(sizeObj.id)
@@ -593,7 +618,7 @@ export default function AddProductPage({ editId }: { editId?: string }) {
                             <button
                               key={color.id}
                               onClick={() =>
-                                toggleColorVariant(index, color.id)
+                                selectColorVariant(index, color.id)
                               }
                               title={color.name}
                               className={`w-10 h-10 rounded-full border-2 transition-all ${

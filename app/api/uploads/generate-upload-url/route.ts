@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${accessToken}`, // 🔥 IMPORTANT
+          Authorization: `Bearer ${accessToken}`,
           Accept: "application/json",
         },
         cache: "no-store",

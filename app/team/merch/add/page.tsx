@@ -345,30 +345,60 @@ export default function AddProductPage({ editId }: { editId?: string }) {
   //   loadMembers();
   // }, []);
 
+  // useEffect(() => {
+  //   async function loadMembers() {
+  //     try {
+  //       const res = await fetch("/api/team/team-profile");
+  //       const json = await res.json();
+
+  //       console.log("API RESPONSE:", json);
+
+  //       const teams = json?.data?.data; // ✅ REAL ARRAY HERE
+
+  //       if (json?.status && Array.isArray(teams)) {
+  //         setTeamMembers(teams);
+  //       } else {
+  //         setTeamMembers([]);
+  //       }
+  //     } catch (err) {
+  //       console.error("Failed to fetch members", err);
+  //       setTeamMembers([]);
+  //     }
+  //   }
+
+  //   loadMembers();
+  // }, []);
+
   useEffect(() => {
-    async function loadMembers() {
+    async function loadTeams() {
       try {
-        const res = await fetch("/api/general-teams/my");
+        const res = await fetch("/api/team/team-profile", {
+          method: "GET",
+          cache: "no-store",
+        });
+
         const json = await res.json();
 
-        console.log("API RESPONSE:", json);
+        console.log("Team API response:", json);
 
-        const teams = json?.data?.data; // ✅ REAL ARRAY HERE
-
-        if (json?.status && Array.isArray(teams)) {
-          setTeamMembers(teams);
-        } else {
+        if (!res.ok) {
+          console.error(json.message || "Failed to load teams");
           setTeamMembers([]);
+          return;
         }
-      } catch (err) {
-        console.error("Failed to fetch members", err);
+
+        // Response mein array directly json.data mein hai
+        const teams = Array.isArray(json?.data) ? json.data : [];
+
+        setTeamMembers(teams);
+      } catch (error) {
+        console.error("Failed to fetch teams:", error);
         setTeamMembers([]);
       }
     }
 
-    loadMembers();
+    loadTeams();
   }, []);
-
   return (
     <div className="min-h-screen bg-slate-900 flex">
       <TeamSidebar />
@@ -498,7 +528,7 @@ export default function AddProductPage({ editId }: { editId?: string }) {
                               >
                                 <Select.ItemText>
                                   {" "}
-                                  {member.displayName || member.name}
+                                  {member.name || member.displayName}
                                 </Select.ItemText>
                                 <Select.ItemIndicator>
                                   <Check className="h-4 w-4 text-primary" />

@@ -73,6 +73,7 @@ export function DashboardHeader() {
   const [openCharter, setOpenCharter] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [openTournament, setOpenTournament] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
@@ -240,6 +241,56 @@ export function DashboardHeader() {
                                 }`}
                               >
                                 Charter Species Type
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    if (item.label === "Tournaments") {
+                      return (
+                        <div key={item.label}>
+                          <button
+                            type="button"
+                            onClick={() => setOpenTournament(!openTournament)}
+                            className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-sm text-muted-foreground font-medium rounded-lg transition-all hover:text-foreground hover:bg-primary/10"
+                          >
+                            <div className="flex items-center gap-3">
+                              <item.icon className="h-5 w-5" />
+                              Create Tournament
+                            </div>
+
+                            <span className="text-xs">
+                              {openTournament ? "▲" : "▼"}
+                            </span>
+                          </button>
+
+                          {openTournament && (
+                            <div className="ml-8 mt-1 space-y-1">
+                              {/* Tournament Type */}
+                              <Link
+                                href="/dashboard/tournaments/tournament_type"
+                                className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                                  pathname ===
+                                  "/dashboard/tournaments/tournament-type"
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                                }`}
+                              >
+                                Tournament Type
+                              </Link>
+
+                              {/* Create Tournament */}
+                              <Link
+                                href="/dashboard/tournaments"
+                                className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                                  pathname === "/dashboard/tournaments"
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                                }`}
+                              >
+                                Tournaments
                               </Link>
                             </div>
                           )}

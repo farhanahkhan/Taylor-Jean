@@ -48,6 +48,7 @@ const navItems = [
 export function DashboardSidebar() {
   const pathname = usePathname();
   const [openCharter, setOpenCharter] = useState(false);
+  const [openTournament, setOpenTournament] = useState(false);
 
   const isCharterRoute = pathname.startsWith("/dashboard/charters");
   // ✅ Auto open Charter dropdown on refresh
@@ -224,6 +225,53 @@ export function DashboardSidebar() {
                       }`}
                     >
                       Charter Species Type
+                    </Link>
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          if (item.label === "Tournaments") {
+            return (
+              <div key={item.label}>
+                <button
+                  type="button"
+                  onClick={() => setOpenTournament(!openTournament)}
+                  className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-sm text-muted-foreground font-medium rounded-lg transition-all hover:text-foreground hover:bg-primary/10"
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon className="h-5 w-5" />
+                    Create Tournament
+                  </div>
+
+                  <span className="text-xs">{openTournament ? "▲" : "▼"}</span>
+                </button>
+
+                {openTournament && (
+                  <div className="ml-8 mt-1 space-y-1">
+                    {/* Tournament Type */}
+                    <Link
+                      href="/dashboard/tournaments/tournament_type"
+                      className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                        pathname === "/dashboard/tournaments/tournament-type"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      }`}
+                    >
+                      Tournament Type
+                    </Link>
+
+                    {/* Create Tournament */}
+                    <Link
+                      href="/dashboard/tournaments"
+                      className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                        pathname === "/dashboard/tournaments"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      }`}
+                    >
+                      Tournaments
                     </Link>
                   </div>
                 )}

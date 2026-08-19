@@ -35,6 +35,11 @@ const navItems = [
   //   label: "Betting",
   //   href: "/dashboard/betting&compliance",
   // },
+  {
+    icon: DollarSign,
+    label: "Bets",
+    href: "/dashboard/bets",
+  },
   { icon: FileCheck, label: "KYC", href: "/dashboard/kyc" },
   // { icon: DollarSign, label: "Payments & Commerce", href: "#" },
   // { icon: FileText, label: "Content Moderation", href: "#" },
@@ -49,6 +54,7 @@ export function DashboardSidebar() {
   const pathname = usePathname();
   const [openCharter, setOpenCharter] = useState(false);
   const [openTournament, setOpenTournament] = useState(false);
+  const [openBets, setOpenBets] = useState(false);
 
   const isCharterRoute = pathname.startsWith("/dashboard/charters");
   // ✅ Auto open Charter dropdown on refresh
@@ -272,6 +278,57 @@ export function DashboardSidebar() {
                       }`}
                     >
                       Tournaments
+                    </Link>
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          if (item.label === "Bets") {
+            return (
+              <div key={item.label}>
+                <button
+                  type="button"
+                  onClick={() => setOpenBets(!openBets)}
+                  className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                    pathname.startsWith("/dashboard/bets")
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon className="h-5 w-5" />
+                    Bets
+                  </div>
+
+                  <span className="text-xs">{openBets ? "▲" : "▼"}</span>
+                </button>
+
+                {openBets && (
+                  <div className="ml-8 mt-1 space-y-1">
+                    {/* Gem Setting */}
+                    <Link
+                      href="/dashboard/bets/gem-setting"
+                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-all ${
+                        pathname === "/dashboard/bets/gem-setting"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      }`}
+                    >
+                      Gem Setting
+                    </Link>
+
+                    {/* Coin Setting */}
+                    <Link
+                      href="/dashboard/bets/coin-setting"
+                      className={`block px-3 py-2 text-sm font-medium rounded-md transition-all ${
+                        pathname === "/dashboard/bets/coin-setting"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                      }`}
+                    >
+                      Coin Setting
                     </Link>
                   </div>
                 )}

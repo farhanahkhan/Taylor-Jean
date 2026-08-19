@@ -58,6 +58,11 @@ const navItems = [
   //   label: "Betting",
   //   href: "/dashboard/betting&compliance",
   // },
+  {
+    icon: DollarSign,
+    label: "Bets",
+    href: "/dashboard/bets",
+  },
   { icon: FileCheck, label: "KYC", href: "/dashboard/kyc" },
   // { icon: DollarSign, label: "Payments & Commerce", href: "#" },
   // { icon: FileText, label: "Content Moderation", href: "#" },
@@ -74,6 +79,7 @@ export function DashboardHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [openTournament, setOpenTournament] = useState(false);
+  const [openBets, setOpenBets] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
@@ -291,6 +297,54 @@ export function DashboardHeader() {
                                 }`}
                               >
                                 Tournaments
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                    if (item.label === "Bets") {
+                      return (
+                        <div key={item.label}>
+                          <button
+                            type="button"
+                            onClick={() => setOpenBets(!openBets)}
+                            className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-sm text-muted-foreground font-medium rounded-lg transition-all hover:text-foreground hover:bg-primary/10"
+                          >
+                            <div className="flex items-center gap-3">
+                              <item.icon className="h-5 w-5" />
+                              Bets
+                            </div>
+
+                            <span className="text-xs">
+                              {openBets ? "▲" : "▼"}
+                            </span>
+                          </button>
+
+                          {openBets && (
+                            <div className="ml-8 mt-1 space-y-1">
+                              <Link
+                                href="/dashboard/bets/gem-setting"
+                                onClick={() => setIsMenuOpen(false)}
+                                className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                                  pathname === "/dashboard/bets/gem-setting"
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                                }`}
+                              >
+                                Gem Setting
+                              </Link>
+
+                              <Link
+                                href="/dashboard/bets/coin-setting"
+                                onClick={() => setIsMenuOpen(false)}
+                                className={`block px-3 py-2 text-sm font-medium rounded-md ${
+                                  pathname === "/dashboard/bets/coin-setting"
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                                }`}
+                              >
+                                Coin Setting
                               </Link>
                             </div>
                           )}

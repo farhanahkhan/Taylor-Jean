@@ -401,9 +401,9 @@ export default function GemSettingPage() {
                           Status
                         </th>
 
-                        <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        {/* <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                           Actions
-                        </th>
+                        </th> */}
                       </tr>
                     </thead>
 
@@ -447,7 +447,7 @@ export default function GemSettingPage() {
                               </span>
                             </td>
 
-                            <td className="px-3 py-4 text-sm whitespace-nowrap">
+                            {/* <td className="px-3 py-4 text-sm whitespace-nowrap">
                               <DropdownMenu.Root>
                                 <DropdownMenu.Trigger asChild>
                                   <button
@@ -479,7 +479,7 @@ export default function GemSettingPage() {
                                   </DropdownMenu.Content>
                                 </DropdownMenu.Portal>
                               </DropdownMenu.Root>
-                            </td>
+                            </td> */}
                           </tr>
                         ))
                       )}

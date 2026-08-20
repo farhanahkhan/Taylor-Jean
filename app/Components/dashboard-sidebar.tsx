@@ -248,7 +248,7 @@ export function DashboardSidebar() {
                 >
                   <div className="flex items-center gap-3">
                     <item.icon className="h-5 w-5" />
-                    Create Tournament
+                    Tournaments
                   </div>
 
                   <span className="text-xs">{openTournament ? "▲" : "▼"}</span>
@@ -277,7 +277,7 @@ export function DashboardSidebar() {
                           : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
                       }`}
                     >
-                      Tournaments
+                      Create Tournament
                     </Link>
                   </div>
                 )}

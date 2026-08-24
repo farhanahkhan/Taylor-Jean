@@ -107,6 +107,12 @@ export default function TournamentTeamsPage() {
   const tournamentId = params?.id;
   const tournament = { title: "Team Activity" };
 
+  const [selectedMember, setSelectedMember] = useState<TeamMemberPoint | null>(
+    null,
+  );
+
+  const [manualPoints, setManualPoints] = useState("");
+
   const [bets, setBets] = useState<Bet[]>([]);
   const [betsLoading, setBetsLoading] = useState(true);
 
@@ -153,6 +159,7 @@ export default function TournamentTeamsPage() {
   const [memberPointLoading, setMemberPointLoading] = useState(false);
   const [selectedLeaderboardTeam, setSelectedLeaderboardTeam] =
     useState<TeamPoint | null>(null);
+  const [isAutoPoint, setIsAutoPoint] = useState(false);
 
   const removeOption = (index: number) => {
     setMarketOptions(marketOptions.filter((_, i) => i !== index));
@@ -422,29 +429,28 @@ export default function TournamentTeamsPage() {
     fetchBets();
   }, [tournamentId]);
 
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        const res = await apiFetch(
-          `/api/bets/tournament/${tournamentId}/team-points`,
-        );
+  const fetchLeaderboard = async () => {
+    try {
+      const res = await apiFetch(
+        `/api/bets/tournament/${tournamentId}/team-points`,
+      );
 
-        const data = await res.json();
+      const data = await res.json();
 
-        if (data?.data) {
-          const sorted = [...data.data].sort(
+      console.log("LEADERBOARD DATA:", data);
+
+      if (data?.data) {
+        setTeamsPoint(
+          [...data.data].sort(
             (a: TeamPoint, b: TeamPoint) => b.totalPoints - a.totalPoints,
-          );
-
-          setTeamsPoint(sorted);
-        }
-      } catch (error) {
-        console.error("Leaderboard error:", error);
-      } finally {
-        setLoading(false);
+          ),
+        );
       }
-    };
-
+    } catch (error) {
+      console.error("Leaderboard error:", error);
+    }
+  };
+  useEffect(() => {
     if (tournamentId) {
       fetchLeaderboard();
     }
@@ -701,7 +707,12 @@ export default function TournamentTeamsPage() {
         }
 
         const detail = Array.isArray(json.data) ? json.data[0] : json.data;
+
         setTournamentData(detail || null);
+
+        setIsAutoPoint(detail?.isAutoPoint ?? false);
+
+        console.log("AUTO POINT:", detail?.isAutoPoint);
       } catch (error) {
         console.error("Tournament detail error:", error);
       }
@@ -766,15 +777,15 @@ export default function TournamentTeamsPage() {
                 <p className="text-sm text-slate-500">Loading...</p>
               ) : (
                 <div className="space-y-4">
-                  {teamsPoint.map((team, index) => (
+                  {teamsPoint.map((team) => (
                     <div
                       key={team.tournamentTeamId}
                       onClick={() => handleLeaderboardClick(team)}
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition"
+                      className="rounded-xl p-5 border cursor-pointer hover:shadow-md"
                     >
                       <div className="flex items-center gap-3">
                         <span className="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">
-                          {index + 1}
+                          {/* {index + 1} */}
                         </span>
                         <div>
                           <p className="font-semibold text-slate-900">
@@ -1439,7 +1450,15 @@ export default function TournamentTeamsPage() {
                 {memberPoints.map((member) => (
                   <div
                     key={member.tournamentTeamMemberId}
-                    className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border"
+                    onClick={() => {
+                      if (isAutoPoint) {
+                        return; // true hai to second modal nahi khulega
+                      }
+
+                      setSelectedMember(member);
+                      setManualPoints("");
+                    }}
+                    className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       {member.avatarUrl ? (
@@ -1470,6 +1489,74 @@ export default function TournamentTeamsPage() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {selectedMember && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
+            <button
+              onClick={() => setSelectedMember(null)}
+              className="float-right text-slate-500"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-lg font-bold mb-4">
+              {selectedMember.userName}
+            </h2>
+
+            <label className="text-sm font-semibold">Points</label>
+
+            <input
+              type="number"
+              value={manualPoints}
+              onChange={(e) => setManualPoints(e.target.value)}
+              placeholder="Enter Points"
+              className="w-full border rounded-lg px-3 py-2 mt-2"
+            />
+
+            <button
+              className="w-full mt-4 bg-primary text-white py-2 rounded-lg"
+              onClick={async () => {
+                try {
+                  const res = await apiFetch(
+                    "/api/team-activities/manual-points",
+                    {
+                      method: "POST",
+                      body: JSON.stringify({
+                        tournamentId: tournamentId,
+                        tournamentTeamId:
+                          selectedLeaderboardTeam?.tournamentTeamId,
+                        tournamentTeamMemberId:
+                          selectedMember?.tournamentTeamMemberId,
+                        point: Number(manualPoints),
+                      }),
+                    },
+                  );
+
+                  const data = await res.json();
+
+                  if (!res.ok) {
+                    alert(data.message || "Failed");
+                    return;
+                  }
+
+                  alert("Points added successfully");
+
+                  setSelectedMember(null);
+                  setManualPoints("");
+                  window.location.reload();
+
+                  // agar leaderboard refresh karna hai
+                } catch (error) {
+                  console.error("Manual points error:", error);
+                  alert("Something went wrong");
+                }
+              }}
+            >
+              Save Points
+            </button>
           </div>
         </div>
       )}

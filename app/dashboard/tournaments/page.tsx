@@ -125,6 +125,7 @@ interface TournamentAPIResponse {
 
 export default function TournamentsPage() {
   const [pageRefreshKey, setPageRefreshKey] = useState(0);
+  const [isAutoPoint, setIsAutoPoint] = useState(true);
 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -211,6 +212,7 @@ export default function TournamentsPage() {
     setSelectedSpecies([]);
     setUploadedImageUrl("");
     setBannerPreview(null);
+    setIsAutoPoint(true);
     setSelectedPosition(null);
   }, []);
 
@@ -357,18 +359,27 @@ export default function TournamentsPage() {
       name: formData.title,
       place: formData.location || "",
       tournamentTypeId: formData.tournamentType,
+
+      isAutoPoint: isAutoPoint,
+
       startDate: new Date(formData.startDate).toISOString(),
       endDate: new Date(formData.endDate).toISOString(),
+
       latitude: Number(selectedPosition?.[0]) || Number(formData.latitude) || 0,
       longitude:
         Number(selectedPosition?.[1]) || Number(formData.longitude) || 0,
+
       entryFee: Number(formData.entryFee) || 0,
       description: formData.description || "",
       imageUrl: finalImage,
-      tournamentSpecies: selectedSpecies.map((s) => ({
-        speciesId: s.speciesId,
-        points: Number(s.points),
-      })),
+
+      tournamentSpecies: isAutoPoint
+        ? selectedSpecies.map((s) => ({
+            speciesId: s.speciesId,
+            points: Number(s.points),
+          }))
+        : [],
+
       tournamentPrizes: prizeCategories.map((prize) => ({
         prizeName: prize.prizeName,
         prizeType: prize.prizeType,
@@ -1046,102 +1057,86 @@ export default function TournamentsPage() {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-slate-500 uppercase mb-2 block">
-                    Allowable Species
-                  </Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {/* {allowableSpecies.map((species) => {
-                      const isSelected = selectedSpecies.some(
-                        (s) => String(s.speciesId) === String(species.id),
-                      );
+                  <div className="flex items-center justify-between mb-3">
+                    <Label className="text-xs font-medium text-slate-500 uppercase">
+                      Allowable Species
+                    </Label>
 
-                      return (
-                        <div key={species.id} className="flex flex-col gap-2">
-                          <button
-                            onClick={() => toggleSpecies(species.id)}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors flex justify-between ${
-                              isSelected
-                                ? "bg-primary/10 text-primary border-primary"
-                                : "bg-white text-slate-700 border-slate-200 hover:bg-gray-100"
-                            }`}
-                          >
-                            {species.name}
-                          </button>
-
-                          {isSelected && (
-                            <input
-                              type="number"
-                              placeholder="Enter points"
-                              // value={
-                              //   selectedSpecies.find(
-                              //     (s) => s.speciesId === species.id,
-                              //   )?.points ?? ""
-                              // }
-                              value={
-                                selectedSpecies.find(
-                                  (s) =>
-                                    String(s.speciesId) === String(species.id),
-                                )?.points ?? ""
-                              }
-                              onChange={(e) =>
-                                handlePointChange(species.id, e.target.value)
-                              }
-                              className="px-3 py-2 border rounded-md text-sm outline-none focus:border-primary"
-                            />
-                          )}
-                        </div>
-                      );
-                    })} */}
-
-                    {allowableSpecies.map((species) => {
-                      const isSelected = selectedSpecies.some(
-                        (s) => String(s.speciesId) === String(species.id),
-                      );
-
-                      return (
-                        <div key={species.id} className="flex flex-col gap-2">
-                          <button
-                            type="button"
-                            onClick={() => toggleSpecies(species.id)}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
-                              isSelected
-                                ? "bg-primary/10 text-primary border-primary"
-                                : "bg-white text-slate-700 border-slate-200 hover:bg-gray-100"
-                            }`}
-                          >
-                            {species.name}
-                          </button>
-
-                          {isSelected && (
-                            <input
-                              type="number"
-                              placeholder="Enter points"
-                              value={
-                                selectedSpecies.find(
-                                  (s) =>
-                                    String(s.speciesId) === String(species.id),
-                                )?.points ?? ""
-                              }
-                              onChange={(e) =>
-                                handlePointChange(species.id, e.target.value)
-                              }
-                              className="px-3 py-2 border rounded-md text-sm outline-none focus:border-primary"
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
+                    <button
+                      type="button"
+                      onClick={() => setIsAutoPoint((prev) => !prev)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        isAutoPoint ? "bg-primary" : "bg-slate-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+                          isAutoPoint ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
                   </div>
-                  {errors.species && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.species}
-                    </p>
-                  )}
+                  {isAutoPoint && (
+                    <>
+                      <div className="grid grid-cols-3 gap-2">
+                        {allowableSpecies.map((species) => {
+                          const isSelected = selectedSpecies.some(
+                            (s) => String(s.speciesId) === String(species.id),
+                          );
 
-                  {errors.speciesPoints && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.speciesPoints}
-                    </p>
+                          return (
+                            <div
+                              key={species.id}
+                              className="flex flex-col gap-2"
+                            >
+                              <button
+                                type="button"
+                                onClick={() => toggleSpecies(species.id)}
+                                className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                                  isSelected
+                                    ? "bg-primary/10 text-primary border-primary"
+                                    : "bg-white text-slate-700 border-slate-200 hover:bg-gray-100"
+                                }`}
+                              >
+                                {species.name}
+                              </button>
+
+                              {isSelected && (
+                                <input
+                                  type="number"
+                                  placeholder="Enter points"
+                                  value={
+                                    selectedSpecies.find(
+                                      (s) =>
+                                        String(s.speciesId) ===
+                                        String(species.id),
+                                    )?.points ?? ""
+                                  }
+                                  onChange={(e) =>
+                                    handlePointChange(
+                                      species.id,
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="px-3 py-2 border rounded-md text-sm outline-none focus:border-primary"
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {errors.species && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.species}
+                        </p>
+                      )}
+
+                      {errors.speciesPoints && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.speciesPoints}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
                 <div>

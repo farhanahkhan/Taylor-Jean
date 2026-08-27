@@ -68,6 +68,7 @@ export interface Tournament {
   place?: string;
   tournamentType?: string;
   tournamentTypeId?: string;
+  isAutoPoint?: boolean;
   typeId?: string;
   image?: string;
   banner?: string;
@@ -301,6 +302,7 @@ export default function TournamentsPage() {
   };
 
   const handleLaunchTournament = async () => {
+    console.log("EDIT AUTO POINT VALUE:", isAutoPoint);
     const validationErrors: Record<string, string> = {};
 
     if (!formData.title.trim())
@@ -398,7 +400,7 @@ export default function TournamentsPage() {
           .map((species) => species.id),
       })),
     };
-
+    console.log("EDIT AUTO POINT VALUE:", isAutoPoint);
     const url = isEditMode
       ? `/api/tournaments/${editingId}`
       : `/api/tournaments`;
@@ -494,6 +496,7 @@ export default function TournamentsPage() {
   const handleEdit = (tournament: Tournament) => {
     setIsEditMode(true);
     setEditingId(tournament.id);
+    setIsAutoPoint(tournament.isAutoPoint ?? false);
 
     const typedTarget = tournamentTypes.find(
       (type) =>

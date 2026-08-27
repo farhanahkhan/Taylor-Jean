@@ -1453,7 +1453,7 @@ export default function TournamentTeamsPage() {
                     key={member.tournamentTeamMemberId}
                     onClick={() => {
                       if (isAutoPoint) {
-                        return; // true hai to second modal nahi khulega
+                        return;
                       }
 
                       setSelectedMember(member);

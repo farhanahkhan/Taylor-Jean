@@ -36,12 +36,13 @@ export async function PUT(
     }
 
     const body = await req.json();
+    console.log("BODY FROM FRONTEND:", body);
 
     const payload = {
       name: body.name,
       place: body.place,
       tournamentTypeId: body.tournamentTypeId,
-
+      isAutoPoint: body.isAutoPoint ?? false,
       startDate: body.startDate,
       endDate: body.endDate,
 
@@ -76,6 +77,7 @@ export async function PUT(
           speciesIds: item.speciesIds || [],
         })) || [],
     };
+    console.log("PAYLOAD TO BACKEND:", payload);
     const res = await fetch(`${API_BASE_URL}/api/tournaments/${id}`, {
       method: "PUT",
       headers: {
@@ -142,6 +144,7 @@ export async function DELETE(
     const responseBody = contentType?.includes("application/json")
       ? await res.json()
       : await res.text();
+    console.log("BACKEND RESPONSE:", responseBody);
 
     return new NextResponse(
       typeof responseBody === "string"

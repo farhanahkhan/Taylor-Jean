@@ -9,14 +9,25 @@ type TournamentPrizePayload = {
   prizeType: string;
   value: number;
   placement: string;
+  remarks: string;
 };
 type TournamentCalcuttaPayload = {
   calcuttaName: string;
   entryFee: number;
-  payoutStructure: string;
+  adminFeePercentage: number;
+  payoutStructure: string; // ADD BACK
   minTeamLimit: number;
   maxTeamLimit: number;
+  remarks: string;
   speciesIds: string[];
+
+  prizes: {
+    prizeName: string;
+    prizeType: string;
+    value: number;
+    placement: string;
+    remarks: string;
+  }[];
 };
 export async function PUT(
   req: NextRequest,
@@ -66,15 +77,38 @@ export async function PUT(
           prizeType: item.prizeType,
           value: Number(item.value) || 0,
           placement: item.placement,
+          remarks: item.remarks || "",
         })) || [],
+
       tournamentCalcuttas:
         body.tournamentCalcuttas?.map((item: TournamentCalcuttaPayload) => ({
           calcuttaName: item.calcuttaName,
+
           entryFee: Number(item.entryFee) || 0,
-          payoutStructure: item.payoutStructure || "",
+
+          adminFeePercentage: Number(item.adminFeePercentage) || 0,
+          payoutStructure: item.payoutStructure || "Winner Takes All",
+
           minTeamLimit: Number(item.minTeamLimit) || 0,
+
           maxTeamLimit: Number(item.maxTeamLimit) || 0,
+
+          remarks: item.remarks || "",
+
           speciesIds: item.speciesIds || [],
+
+          prizes:
+            item.prizes?.map((prize) => ({
+              prizeName: prize.prizeName,
+
+              prizeType: prize.prizeType,
+
+              value: Number(prize.value) || 0,
+
+              placement: prize.placement,
+
+              remarks: prize.remarks || "",
+            })) || [],
         })) || [],
     };
     console.log("PAYLOAD TO BACKEND:", payload);

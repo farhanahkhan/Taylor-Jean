@@ -84,6 +84,7 @@ export interface Tournament {
     prizeType: string;
     value: number;
     placement: string;
+    remarks: string;
   }[];
   prizesList?: {
     id?: string;
@@ -91,17 +92,29 @@ export interface Tournament {
     prizeType: string;
     value: number;
     placement: string;
+    remarks: string;
   }[];
   calcuttas?: {
     id: string;
     calcuttaName: string;
     entryFee: number;
+    adminFeePercentage: number;
     payoutStructure: string;
     minTeamLimit: number;
     maxTeamLimit: number;
+    remarks?: string;
+
     species: {
       id: string;
       name: string;
+    }[];
+    prizes?: {
+      id?: string;
+      prizeName: string;
+      prizeType: string;
+      value: number;
+      placement: string;
+      remarks?: string;
     }[];
   }[];
 
@@ -111,14 +124,26 @@ export interface Tournament {
     points: number;
   }[];
 }
+interface CalcuttaPrize {
+  prizeName: string;
+  prizeType: string;
+  value: string;
+  placement: string;
+  remarks?: string;
+}
+
 interface Calcutta {
   id?: string;
   calcuttaName: string;
   entryFee: string;
+  adminFeePercentage: string;
   payoutStructure: string;
   targetSpecies: string[];
   minTeams: string;
   maxTeams: string;
+  remarks: string;
+
+  prizes: CalcuttaPrize[];
 }
 interface TournamentAPIResponse {
   data: Omit<Tournament, "title">[];
@@ -168,17 +193,28 @@ export default function TournamentsPage() {
       prizeType: "",
       value: "",
       placement: "",
+      remarks: "",
     },
   ]);
+  const emptyPrize = {
+    prizeName: "",
+    prizeType: "Cash",
+    value: "",
+    placement: "",
+    remarks: "",
+  };
 
   const [calcuttas, setCalcuttas] = useState<Calcutta[]>([
     {
       calcuttaName: "",
       entryFee: "",
-      payoutStructure: "",
+      adminFeePercentage: "",
       targetSpecies: [],
+      payoutStructure: "",
       minTeams: "",
       maxTeams: "",
+      remarks: "",
+      prizes: [emptyPrize],
     },
   ]);
 
@@ -387,17 +423,36 @@ export default function TournamentsPage() {
         prizeType: prize.prizeType,
         value: Number(prize.value) || 0,
         placement: prize.placement,
+        remarks: prize.remarks,
       })),
 
       tournamentCalcuttas: calcuttas.map((calcutta) => ({
         calcuttaName: calcutta.calcuttaName,
+
         entryFee: Number(calcutta.entryFee) || 0,
-        payoutStructure: calcutta.payoutStructure,
+
+        adminFeePercentage: Number(calcutta.adminFeePercentage) || 0,
+
+        payoutStructure: calcutta.payoutStructure || "Winner Takes All",
+
         minTeamLimit: Number(calcutta.minTeams) || 0,
+
         maxTeamLimit: Number(calcutta.maxTeams) || 0,
+        remarks: calcutta.remarks,
+
         speciesIds: allowableSpecies
           .filter((species) => calcutta.targetSpecies.includes(species.name))
           .map((species) => species.id),
+
+        prizes: calcutta.prizes.map((prize) => ({
+          prizeName: prize.prizeName,
+
+          prizeType: prize.prizeType,
+
+          value: Number(prize.value) || 0,
+
+          placement: prize.placement,
+        })),
       })),
     };
     console.log("EDIT AUTO POINT VALUE:", isAutoPoint);
@@ -544,6 +599,7 @@ export default function TournamentsPage() {
             prizeType: prize.prizeType || "Cash",
             value: String(prize.value || ""),
             placement: prize.placement || "",
+            remarks: prize.remarks || "",
           }))
         : [
             {
@@ -552,6 +608,7 @@ export default function TournamentsPage() {
               prizeType: "Cash",
               value: "",
               placement: "",
+              remarks: "",
             },
           ],
     );
@@ -560,15 +617,48 @@ export default function TournamentsPage() {
       setCalcuttas(
         tournament.calcuttas.map((item) => ({
           id: item.id || "",
+
           calcuttaName: item.calcuttaName || "",
+
           entryFee: String(item.entryFee || ""),
-          payoutStructure: item.payoutStructure || "",
+
+          adminFeePercentage: String(item.adminFeePercentage || ""),
+          payoutStructure: item.payoutStructure || "Winner Takes All",
+
           minTeams: String(item.minTeamLimit || ""),
+
           maxTeams: String(item.maxTeamLimit || ""),
+
+          remarks: item.remarks || "",
+
           targetSpecies: item.species?.map((s) => s.name) || [],
+
+          prizes:
+            item.prizes && item.prizes.length > 0
+              ? item.prizes.map((prize) => ({
+                  prizeName: prize.prizeName || "",
+
+                  prizeType: prize.prizeType || "Cash",
+
+                  value: String(prize.value || ""),
+
+                  placement: prize.placement || "",
+
+                  remarks: prize.remarks || "", // ✅ add this
+                }))
+              : [
+                  {
+                    prizeName: "",
+                    prizeType: "Cash",
+                    value: "",
+                    placement: "",
+                    remarks: "",
+                  },
+                ],
         })),
       );
     }
+
     fetchTournaments();
     setIsModalOpen(true);
   };
@@ -582,6 +672,7 @@ export default function TournamentsPage() {
         prizeType: "Cash",
         value: "",
         placement: "",
+        remarks: "",
       },
     ]);
   };
@@ -614,13 +705,26 @@ export default function TournamentsPage() {
   const addCalcutta = () => {
     setCalcuttas((prev) => [
       ...prev,
+
       {
         calcuttaName: "",
         entryFee: "",
-        payoutStructure: "Winner Takes All — 100%",
+        adminFeePercentage: "",
+        payoutStructure: "Winner Takes All",
         targetSpecies: [],
         minTeams: "",
         maxTeams: "",
+        remarks: "",
+
+        prizes: [
+          {
+            prizeName: "",
+            prizeType: "Cash",
+            value: "",
+            placement: "",
+            remarks: "",
+          },
+        ],
       },
     ]);
   };
@@ -666,6 +770,68 @@ export default function TournamentsPage() {
           targetSpecies: exists
             ? item.targetSpecies.filter((species) => species !== speciesName)
             : [...item.targetSpecies, speciesName],
+        };
+      }),
+    );
+  };
+
+  const addCalcuttaPrize = (calcuttaIndex: number) => {
+    setCalcuttas((prev) =>
+      prev.map((calcutta, index) => {
+        if (index !== calcuttaIndex) return calcutta;
+
+        return {
+          ...calcutta,
+
+          prizes: [
+            ...calcutta.prizes,
+            {
+              prizeName: "",
+              prizeType: "Cash",
+              value: "",
+              placement: "",
+            },
+          ],
+        };
+      }),
+    );
+  };
+
+  const removeCalcuttaPrize = (calcuttaIndex: number, prizeIndex: number) => {
+    setCalcuttas((prev) =>
+      prev.map((calcutta, index) => {
+        if (index !== calcuttaIndex) return calcutta;
+
+        return {
+          ...calcutta,
+
+          prizes: calcutta.prizes.filter((_, i) => i !== prizeIndex),
+        };
+      }),
+    );
+  };
+
+  const handleCalcuttaPrizeChange = (
+    calcuttaIndex: number,
+    prizeIndex: number,
+    field: keyof CalcuttaPrize,
+    value: string,
+  ) => {
+    setCalcuttas((prev) =>
+      prev.map((calcutta, cIndex) => {
+        if (cIndex !== calcuttaIndex) return calcutta;
+
+        return {
+          ...calcutta,
+
+          prizes: calcutta.prizes.map((prize, pIndex) => {
+            if (pIndex !== prizeIndex) return prize;
+
+            return {
+              ...prize,
+              [field]: value,
+            };
+          }),
         };
       }),
     );
@@ -1142,34 +1308,26 @@ export default function TournamentsPage() {
                     </>
                   )}
                 </div>
-                <div>
-                  <Label className="text-xs font-medium text-slate-500 uppercase mb-3 block">
-                    Financials & Scoring
-                  </Label>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label
-                        htmlFor="entry-fee"
-                        className="text-xs font-medium text-slate-500 uppercase mb-2 block"
-                      >
-                        Entry Fee ($)
-                      </Label>
-                      <input
-                        id="entry-fee"
-                        type="number"
-                        placeholder="500"
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        value={formData.entryFee}
-                        onChange={(e) =>
-                          handleInputChange("entryFee", e.target.value)
-                        }
-                      />
-                      {errors.entryFee && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.entryFee}
-                        </p>
-                      )}
-                    </div>
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Entry Fee */}
+                  <div>
+                    <Label
+                      htmlFor="entry-fee"
+                      className="text-xs font-medium text-slate-500 uppercase mb-2 block"
+                    >
+                      Entry Fee ($)
+                    </Label>
+
+                    <input
+                      id="entry-fee"
+                      type="number"
+                      placeholder="500"
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      value={formData.entryFee}
+                      onChange={(e) =>
+                        handleInputChange("entryFee", e.target.value)
+                      }
+                    />
                   </div>
                 </div>
                 <div className="border border-slate-200 rounded-2xl p-5 bg-white">
@@ -1211,7 +1369,7 @@ export default function TournamentsPage() {
                           />
                         </div>
 
-                        <div className="col-span-3">
+                        <div className="col-span-2">
                           <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
                             Prize Type
                           </Label>
@@ -1232,17 +1390,25 @@ export default function TournamentsPage() {
                           </Select>
                         </div>
 
-                        <div className="col-span-2">
+                        <div className="col-span-3">
                           <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
-                            Value / Payout
+                            Value / Payout (%)
                           </Label>
                           <input
                             type="number"
+                            min="0"
+                            max="100"
                             value={prize.value}
-                            onChange={(e) =>
-                              handlePrizeChange(index, "value", e.target.value)
-                            }
-                            placeholder="50000"
+                            onChange={(e) => {
+                              let value = e.target.value;
+
+                              if (Number(value) > 100) {
+                                value = "100";
+                              }
+
+                              handlePrizeChange(index, "value", value);
+                            }}
+                            placeholder="100"
                             className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
                           />
                         </div>
@@ -1265,6 +1431,25 @@ export default function TournamentsPage() {
                           />
                         </div>
 
+                        <div className="col-span-3">
+                          <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
+                            Prize Remarks
+                          </Label>
+
+                          <input
+                            value={prize.remarks || ""}
+                            onChange={(e) =>
+                              handlePrizeChange(
+                                index,
+                                "remarks",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Enter prize remarks..."
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
+                          />
+                        </div>
+
                         <div className="col-span-1 flex justify-center items-center">
                           <button
                             type="button"
@@ -1277,6 +1462,7 @@ export default function TournamentsPage() {
                       </div>
                     ))}
                   </div>
+                  {/* Prize Remarks */}
                 </div>
                 <div className="border border-slate-200 rounded-2xl p-5 bg-white">
                   <div className="flex items-center justify-between mb-5">
@@ -1348,23 +1534,224 @@ export default function TournamentsPage() {
                             className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
                           />
                         </div>
+                      </div>
 
-                        <div>
-                          <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
-                            Payout Structure
-                          </Label>
-                          <input
-                            placeholder="Winner Takes All — 100%"
-                            value={calcutta.payoutStructure}
-                            onChange={(e) =>
-                              handleCalcuttaChange(
-                                index,
-                                "payoutStructure",
-                                e.target.value,
-                              )
-                            }
-                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
-                          />
+                      <div className="mt-6">
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-800">
+                              Calcutta Prizes
+                            </h4>
+
+                            <p className="text-xs text-slate-400">
+                              Add multiple prizes for this side pool
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => addCalcuttaPrize(index)}
+                            className="
+      flex items-center gap-2
+      px-4 py-2
+      rounded-lg
+      text-xs font-semibold
+      bg-orange-500
+      text-white
+      hover:bg-orange-600
+      transition
+      shadow-sm
+      "
+                          >
+                            <Plus className="w-4 h-4" />
+                            Add Prize
+                          </button>
+                        </div>
+
+                        {/* Prize Rows */}
+
+                        <div className="space-y-3">
+                          {calcutta.prizes.map((prize, pIndex) => (
+                            <div
+                              key={pIndex}
+                              className="
+    bg-white
+    border
+    border-slate-200
+    rounded-xl
+    p-4
+    shadow-sm
+    hover:shadow-md
+    transition
+    "
+                            >
+                              <div
+                                className="
+      grid 
+      grid-cols-12 
+      gap-3 
+      items-end
+      "
+                              >
+                                {/* Prize Name */}
+
+                                <div className="col-span-3">
+                                  <label className="text-xs font-semibold text-slate-500">
+                                    Prize Name
+                                  </label>
+
+                                  <input
+                                    placeholder="Winner Prize"
+                                    value={prize.prizeName}
+                                    onChange={(e) =>
+                                      handleCalcuttaPrizeChange(
+                                        index,
+                                        pIndex,
+                                        "prizeName",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="
+          mt-1
+          w-full
+          rounded-lg
+          border
+          px-3
+          py-2
+          text-sm
+          focus:ring-2
+          focus:ring-orange-200
+          outline-none
+          "
+                                  />
+                                </div>
+
+                                {/* Type */}
+
+                                <div className="col-span-2">
+                                  <label className="text-xs font-semibold text-slate-500">
+                                    Type
+                                  </label>
+
+                                  <select
+                                    value={prize.prizeType}
+                                    onChange={(e) =>
+                                      handleCalcuttaPrizeChange(
+                                        index,
+                                        pIndex,
+                                        "prizeType",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="
+        mt-1
+        w-full
+        rounded-lg
+        border
+        px-3
+        py-2
+        text-sm
+        bg-white
+        "
+                                  >
+                                    <option>Cash</option>
+                                    <option>Trophy</option>
+                                    <option>Product</option>
+                                  </select>
+                                </div>
+
+                                {/* Value */}
+
+                                <div className="col-span-2">
+                                  <label className="text-xs font-semibold text-slate-500">
+                                    Value
+                                  </label>
+
+                                  <input
+                                    type="number"
+                                    placeholder="100"
+                                    min="0"
+                                    max="100"
+                                    value={prize.value || ""}
+                                    onChange={(e) => {
+                                      let value = e.target.value;
+
+                                      if (Number(value) > 100) {
+                                        value = "100";
+                                      }
+
+                                      if (Number(value) < 0) {
+                                        value = "0";
+                                      }
+
+                                      handleCalcuttaPrizeChange(
+                                        index,
+                                        pIndex,
+                                        "value",
+                                        value,
+                                      );
+                                    }}
+                                    className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
+                                  />
+                                </div>
+
+                                {/* Placement */}
+
+                                <div className="col-span-2">
+                                  <label className="text-xs font-semibold text-slate-500">
+                                    Placement
+                                  </label>
+
+                                  <input
+                                    placeholder="1st"
+                                    value={prize.placement}
+                                    onChange={(e) =>
+                                      handleCalcuttaPrizeChange(
+                                        index,
+                                        pIndex,
+                                        "placement",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="
+        mt-1
+        w-full
+        rounded-lg
+        border
+        px-3
+        py-2
+        text-sm
+        "
+                                  />
+                                </div>
+
+                                {/* Remarks */}
+
+                                {/* Delete */}
+
+                                <div className="col-span-1 flex justify-center">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      removeCalcuttaPrize(index, pIndex)
+                                    }
+                                    className="h-9 w-9 flex
+        items-center
+        justify-center
+        rounded-lg
+        bg-red-50
+        text-red-500
+        hover:bg-red-100
+        transition
+        "
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
 
@@ -1438,6 +1825,20 @@ export default function TournamentsPage() {
                             className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
                           />
                         </div>
+                      </div>
+                      <div className="col-span-3">
+                        <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
+                          Prize Remarks
+                        </Label>
+
+                        <input
+                          // value={prize.remarks}
+                          onChange={(e) =>
+                            handlePrizeChange(index, "remarks", e.target.value)
+                          }
+                          placeholder="Enter prize remarks..."
+                          className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
+                        />
                       </div>
                     </div>
                   ))}

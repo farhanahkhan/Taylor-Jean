@@ -26,6 +26,7 @@ interface PrizeList {
   prizeType: string;
   value: number;
   placement: string;
+  remarks?: string;
 }
 
 interface CalcuttaList {
@@ -35,6 +36,7 @@ interface CalcuttaList {
   payoutStructure: string;
   minTeamLimit: number;
   maxTeamLimit: number;
+  remarks?: string;
 }
 
 interface TournamentDetailData {

@@ -1605,18 +1605,7 @@ export default function TournamentsPage() {
                                         e.target.value,
                                       )
                                     }
-                                    className="
-          mt-1
-          w-full
-          rounded-lg
-          border
-          px-3
-          py-2
-          text-sm
-          focus:ring-2
-          focus:ring-orange-200
-          outline-none
-          "
+                                    className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-orange-200 outline-none"
                                   />
                                 </div>
 
@@ -1691,7 +1680,7 @@ export default function TournamentsPage() {
 
                                 {/* Placement */}
 
-                                <div className="col-span-1 sm:col-span-1 lg:col-span-22">
+                                <div className="col-span-1 sm:col-span-1 lg:col-span-2">
                                   <label className="text-xs font-semibold text-slate-500">
                                     Placement
                                   </label>

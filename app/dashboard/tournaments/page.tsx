@@ -1431,9 +1431,9 @@ export default function TournamentsPage() {
                           />
                         </div>
 
-                        <div className="col-span-3">
+                        <div className="col-span-11">
                           <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
-                            Prize Remarks
+                            Remarks
                           </Label>
 
                           <input
@@ -1445,7 +1445,7 @@ export default function TournamentsPage() {
                                 e.target.value,
                               )
                             }
-                            placeholder="Enter prize remarks..."
+                            placeholder="Enter remarks..."
                             className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
                           />
                         </div>
@@ -1828,7 +1828,7 @@ export default function TournamentsPage() {
                       </div>
                       <div className="col-span-3">
                         <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
-                          Prize Remarks
+                          Remarks
                         </Label>
 
                         <input
@@ -1836,7 +1836,7 @@ export default function TournamentsPage() {
                           onChange={(e) =>
                             handlePrizeChange(index, "remarks", e.target.value)
                           }
-                          placeholder="Enter prize remarks..."
+                          placeholder="Enter remarks..."
                           className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
                         />
                       </div>

@@ -1351,7 +1351,7 @@ export default function TournamentsPage() {
                         key={index}
                         className="grid grid-cols-12 gap-3 items-end bg-slate-50 border border-slate-100 rounded-xl p-4"
                       >
-                        <div className="col-span-4">
+                        <div className="col-span-12 sm:col-span-6 lg:col-span-4">
                           <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
                             Prize Name
                           </Label>
@@ -1369,7 +1369,7 @@ export default function TournamentsPage() {
                           />
                         </div>
 
-                        <div className="col-span-2">
+                        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
                           <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
                             Prize Type
                           </Label>
@@ -1390,7 +1390,7 @@ export default function TournamentsPage() {
                           </Select>
                         </div>
 
-                        <div className="col-span-3">
+                        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
                           <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
                             Value / Payout (%)
                           </Label>
@@ -1413,7 +1413,7 @@ export default function TournamentsPage() {
                           />
                         </div>
 
-                        <div className="col-span-2">
+                        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
                           <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
                             Placement
                           </Label>
@@ -1497,7 +1497,7 @@ export default function TournamentsPage() {
                           <Trash2 className="w-5 h-5" />
                         </button>
                       </div>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid sm:grid-cols-3 gap-4">
                         <div>
                           <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
                             Calcutta Name
@@ -1586,17 +1586,10 @@ export default function TournamentsPage() {
     transition
     "
                             >
-                              <div
-                                className="
-      grid 
-      grid-cols-12 
-      gap-3 
-      items-end
-      "
-                              >
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
                                 {/* Prize Name */}
 
-                                <div className="col-span-3">
+                                <div className="col-span-1 sm:col-span-6 lg:col-span-3">
                                   <label className="text-xs font-semibold text-slate-500">
                                     Prize Name
                                   </label>
@@ -1629,7 +1622,7 @@ export default function TournamentsPage() {
 
                                 {/* Type */}
 
-                                <div className="col-span-2">
+                                <div className="col-span-1 sm:col-span-1 lg:col-span-2">
                                   <label className="text-xs font-semibold text-slate-500">
                                     Type
                                   </label>
@@ -1663,7 +1656,7 @@ export default function TournamentsPage() {
 
                                 {/* Value */}
 
-                                <div className="col-span-2">
+                                <div className="col-span-1 sm:col-span-1 lg:col-span-2">
                                   <label className="text-xs font-semibold text-slate-500">
                                     Value
                                   </label>
@@ -1698,7 +1691,7 @@ export default function TournamentsPage() {
 
                                 {/* Placement */}
 
-                                <div className="col-span-2">
+                                <div className="col-span-1 sm:col-span-1 lg:col-span-22">
                                   <label className="text-xs font-semibold text-slate-500">
                                     Placement
                                   </label>
@@ -1730,7 +1723,7 @@ export default function TournamentsPage() {
 
                                 {/* Delete */}
 
-                                <div className="col-span-1 flex justify-center">
+                                <div className="col-span-1 flex justify-end sm:justify-center items-center">
                                   <button
                                     type="button"
                                     onClick={() =>

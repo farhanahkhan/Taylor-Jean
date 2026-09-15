@@ -73,6 +73,7 @@ export interface Tournament {
   image?: string;
   banner?: string;
   bannerUrl?: string;
+  adminFeePercentage?: number;
 
   tournamentSpecies?: {
     speciesId: string;
@@ -102,7 +103,7 @@ export interface Tournament {
     payoutStructure: string;
     minTeamLimit: number;
     maxTeamLimit: number;
-    remarks?: string;
+    remarks: string;
 
     species: {
       id: string;
@@ -114,7 +115,6 @@ export interface Tournament {
       prizeType: string;
       value: number;
       placement: string;
-      remarks?: string;
     }[];
   }[];
 
@@ -129,7 +129,7 @@ interface CalcuttaPrize {
   prizeType: string;
   value: string;
   placement: string;
-  remarks?: string;
+  // remarks?: string;
 }
 
 interface Calcutta {
@@ -229,6 +229,7 @@ export default function TournamentsPage() {
     longitude: "",
     imageUrl: "",
     location: "",
+    adminFeePercentage: "",
   });
 
   const resetForm = useCallback(() => {
@@ -245,6 +246,7 @@ export default function TournamentsPage() {
       longitude: "",
       imageUrl: "",
       location: "",
+      adminFeePercentage: "",
     });
     setSelectedSpecies([]);
     setUploadedImageUrl("");
@@ -408,6 +410,7 @@ export default function TournamentsPage() {
         Number(selectedPosition?.[1]) || Number(formData.longitude) || 0,
 
       entryFee: Number(formData.entryFee) || 0,
+      adminFeePercentage: Number(formData.adminFeePercentage) || 0,
       description: formData.description || "",
       imageUrl: finalImage,
 
@@ -566,6 +569,7 @@ export default function TournamentsPage() {
       startDate: tournament.startDate?.split("T")[0] || "",
       endDate: tournament.endDate?.split("T")[0] || "",
       entryFee: String(tournament.entryFee || 0),
+      adminFeePercentage: String(tournament.adminFeePercentage || 0),
       latitude: String(tournament.latitude || 0),
       longitude: String(tournament.longitude || 0),
       imageUrl: tournament.imageUrl || "",
@@ -643,8 +647,6 @@ export default function TournamentsPage() {
                   value: String(prize.value || ""),
 
                   placement: prize.placement || "",
-
-                  remarks: prize.remarks || "", // ✅ add this
                 }))
               : [
                   {
@@ -652,7 +654,6 @@ export default function TournamentsPage() {
                     prizeType: "Cash",
                     value: "",
                     placement: "",
-                    remarks: "",
                   },
                 ],
         })),
@@ -722,7 +723,6 @@ export default function TournamentsPage() {
             prizeType: "Cash",
             value: "",
             placement: "",
-            remarks: "",
           },
         ],
       },
@@ -1329,6 +1329,33 @@ export default function TournamentsPage() {
                       }
                     />
                   </div>
+
+                  <div>
+                    <Label className="text-xs font-medium text-slate-500 uppercase mb-2 block">
+                      Admin Fee Percentage (%)
+                    </Label>
+
+                    <input
+                      type="number"
+                      placeholder="100"
+                      min="0"
+                      max="100"
+                      value={formData.adminFeePercentage}
+                      onChange={(e) => {
+                        let value = e.target.value;
+
+                        if (Number(value) > 100) {
+                          value = "100";
+                        }
+
+                        if (Number(value) < 0) {
+                          value = "0";
+                        }
+                        handleInputChange("adminFeePercentage", value);
+                      }}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm"
+                    />
+                  </div>
                 </div>
                 <div className="border border-slate-200 rounded-2xl p-5 bg-white">
                   <div className="flex items-center justify-between mb-5">
@@ -1436,7 +1463,7 @@ export default function TournamentsPage() {
                             Remarks
                           </Label>
 
-                          <input
+                          <textarea
                             value={prize.remarks || ""}
                             onChange={(e) =>
                               handlePrizeChange(
@@ -1445,6 +1472,7 @@ export default function TournamentsPage() {
                                 e.target.value,
                               )
                             }
+                            rows={3}
                             placeholder="Enter remarks..."
                             className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
                           />
@@ -1534,6 +1562,38 @@ export default function TournamentsPage() {
                             className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
                           />
                         </div>
+
+                        <div>
+                          <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
+                            Admin Fee Percentage (%)
+                          </Label>
+
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            placeholder="10"
+                            value={calcutta.adminFeePercentage}
+                            onChange={(e) => {
+                              let value = e.target.value;
+
+                              if (Number(value) > 100) {
+                                value = "100";
+                              }
+
+                              if (Number(value) < 0) {
+                                value = "0";
+                              }
+
+                              handleCalcuttaChange(
+                                index,
+                                "adminFeePercentage",
+                                value,
+                              );
+                            }}
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
+                          />
+                        </div>
                       </div>
 
                       <div className="mt-6">
@@ -1552,17 +1612,7 @@ export default function TournamentsPage() {
                           <button
                             type="button"
                             onClick={() => addCalcuttaPrize(index)}
-                            className="
-      flex items-center gap-2
-      px-4 py-2
-      rounded-lg
-      text-xs font-semibold
-      bg-orange-500
-      text-white
-      hover:bg-orange-600
-      transition
-      shadow-sm
-      "
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-orange-500 text-white hover:bg-orange-600 transition shadow-sm"
                           >
                             <Plus className="w-4 h-4" />
                             Add Prize
@@ -1575,16 +1625,7 @@ export default function TournamentsPage() {
                           {calcutta.prizes.map((prize, pIndex) => (
                             <div
                               key={pIndex}
-                              className="
-    bg-white
-    border
-    border-slate-200
-    rounded-xl
-    p-4
-    shadow-sm
-    hover:shadow-md
-    transition
-    "
+                              className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition"
                             >
                               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
                                 {/* Prize Name */}
@@ -1696,19 +1737,9 @@ export default function TournamentsPage() {
                                         e.target.value,
                                       )
                                     }
-                                    className="
-        mt-1
-        w-full
-        rounded-lg
-        border
-        px-3
-        py-2
-        text-sm
-        "
+                                    className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
                                   />
                                 </div>
-
-                                {/* Remarks */}
 
                                 {/* Delete */}
 
@@ -1718,15 +1749,7 @@ export default function TournamentsPage() {
                                     onClick={() =>
                                       removeCalcuttaPrize(index, pIndex)
                                     }
-                                    className="h-9 w-9 flex
-        items-center
-        justify-center
-        rounded-lg
-        bg-red-50
-        text-red-500
-        hover:bg-red-100
-        transition
-        "
+                                    className="h-9 w-9 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -1808,18 +1831,25 @@ export default function TournamentsPage() {
                           />
                         </div>
                       </div>
-                      <div className="col-span-3">
+                      {/* Calcutta Remarks */}
+
+                      <div className="mt-4">
                         <Label className="text-xs font-medium text-slate-400 uppercase mb-2 block">
                           Remarks
                         </Label>
 
-                        <input
-                          // value={prize.remarks}
+                        <textarea
+                          placeholder="Enter calcutta remarks..."
+                          value={calcutta.remarks || ""}
                           onChange={(e) =>
-                            handlePrizeChange(index, "remarks", e.target.value)
+                            handleCalcuttaChange(
+                              index,
+                              "remarks",
+                              e.target.value,
+                            )
                           }
-                          placeholder="Enter remarks..."
-                          className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
+                          rows={3}
+                          className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-200"
                         />
                       </div>
                     </div>

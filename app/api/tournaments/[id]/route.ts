@@ -59,7 +59,7 @@ export async function PUT(
 
       latitude: Number(body.latitude) || 0,
       longitude: Number(body.longitude) || 0,
-
+      adminFeePercentage: Number(body.adminFeePercentage) || 0,
       entryFee: Number(body.entryFee) || 0,
       points: Number(body.points) || 0,
 

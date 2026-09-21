@@ -254,6 +254,16 @@ export default function TournamentsPage() {
     setBannerPreview(null);
     setIsAutoPoint(true);
     setSelectedPosition(null);
+    setPrizeCategories([
+      {
+        id: "",
+        prizeName: "",
+        prizeType: "",
+        value: "",
+        placement: "",
+        remarks: "",
+      },
+    ]);
     setCalcuttas([
       {
         calcuttaName: "",
@@ -1443,9 +1453,19 @@ export default function TournamentsPage() {
                           </Label>
                           <Select
                             value={prize.prizeType}
-                            onValueChange={(value) =>
-                              handlePrizeChange(index, "prizeType", value)
-                            }
+                            onValueChange={(value) => {
+                              let currentValue = prize.value;
+
+                              if (
+                                value !== "Cash" &&
+                                Number(currentValue) > 100
+                              ) {
+                                currentValue = "100";
+                              }
+
+                              handlePrizeChange(index, "prizeType", value);
+                              handlePrizeChange(index, "value", currentValue);
+                            }}
                           >
                             <SelectTrigger className="w-full bg-white border border-gray-200 rounded-lg text-sm">
                               <SelectValue placeholder="Select Type" />
@@ -1465,12 +1485,15 @@ export default function TournamentsPage() {
                           <input
                             type="number"
                             min="0"
-                            max="100"
+                            max={prize.prizeType === "Cash" ? undefined : 100}
                             value={prize.value}
                             onChange={(e) => {
                               let value = e.target.value;
 
-                              if (Number(value) > 100) {
+                              if (
+                                prize.prizeType !== "Cash" &&
+                                Number(value) > 100
+                              ) {
                                 value = "100";
                               }
 

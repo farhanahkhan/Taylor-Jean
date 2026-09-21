@@ -1168,7 +1168,7 @@ export default function TournamentTeamsPage() {
                                     </p>
                                     <p className="text-sm font-semibold text-primary">
                                       {prize.prizeType === "Cash"
-                                        ? `$${prize.value || 0}`
+                                        ? `${prize.value || 0}`
                                         : prize.value || "-"}
                                     </p>
                                   </div>

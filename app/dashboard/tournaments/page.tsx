@@ -479,8 +479,7 @@ export default function TournamentsPage() {
     //   setApiError(data?.message || "Something went wrong");
     //   return;
     // }
-
-    alert(isEditMode ? "Tournament updated!" : "Tournament created!");
+    alert(data?.message);
 
     // 🛠️ REFRESH FIX 3: Edit/Save success par internal reload
     triggerInternalRefresh();

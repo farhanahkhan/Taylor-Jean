@@ -29,6 +29,15 @@ interface PrizeList {
   remarks?: string;
 }
 
+// interface CalcuttaList {
+//   id: string;
+//   calcuttaName: string;
+//   entryFee: number;
+//   payoutStructure: string;
+//   minTeamLimit: number;
+//   maxTeamLimit: number;
+//   remarks?: string;
+// }
 interface CalcuttaList {
   id: string;
   calcuttaName: string;
@@ -37,8 +46,15 @@ interface CalcuttaList {
   minTeamLimit: number;
   maxTeamLimit: number;
   remarks?: string;
+  prizes?: {
+    id?: string;
+    prizeName: string;
+    prizeType: string;
+    value: number;
+    placement: string;
+    remarks?: string;
+  }[];
 }
-
 interface TournamentDetailData {
   prizesList: PrizeList[];
   calcuttas: CalcuttaList[];
@@ -1056,7 +1072,7 @@ export default function TournamentTeamsPage() {
             </div>
 
             {/* Flexible Calcuttas */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 max-h-[600px] overflow-y-auto">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-lg font-bold text-slate-900">
                   🎣 Flexible Calcuttas
@@ -1087,13 +1103,13 @@ export default function TournamentTeamsPage() {
                           </p>
                         </div>
 
-                        <div className="bg-white rounded-lg p-3 border border-slate-100">
-                          <p className="text-[11px] uppercase text-slate-400 font-semibold">
+                        <div className=" rounded-lg p-3 border border-slate-100">
+                          {/* <p className="text-[11px] uppercase text-slate-400 font-semibold">
                             Payout Structure
                           </p>
                           <p className="text-sm font-bold text-slate-800">
                             {calcutta.payoutStructure || "-"}
-                          </p>
+                          </p> */}
                         </div>
 
                         <div className="bg-white rounded-lg p-3 border border-slate-100">
@@ -1114,6 +1130,67 @@ export default function TournamentTeamsPage() {
                           </p>
                         </div>
                       </div>
+
+                      {calcutta.prizes?.length ? (
+                        <div className="mt-4">
+                          <p className="text-sm font-bold text-slate-900 mb-3">
+                            🏆 Prizes
+                          </p>
+
+                          <div className="space-y-2">
+                            {calcutta.prizes.map((prize, index) => (
+                              <div
+                                key={prize.id || index}
+                                className="bg-white rounded-lg border border-slate-100 p-3"
+                              >
+                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-center">
+                                  <div>
+                                    <p className="text-[10px] uppercase text-slate-400 font-semibold">
+                                      Prize
+                                    </p>
+                                    <p className="text-sm font-bold text-slate-900">
+                                      {prize.prizeName || "Unnamed Prize"}
+                                    </p>
+                                  </div>
+
+                                  <div>
+                                    <p className="text-[10px] uppercase text-slate-400 font-semibold">
+                                      Type
+                                    </p>
+                                    <p className="text-sm font-semibold text-slate-700">
+                                      {prize.prizeType || "-"}
+                                    </p>
+                                  </div>
+
+                                  <div>
+                                    <p className="text-[10px] uppercase text-slate-400 font-semibold">
+                                      Value
+                                    </p>
+                                    <p className="text-sm font-semibold text-primary">
+                                      {prize.prizeType === "Cash"
+                                        ? `$${prize.value || 0}`
+                                        : prize.value || "-"}
+                                    </p>
+                                  </div>
+
+                                  <div>
+                                    <p className="text-[10px] uppercase text-slate-400 font-semibold">
+                                      Placement
+                                    </p>
+                                    <p className="text-sm font-semibold text-slate-700">
+                                      {prize.placement || "-"}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="mt-4 text-sm text-slate-500">
+                          No Prizes Found
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1776,6 +1853,5 @@ export default function TournamentTeamsPage() {
         </div>
       )}
     </div>
-    // ..d
   );
 }

@@ -254,6 +254,26 @@ export default function TournamentsPage() {
     setBannerPreview(null);
     setIsAutoPoint(true);
     setSelectedPosition(null);
+    setCalcuttas([
+      {
+        calcuttaName: "",
+        entryFee: "",
+        adminFeePercentage: "",
+        targetSpecies: [],
+        payoutStructure: "Winner Takes All",
+        minTeams: "",
+        maxTeams: "",
+        remarks: "",
+        prizes: [
+          {
+            prizeName: "",
+            prizeType: "Cash",
+            value: "",
+            placement: "",
+          },
+        ],
+      },
+    ]);
   }, []);
 
   // 🛠️ REFRESH FIX 2: Internal refresh function bina hard reload kiye

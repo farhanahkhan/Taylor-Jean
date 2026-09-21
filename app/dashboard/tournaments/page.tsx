@@ -150,6 +150,7 @@ interface TournamentAPIResponse {
 }
 
 export default function TournamentsPage() {
+  const [apiError, setApiError] = useState("");
   const [pageRefreshKey, setPageRefreshKey] = useState(0);
   const [isAutoPoint, setIsAutoPoint] = useState(true);
 
@@ -421,42 +422,40 @@ export default function TournamentsPage() {
           }))
         : [],
 
-      tournamentPrizes: prizeCategories.map((prize) => ({
-        prizeName: prize.prizeName,
-        prizeType: prize.prizeType,
-        value: Number(prize.value) || 0,
-        placement: prize.placement,
-        remarks: prize.remarks,
-      })),
-
-      tournamentCalcuttas: calcuttas.map((calcutta) => ({
-        calcuttaName: calcutta.calcuttaName,
-
-        entryFee: Number(calcutta.entryFee) || 0,
-
-        adminFeePercentage: Number(calcutta.adminFeePercentage) || 0,
-
-        payoutStructure: calcutta.payoutStructure || "Winner Takes All",
-
-        minTeamLimit: Number(calcutta.minTeams) || 0,
-
-        maxTeamLimit: Number(calcutta.maxTeams) || 0,
-        remarks: calcutta.remarks,
-
-        speciesIds: allowableSpecies
-          .filter((species) => calcutta.targetSpecies.includes(species.name))
-          .map((species) => species.id),
-
-        prizes: calcutta.prizes.map((prize) => ({
-          prizeName: prize.prizeName,
-
+      tournamentPrizes: prizeCategories
+        .filter((prize) => prize.prizeName?.trim())
+        .map((prize) => ({
+          prizeName: prize.prizeName.trim(),
           prizeType: prize.prizeType,
-
           value: Number(prize.value) || 0,
-
           placement: prize.placement,
+          remarks: prize.remarks,
         })),
-      })),
+
+      tournamentCalcuttas: calcuttas
+        .filter((calcutta) => calcutta.calcuttaName?.trim())
+        .map((calcutta) => ({
+          calcuttaName: calcutta.calcuttaName.trim(),
+          entryFee: Number(calcutta.entryFee) || 0,
+          adminFeePercentage: Number(calcutta.adminFeePercentage) || 0,
+          payoutStructure: calcutta.payoutStructure || "Winner Takes All",
+          minTeamLimit: Number(calcutta.minTeams) || 0,
+          maxTeamLimit: Number(calcutta.maxTeams) || 0,
+          remarks: calcutta.remarks,
+
+          speciesIds: allowableSpecies
+            .filter((species) => calcutta.targetSpecies.includes(species.name))
+            .map((species) => species.id),
+
+          prizes: calcutta.prizes
+            .filter((prize) => prize.prizeName?.trim())
+            .map((prize) => ({
+              prizeName: prize.prizeName.trim(),
+              prizeType: prize.prizeType,
+              value: Number(prize.value) || 0,
+              placement: prize.placement,
+            })),
+        })),
     };
     console.log("EDIT AUTO POINT VALUE:", isAutoPoint);
     const url = isEditMode
@@ -472,15 +471,28 @@ export default function TournamentsPage() {
 
     const data = await res.json();
 
-    if (!res.ok) {
-      alert(data.message || "Something went wrong");
+    if (!res.ok || data?.data === null) {
+      alert(data?.message || "Something went wrong");
       return;
     }
+    // if (!res.ok || data?.data === null) {
+    //   setApiError(data?.message || "Something went wrong");
+    //   return;
+    // }
 
     alert(isEditMode ? "Tournament updated!" : "Tournament created!");
 
     // 🛠️ REFRESH FIX 3: Edit/Save success par internal reload
     triggerInternalRefresh();
+
+    // const data = await res.json();
+
+    if (!res.ok || data?.status === false || data?.data === null) {
+      setApiError(data?.message || "Something went wrong.");
+      return;
+    }
+
+    setApiError("");
   };
 
   const formatDate = (dateString: string) => {
@@ -1009,6 +1021,11 @@ export default function TournamentsPage() {
             )}
           </div>
 
+          {apiError && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {apiError}
+            </div>
+          )}
           {/* Dialog Root */}
           <Dialog
             open={isModalOpen}
@@ -1394,6 +1411,11 @@ export default function TournamentsPage() {
                             placeholder="e.g. Heaviest Blue Marlin"
                             className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm"
                           />
+                          {apiError && !prize.prizeName.trim() && (
+                            <p className="mt-1 text-xs text-red-500">
+                              {apiError}
+                            </p>
+                          )}
                         </div>
 
                         <div className="col-span-12 sm:col-span-6 lg:col-span-2">

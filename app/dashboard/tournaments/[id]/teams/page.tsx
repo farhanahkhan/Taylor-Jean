@@ -1047,8 +1047,13 @@ export default function TournamentTeamsPage() {
                           <p className="text-[11px] uppercase text-slate-400 font-semibold">
                             Value
                           </p>
-                          <p className="text-sm font-bold text-primary">
+                          {/* <p className="text-sm font-bold text-primary">
                             ${prize.value || 0}
+                          </p> */}
+                          <p className="text-sm font-bold text-primary">
+                            {prize.prizeType === "Cash"
+                              ? `$${prize.value || 0}`
+                              : prize.value || "-"}
                           </p>
                         </div>
 

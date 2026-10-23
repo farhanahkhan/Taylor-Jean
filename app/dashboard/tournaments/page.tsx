@@ -18,6 +18,15 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 import dynamic from "next/dynamic";
 
+const MapComponent = dynamic(() => import("../../Components/MapComponent"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400">
+      Loading Map Engine...
+    </div>
+  ),
+});
+
 import {
   Dialog,
   DialogContent,
@@ -174,15 +183,6 @@ export default function TournamentsPage() {
   >({});
 
   // const router = useRouter();
-
-  const MapComponent = dynamic(() => import("../../Components/MapComponent"), {
-    ssr: false,
-    loading: () => (
-      <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400">
-        Loading Map Engine...
-      </div>
-    ),
-  });
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -1074,6 +1074,22 @@ export default function TournamentsPage() {
               }}
             >
               <DialogHeader>
+                {isMapOpen && (
+                  <Dialog open={isMapOpen} onOpenChange={setIsMapOpen}>
+                    <DialogContent className="w-[95vw] max-w-[1200px] max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Select Tournament Location</DialogTitle>
+                      </DialogHeader>
+
+                      <MapComponent
+                        setFormData={setFormData}
+                        setSelectedPosition={setSelectedPosition}
+                        selectedPosition={selectedPosition}
+                        setIsMapOpen={setIsMapOpen}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                )}
                 <DialogTitle className="text-xl font-semibold">
                   {isEditMode
                     ? "Modify Tournament Details"
@@ -1133,24 +1149,6 @@ export default function TournamentsPage() {
                       )}
                     </div>
                   </div>
-
-                  {isMapOpen && (
-                    <Dialog open={isMapOpen} onOpenChange={setIsMapOpen}>
-                      <DialogContent className="max-w-4xl">
-                        <DialogHeader>
-                          <DialogTitle>Select Tournament Location</DialogTitle>
-                        </DialogHeader>
-                        <div className="w-full h-[500px] rounded-lg overflow-hidden border">
-                          <MapComponent
-                            setFormData={setFormData}
-                            setSelectedPosition={setSelectedPosition}
-                            selectedPosition={selectedPosition}
-                            setIsMapOpen={setIsMapOpen}
-                          />
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  )}
                 </div>
                 <div>
                   <Label
@@ -1721,31 +1719,31 @@ export default function TournamentsPage() {
                                     Type
                                   </label>
 
-                                  <select
+                                  <Select
                                     value={prize.prizeType}
-                                    onChange={(e) =>
+                                    onValueChange={(value) =>
                                       handleCalcuttaPrizeChange(
                                         index,
                                         pIndex,
                                         "prizeType",
-                                        e.target.value,
+                                        value,
                                       )
                                     }
-                                    className="
-        mt-1
-        w-full
-        rounded-lg
-        border
-        px-3
-        py-2
-        text-sm
-        bg-white
-        "
                                   >
-                                    <option>Cash</option>
-                                    <option>Trophy</option>
-                                    <option>Product</option>
-                                  </select>
+                                    <SelectTrigger className="mt-1 w-full bg-white border border-gray-200 rounded-lg text-sm">
+                                      <SelectValue placeholder="Select Type" />
+                                    </SelectTrigger>
+
+                                    <SelectContent>
+                                      <SelectItem value="Cash">Cash</SelectItem>
+                                      <SelectItem value="Trophy">
+                                        Trophy
+                                      </SelectItem>
+                                      <SelectItem value="Product">
+                                        Gear
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
 
                                 {/* Value */}

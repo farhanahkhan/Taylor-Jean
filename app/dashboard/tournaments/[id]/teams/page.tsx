@@ -745,7 +745,7 @@ export default function TournamentTeamsPage() {
         <DashboardHeader />
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
+            <div className="sm:flex sm:items-center justify-between mb-4 ">
               <div className="flex items-center gap-3">
                 <Link
                   href="/dashboard"
@@ -773,7 +773,7 @@ export default function TournamentTeamsPage() {
               {/* <div className="flex items-center gap-3"> */}
               <button
                 onClick={() => setShowLaunchModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-foreground text-white font-medium rounded-lg hover:bg-foreground transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-foreground text-white font-medium rounded-lg hover:bg-foreground transition-colors sm:mt-0 mt-3 justify-end sm:mx-0 mx-7"
               >
                 Launch New Bet
               </button>
@@ -799,7 +799,7 @@ export default function TournamentTeamsPage() {
                     <div
                       key={team.tournamentTeamId}
                       onClick={() => handleLeaderboardClick(team)}
-                      className="rounded-xl p-5 border cursor-pointer hover:shadow-md"
+                      className="rounded-xl p-5 border cursor-pointer hover:shadow-md sm:flex justify-between items-center grid"
                     >
                       <div className="flex items-center gap-3">
                         <span className="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">
@@ -809,10 +809,20 @@ export default function TournamentTeamsPage() {
                           <p className="font-semibold text-slate-900">
                             {team.teamName}
                           </p>
-                          <p className="text-xs text-slate-600">Total Points</p>
+                          <p className="text-xs text-slate-600 sm:block hidden">
+                            Total Points
+                          </p>
+                          <div className="flex sm:hidden items-center justify-between">
+                            <p className="text-xs text-slate-600">
+                              Total Points
+                            </p>
+                            <p className="font-bold text-slate-900 mx-7 sm:mx-0 ">
+                              {team.totalPoints}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      <p className="font-bold text-slate-900">
+                      <p className="font-bold text-slate-900 mx-7 sm:mx-0 sm:block hidden">
                         {team.totalPoints}
                       </p>
                     </div>

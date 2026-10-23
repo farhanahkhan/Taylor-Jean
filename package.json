@@ -46,6 +46,7 @@
     "jsonwebtoken": "^9.0.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.555.0",
+    "mapbox-gl": "^3.33.0",
     "next": "16.0.7",
     "react": "19.2.0",
     "react-dom": "19.2.0",
@@ -60,6 +61,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/mapbox-gl": "^3.4.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

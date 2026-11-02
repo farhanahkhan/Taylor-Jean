@@ -12,13 +12,22 @@ import {
   AlertCircle,
   Info,
   X,
+  Users,
 } from "lucide-react";
 import * as Select from "@radix-ui/react-select";
 import { ChevronDown } from "lucide-react";
 import { DashboardSidebar } from "@/app/Components/dashboard-sidebar";
 import { DashboardHeader } from "@/app/Components/dashboard-header";
 import * as Dialog from "@radix-ui/react-dialog";
+import Swal from "sweetalert2";
 
+interface ApiUser {
+  id: string;
+  fullName: string;
+
+  email: string;
+  kycStatus: boolean;
+}
 interface KYCRequest {
   id: string;
   user: string;
@@ -46,11 +55,35 @@ export const getAllKyc = async (): Promise<ApiKyc[]> => {
   const json = await res.json();
   return json.data;
 };
+const getAllUsers = async (): Promise<ApiUser[]> => {
+  const res = await fetch("/api/user-Team");
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch users (${res.status})`);
+  }
+
+  const json: unknown = await res.json();
+
+  if (Array.isArray(json)) {
+    return json as ApiUser[];
+  }
+
+  if (
+    typeof json === "object" &&
+    json !== null &&
+    "data" in json &&
+    Array.isArray(json.data)
+  ) {
+    return json.data as ApiUser[];
+  }
+
+  throw new Error("Invalid users API response");
+};
 
 export const updateKycStatus = async (
   id: string,
   status: "approved" | "rejected" | "review",
-  notes?: string
+  notes?: string,
 ) => {
   const body = { isApproved: status === "approved", notes };
 
@@ -76,15 +109,130 @@ export default function KYCPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [decisionNotes, setDecisionNotes] = useState("");
   const [selectedRequest, setSelectedRequest] = useState<KYCRequest | null>(
-    null
+    null,
   );
   const [kycRequests, setKycRequests] = useState<KYCRequest[]>([]);
+  // New Implement
+  const [isKycUsersModalOpen, setIsKycUsersModalOpen] = useState(false);
+  const [kycUserSearch, setKycUserSearch] = useState("");
+  const [approvingUserId, setApprovingUserId] = useState<string | null>(null);
+  const [users, setUsers] = useState<ApiUser[]>([]);
+
+  // const pendingKycUsers = useMemo(() => {
+  //   return kycRequests.filter(
+  //     (user) =>
+  //       user.status === "pending" &&
+  //       user.user.toLowerCase().includes(kycUserSearch.toLowerCase()),
+  //   );
+  // }, [kycRequests, kycUserSearch]);
+  const pendingUsers = useMemo(() => {
+    return users.filter((user) => {
+      const fullName = user.fullName ?? "";
+
+      return (
+        user.kycStatus !== true &&
+        fullName.toLowerCase().includes(kycUserSearch.toLowerCase())
+      );
+    });
+  }, [users, kycUserSearch]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await getAllUsers();
+        setUsers(data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const handleReviewClick = (request: KYCRequest) => {
     setSelectedRequest(request);
     setIsModalOpen(true);
     setDecisionNotes("");
   };
+
+  const handleApproveUser = async (user: ApiUser) => {
+    if (approvingUserId) return;
+
+    const swalTarget =
+      document.querySelector<HTMLElement>("#kyc-users-dialog") ?? document.body;
+
+    const swalOptions = {
+      target: swalTarget,
+      customClass: {
+        container: "kyc-swal-container",
+      },
+    };
+
+    const result = await Swal.fire({
+      ...swalOptions,
+      title: "Are you sure?",
+      text: `Do you want to approve ${user.fullName ?? "this user"}?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Approve",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#16a34a",
+      cancelButtonColor: "#6b7280",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setApprovingUserId(user.id);
+
+      const res = await fetch("/api/kyc/shufti/admin/manual-approve", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          reason: "Approved by admin",
+        }),
+      });
+
+      const responseText = await res.text();
+
+      if (!res.ok) {
+        throw new Error(`Approval failed (${res.status}): ${responseText}`);
+      }
+
+      // Successful approval ke baad pending list se remove
+      setUsers((prev) =>
+        prev.map((item) =>
+          item.id === user.id ? { ...item, kycStatus: true } : item,
+        ),
+      );
+
+      await Swal.fire({
+        ...swalOptions,
+        title: "Approved!",
+        text: "User approved successfully.",
+        icon: "success",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#16a34a",
+      });
+    } catch (error) {
+      console.error("Approve Error:", error);
+
+      await Swal.fire({
+        ...swalOptions,
+        title: "Error!",
+        text: error instanceof Error ? error.message : "Failed to approve user",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#dc2626",
+      });
+    } finally {
+      setApprovingUserId(null);
+    }
+  };
+
   const handleApprove = async () => {
     if (!selectedRequest) return;
 
@@ -93,8 +241,8 @@ export default function KYCPage() {
 
       setKycRequests((prev) =>
         prev.map((req) =>
-          req.id === selectedRequest.id ? { ...req, status: "approved" } : req
-        )
+          req.id === selectedRequest.id ? { ...req, status: "approved" } : req,
+        ),
       );
 
       setIsModalOpen(false);
@@ -102,10 +250,14 @@ export default function KYCPage() {
       setDecisionNotes("");
 
       alert("KYC approved successfully!");
-    } catch (error: any) {
-      // Backend se error message show kare
+    } catch (error) {
       console.error("Approve Error:", error);
-      alert(`Failed to approve KYC: ${error.message}`);
+
+      alert(
+        `Failed to approve KYC: ${
+          error instanceof Error ? error.message : "Something went wrong"
+        }`,
+      );
     }
   };
 
@@ -117,8 +269,8 @@ export default function KYCPage() {
 
       setKycRequests((prev) =>
         prev.map((req) =>
-          req.id === selectedRequest.id ? { ...req, status: "rejected" } : req
-        )
+          req.id === selectedRequest.id ? { ...req, status: "rejected" } : req,
+        ),
       );
 
       setIsModalOpen(false);
@@ -164,10 +316,10 @@ export default function KYCPage() {
   const stats = useMemo(() => {
     const total = filteredRequests.length;
     const pending = filteredRequests.filter(
-      (r) => r.status === "pending"
+      (r) => r.status === "pending",
     ).length;
     const approved = filteredRequests.filter(
-      (r) => r.status === "approved"
+      (r) => r.status === "approved",
     ).length;
     const highRisk = filteredRequests.filter((r) => r.riskScore >= 70).length;
 
@@ -239,10 +391,10 @@ export default function KYCPage() {
             item.status === 1
               ? "pending"
               : item.status === 2
-              ? "approved"
-              : item.status === 3
-              ? "rejected"
-              : "unknown",
+                ? "approved"
+                : item.status === 3
+                  ? "rejected"
+                  : "unknown",
         }));
 
         setKycRequests(mapped);
@@ -262,13 +414,26 @@ export default function KYCPage() {
         <DashboardHeader />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
-          <div className="mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-              KYC Management
-            </h1>
-            <p className="text-slate-600 mt-1">
-              Manage and review user verification requests
-            </p>
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+                KYC Management
+              </h1>
+              <p className="text-slate-600 mt-1">
+                Manage and review user verification requests
+              </p>
+            </div>
+
+            <button
+              onClick={() => setIsKycUsersModalOpen(true)}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-dark-navy text-white hover:bg-dark text-sm font-medium rounded-lg transition-colors"
+            >
+              <Users className="w-4 h-4" />
+              KYC Users
+              <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
+                {users.filter((user) => user.kycStatus !== true).length}
+              </span>
+            </button>
           </div>
 
           {/* Search and Filter */}
@@ -550,8 +715,8 @@ export default function KYCPage() {
                             selectedRequest.status === "pending"
                               ? "bg-blue-100 text-blue-700"
                               : selectedRequest.status === "approved"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
                           }`}
                         >
                           {selectedRequest.status}
@@ -636,6 +801,127 @@ export default function KYCPage() {
                 </div>
               </>
             )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <Dialog.Root
+        open={isKycUsersModalOpen}
+        onOpenChange={setIsKycUsersModalOpen}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
+
+          <Dialog.Content
+            id="kyc-users-dialog"
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl w-[95vw] max-w-2xl max-h-[80vh] overflow-hidden z-50 flex flex-col"
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <Dialog.Title className="text-xl font-semibold text-gray-900">
+                Pending KYC Users
+              </Dialog.Title>
+
+              <Dialog.Close className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </Dialog.Close>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6 overflow-y-auto">
+              {/* Search Section */}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+                  Find KYC Users
+                </label>
+
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+
+                  <input
+                    type="text"
+                    placeholder="Start typing a name..."
+                    value={kycUserSearch}
+                    onChange={(e) => setKycUserSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Results Section */}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+                  Pending KYC Requests ({pendingUsers.length} results)
+                </label>
+
+                <div className="border border-gray-200 rounded-lg overflow-hidden max-h-[300px] overflow-y-auto">
+                  {pendingUsers.length > 0 ? (
+                    pendingUsers.map((user) => {
+                      const fullName =
+                        typeof user.fullName === "string" &&
+                        user.fullName.trim()
+                          ? user.fullName.trim()
+                          : "Unknown User";
+
+                      const initials = fullName
+                        .split(/\s+/)
+                        .map((name) => name.charAt(0))
+                        .slice(0, 2)
+                        .join("")
+                        .toUpperCase();
+
+                      return (
+                        <div
+                          key={user.id}
+                          className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50 border-b border-gray-200 last:border-b-0"
+                        >
+                          {/* User Information */}
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-primary bg-primary/10 font-semibold text-sm">
+                              {initials}
+                            </div>
+
+                            <div className="min-w-0">
+                              <div className="font-semibold text-gray-900 truncate">
+                                {user.fullName}
+                              </div>
+
+                              <div className="text-sm text-gray-500 truncate">
+                                {user.email}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Approve Button */}
+                          <button
+                            onClick={() => handleApproveUser(user)}
+                            disabled={approvingUserId !== null}
+                            className="shrink-0 px-4 py-2 bg-green-600 text-white hover:bg-green-700 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {approvingUserId === user.id
+                              ? "Approving..."
+                              : "Approve"}
+                          </button>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                      <CheckCircle className="w-10 h-10 text-green-500 mb-3" />
+
+                      <p className="text-sm font-medium text-gray-900">
+                        No users found
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Info Text */}
+              <p className="text-sm text-gray-500 text-center">
+                Approved users will automatically disappear from this list.
+              </p>
+            </div>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>

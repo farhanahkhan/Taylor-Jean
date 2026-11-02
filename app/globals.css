@@ -140,3 +140,6 @@ button {
 } */
 /* dsdsadsa */
 /* dsadsdsfs */
+.kyc-swal-container {
+  z-index: 99999 !important;
+}
